@@ -19,8 +19,35 @@ import StudentSettings from './components/StudentSettings';
 import { LayoutDashboard, MessageSquare, CalendarDays, Users, ShieldAlert, Compass, Settings } from 'lucide-react';
 
 export default function App() {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const savedUser = localStorage.getItem('sabicrest_current_user');
+    if (savedUser) {
+      try {
+        return JSON.parse(savedUser);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    return localStorage.getItem('sabicrest_active_tab') || 'dashboard';
+  });
+
+  // Keep saved user session state synchronized with store
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('sabicrest_current_user', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('sabicrest_current_user');
+    }
+  }, [currentUser]);
+
+  // Keep saved active tab synchronized with store
+  useEffect(() => {
+    localStorage.setItem('sabicrest_active_tab', activeTab);
+  }, [activeTab]);
 
   // Scroll to the very top of the page when the active tab/page mounts or changes
   useEffect(() => {
@@ -53,6 +80,9 @@ export default function App() {
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setActiveTab('dashboard');
+    localStorage.removeItem('sabicrest_current_user');
+    localStorage.removeItem('sabicrest_active_tab');
   };
 
   if (!currentUser) {

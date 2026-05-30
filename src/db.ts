@@ -22,8 +22,8 @@ let appwriteClient: Client | null = null;
 let appwriteDatabases: Databases | null = null;
 
 export function getAppwrite(): Databases | null {
-  const endpoint = import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1';
-  const projectId = import.meta.env.VITE_APPWRITE_PROJECT_ID;
+  const endpoint = import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
+  const projectId = import.meta.env.VITE_APPWRITE_PROJECT_ID || '6a19e810001156433516';
   if (!projectId) {
     return null;
   }
