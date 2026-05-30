@@ -1,0 +1,6 @@
+{
+  "name": "Sabicrest",
+  "description": "A secure mentoring and certification platform with scheduling, messaging, assignment evaluation, and team collaboration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
