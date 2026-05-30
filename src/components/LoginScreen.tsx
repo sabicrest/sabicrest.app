@@ -159,7 +159,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         <div id="login-brand-heading" className="text-center mb-8 flex flex-col items-center">
           <div className="w-16 h-16 bg-zinc-100 border border-zinc-200 flex items-center justify-center rounded-none overflow-hidden shadow-xs mb-4">
             <img
-              src="/src/assets/images/sabicrest_logo_1780159096569.png"
+              src="/src/assets/images/sabicrestlogo.png"
               alt="Sabicrest Logo"
               className="w-full h-full rounded-none object-cover"
               referrerPolicy="no-referrer"
