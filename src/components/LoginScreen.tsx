@@ -182,7 +182,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             onClick={() => { setIsRegistering(false); setErrorMessage(''); }}
             className={`flex-1 py-1 text-center transition-all ${!isRegistering ? 'text-brand-black border-b-2 border-brand-black font-semibold' : 'hover:text-zinc-600'}`}
           >
-            Sign-In Gateway
+            Sign-In
           </button>
           <button
             id="tab-signup-btn"
