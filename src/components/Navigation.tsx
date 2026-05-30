@@ -162,8 +162,13 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
               )}
             </div>
 
-            {/* Profile Brief Badge */}
-            <div id="nav-profile-badge" className="hidden sm:flex items-center gap-2.5 bg-zinc-50 border border-zinc-100 py-1.5 pl-2.5 pr-3.5 rounded-2xl">
+            {/* Profile Brief Badge clickable */}
+            <div
+              id="nav-profile-badge"
+              onClick={() => setActiveTab('profile')}
+              className="hidden sm:flex items-center gap-2.5 bg-zinc-50 border border-zinc-100 hover:border-zinc-300 hover:bg-zinc-100/50 py-1.5 pl-2.5 pr-3.5 rounded-2xl cursor-pointer transition-all"
+              title="View Profile Settings"
+            >
               {currentUser.avatar ? (
                 <img src={currentUser.avatar} alt="avatar" className="w-6 h-6 rounded-full object-cover border border-zinc-200 referrerPolicy='no-referrer'" />
               ) : (

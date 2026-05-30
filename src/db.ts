@@ -283,16 +283,16 @@ const INITIAL_CURRICULA: Curriculum[] = [
     id: 'c-4',
     trainerId: 'u-trainer-2',
     trainerName: 'Marcus Vance',
-    title: 'Enterprise Serverless Security Integration',
-    description: 'Learn secure application governance, end-to-end credential proxies, Appwrite access parameters, encryption rules, and compliance log generation.',
+    title: 'Enterprise Server Security & Best Practices',
+    description: 'Learn secure application governance, data safety rules, secure database setups, user permissions, and compliance log generation.',
     category: 'Cloud Architecture',
     level: 'Advanced',
     durationWeeks: 12,
     modules: [
-      'Token-Based Verification Flows',
-      'Developing Secure Middleware Parsers',
-      'Securing Data Storage at Rest with Keys',
-      'Exporting Real-time Audit Trails & Logging'
+      'Secure User Log-In & Authentication Flows',
+      'Developing Secure Application Routing',
+      'Securing Client & Server Data Storage',
+      'Creating Real-time Activity Logs & Indicators'
     ],
     status: 'approved',
     submittedAt: '2026-05-24T12:00:00Z',

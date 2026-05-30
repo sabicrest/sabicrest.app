@@ -28,6 +28,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
   };
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     loadMessages();
     // Poll to simulate real-time chat updates seamlessly
     const interval = setInterval(loadMessages, 3000);
@@ -192,14 +193,6 @@ export default function Messaging({ currentUser }: MessagingProps) {
 
           </div>
 
-          <div className="bg-white border border-zinc-100 rounded-2xl p-3 mt-4">
-            <div className="flex items-center gap-1.5 text-zinc-800 text-[10px] font-semibold mb-1 uppercase">
-              <Lock size={10} className="text-emerald-500" /> AES Key Active
-            </div>
-            <p className="text-[9px] text-zinc-400 font-mono leading-tight">
-              SABICREST_APPETITE_AES_256_GCM
-            </p>
-          </div>
         </div>
 
         {/* Dynamic Chat Main Pane */}
@@ -213,18 +206,17 @@ export default function Messaging({ currentUser }: MessagingProps) {
                 Active Hub: <span className="font-semibold">{activeDmUser ? activeDmUser.name : `#${activeChannelId === 'team-general' ? 'cohort-general' : 'team-active-horizon'}`}</span>
               </h3>
             </div>
-            <span className="text-[10px] text-emerald-500 font-mono flex items-center gap-1 bg-emerald-50/60 px-2 py-0.5 rounded">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> secure edge tunnel
+            <span className="text-[10px] text-emerald-500 font-sans flex items-center gap-1 bg-emerald-50/60 px-2 py-0.5 rounded">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> secure connection
             </span>
           </div>
 
-          {/* Messages stream view */}
           <div ref={chatStreamRef} id="chat-stream-panel" className="flex-1 p-6 space-y-4 overflow-y-auto max-h-[380px] bg-zinc-50/20">
             {filteredMessages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-zinc-400 font-light text-xs gap-1 py-10">
                 <Unlock size={20} className="text-zinc-300" />
-                <p>No transactions found in this communication block.</p>
-                <p className="text-[10px] text-zinc-300">Start the conversation by typing a secure packet below.</p>
+                <p>No messages found in this chat.</p>
+                <p className="text-[10px] text-zinc-300">Start the conversation by typing a message below.</p>
               </div>
             ) : (
               filteredMessages.map((msg, idx) => {
@@ -249,7 +241,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
                         </span>
                       </div>
 
-                      {/* Decrypted or encrypted display bubble based on master decrypt state */}
+                      {/* Message display bubble */}
                       <div
                         className={`p-3.5 rounded-2xl text-xs font-light leading-relaxed font-sans ${
                           isMine
@@ -257,21 +249,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
                             : 'bg-white border border-zinc-100 text-brand-black rounded-tl-none'
                         }`}
                       >
-                        {revealEncryptedVersion ? (
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-1 text-[9px] text-brand-yellow font-mono uppercase tracking-wide">
-                              <Lock size={8} /> Decryption Suspended Log
-                            </div>
-                            <p className="font-mono text-[9px] tracking-tight text-zinc-400 break-all bg-zinc-950 p-2 rounded text-left leading-normal">
-                              {msg.encryptedContent || '[NO_CI_BLOCK]'}
-                            </p>
-                            <p className="text-[8px] text-emerald-400 font-mono text-left">
-                              ALGORITHM: {msg.algorithm}
-                            </p>
-                          </div>
-                        ) : (
-                          <p>{msg.content}</p>
-                        )}
+                        <p>{msg.content}</p>
                       </div>
                     </div>
                   </div>
@@ -286,7 +264,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
               id="chat-typed-msg"
               value={typedMsg}
               onChange={(e) => setTypedMsg(e.target.value)}
-              placeholder={revealEncryptedVersion ? "Encryption preview on: type text to encrypt..." : "Transmit data packets privately..."}
+              placeholder="Send a secure message..."
               className="flex-1 bg-brand-light border border-zinc-100 rounded-xl px-4 py-3 text-xs font-light focus:outline-hidden focus:border-brand-yellow transition-all"
             />
             

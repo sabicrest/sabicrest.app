@@ -111,14 +111,16 @@ export default function App() {
           { id: 'dashboard', label: 'Space', icon: LayoutDashboard },
           { id: 'hub', label: 'Hub', icon: Compass },
           { id: 'messaging', label: 'Chats', icon: MessageSquare },
-          { id: 'scheduling', label: 'Schedules', icon: CalendarDays }
+          { id: 'scheduling', label: 'Schedules', icon: CalendarDays },
+          { id: 'profile', label: 'Settings', icon: Settings }
         ];
       case 'admin':
         return [
           { id: 'dashboard', label: 'Space', icon: LayoutDashboard },
           { id: 'hub', label: 'Hub', icon: Compass },
           { id: 'messaging', label: 'Chats', icon: MessageSquare },
-          { id: 'scheduling', label: 'Schedules', icon: CalendarDays }
+          { id: 'scheduling', label: 'Schedules', icon: CalendarDays },
+          { id: 'profile', label: 'Settings', icon: Settings }
         ];
       default:
         return [];
@@ -156,10 +158,7 @@ export default function App() {
         return <div className="p-8 text-center text-zinc-400">Collaboration panels restricted to students.</div>;
 
       case 'profile':
-        if (currentUser.role === 'student') {
-          return <StudentSettings currentUser={currentUser} />;
-        }
-        return <div className="p-8 text-center text-zinc-400">Profile Settings restricted to students.</div>;
+        return <StudentSettings currentUser={currentUser} />;
 
       default:
         return <div className="p-8 text-center text-zinc-400">View segment not found in compilation path.</div>;

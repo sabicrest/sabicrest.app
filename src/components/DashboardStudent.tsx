@@ -201,10 +201,10 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
     
     setPaymentStep('processing');
     const logs = [
-      'Sending encrypted card payload to dynamic gateway...',
-      'Conducting AES-256 Appwrite handshake parameters...',
-      'Verifying credit threshold with issuer bank...',
-      'One Time Password (OTP) authorization requested by Zenith Bank security ledger.'
+      'Connecting to secure bank gateway...',
+      'Establishing secure encrypted connection...',
+      'Verifying details with bank...',
+      'One-Time Password (OTP) validation requested by bank.'
     ];
     
     let currentLogIndex = 0;
@@ -351,7 +351,7 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
       type: 'grade'
     });
 
-    showToast('✓ Profile updated successfully and synced with Appwrite replication cloud!');
+    showToast('✓ Profile updated successfully!');
     reloadStudentData();
   };
 
@@ -424,7 +424,7 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
             <span>{certs.length}</span>
             <span className="text-xs text-brand-yellow font-mono ml-2 font-light">Issued</span>
           </div>
-          <p className="text-[10px] font-light text-brand-gray mt-2 leading-relaxed">Verified and stored securely on Appwrite.</p>
+          <p className="text-[10px] font-light text-brand-gray mt-2 leading-relaxed font-sans">Verified and stored securely.</p>
         </div>
 
         <div className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs">
@@ -1073,8 +1073,8 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
 
             </div>
 
-            <div className="text-[9px] font-mono text-zinc-300 uppercase tracking-wide border-t border-zinc-50 pt-4 text-center mt-6">
-              SABICREST REGISTRAR DESK // APPWRITE TRANSACTION PROTOCOL
+            <div className="text-[9px] font-sans text-zinc-300 uppercase tracking-wide border-t border-zinc-50 pt-4 text-center mt-6">
+              SABICREST REGISTRAR PORTAL // SECURE TRANSACTION
             </div>
 
           </div>
@@ -1160,14 +1160,14 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
                   </div>
 
                   {generatingLink && (
-                    <div className="text-center py-2 text-[10px] text-zinc-400 font-mono animate-pulse">
-                      Invoking Appwrite Paystack proxy webhook client...
+                    <div className="text-center py-2 text-[10px] text-zinc-400 font-sans animate-pulse">
+                      Generating secure checkout link...
                     </div>
                   )}
 
                   {generatedLink && (
                     <div className="bg-emerald-500/10 border border-emerald-100 rounded-xl p-3.5 text-center space-y-2 select-all">
-                      <span className="text-[9px] font-mono font-bold text-emerald-800 tracking-wider block">OFFICIAL PAYSTACK REDIRECT URL</span>
+                      <span className="text-[9px] font-sans font-bold text-emerald-800 tracking-wider block">OFFICIAL PAYSTACK LINK</span>
                       <p className="text-xs font-mono text-emerald-900 break-all underline cursor-pointer">{generatedLink}</p>
                       <span className="text-[8px] text-zinc-400 font-light block">You paid? Paste the code returned below or proceed with sandbox simulation card below.</span>
                     </div>

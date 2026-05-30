@@ -376,8 +376,8 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
       {/* Modern, minimalist footer branding details */}
       <div id="login-footer-info" className="mt-6 text-[10px] font-light text-zinc-300 tracking-wider uppercase text-center flex flex-col gap-1">
-        <span>Sabicrest Platform // Secured by Appwrite Workspace</span>
-        <span>Secure database storage integration enabled</span>
+        <span>Sabicrest Platform // Secure Connection Active</span>
+        <span>A professional workspace for learning and collaboration</span>
       </div>
 
     </div>

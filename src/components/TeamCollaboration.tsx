@@ -277,7 +277,7 @@ export default function TeamCollaboration({ currentUser }: TeamCollaborationProp
             ></textarea>
             
             <span className="text-[9px] text-zinc-400 italic font-mono block mt-2 text-right">
-              Secured in Appwrite Cloud Bucket payload via custom file wrapper API.
+              Stored securely in cloud workspace storage.
             </span>
           </div>
 

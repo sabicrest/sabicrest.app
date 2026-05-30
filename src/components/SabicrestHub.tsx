@@ -51,6 +51,7 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
   };
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     loadHubMessages();
     const interval = setInterval(loadHubMessages, 2500);
     return () => clearInterval(interval);

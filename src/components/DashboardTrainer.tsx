@@ -348,7 +348,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
             <span>{gradedCount}</span>
             <span className="text-xs text-emerald-600 font-mono ml-2 font-light">Completed</span>
           </div>
-          <p className="text-[10px] font-light text-brand-gray mt-2">Grading records are registered and saved securely on Appwrite.</p>
+          <p className="text-[10px] font-light text-brand-gray mt-2">Grading records are registered and saved securely.</p>
         </div>
 
         <div className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs">
@@ -414,7 +414,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                 <div className="text-center p-12 text-zinc-400 font-light text-xs bg-zinc-50/50 rounded-2xl border border-dashed border-zinc-100 flex flex-col items-center gap-2">
                   <FileCheck size={28} className="text-zinc-300" />
                   <p>Perfect workflow state: No assignments pending check.</p>
-                  <p className="text-[10px]">Previously graded deliverables are saved permanently in Appwrite.</p>
+                  <p className="text-[10px]">Previously graded deliverables are saved permanently.</p>
                 </div>
               ) : (
                 <div className="space-y-4">

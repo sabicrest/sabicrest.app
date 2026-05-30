@@ -518,16 +518,16 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
         {/* Platform Overview Panel - Right Side Col */}
         <div className="lg:col-span-1 space-y-6">
           
-          {/* Cryptographic Transaction Ledger */}
+          {/* Activity Audit Ledger */}
           <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs">
             <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase mb-4 flex items-center justify-between font-light">
               <span className="flex items-center gap-1.5">
-                <KeyRound size={13} className="text-brand-yellow" /> Appwrite Encrypted Ledger
+                <KeyRound size={13} className="text-brand-yellow" /> Database Activity Logs
               </span>
               <button 
                 onClick={() => setTransactions(db.getTransactions())}
                 className="text-zinc-500 hover:text-brand-black cursor-pointer"
-                title="Force Refresh Appwrite Sync"
+                title="Force Refresh Sync"
               >
                 <RefreshCw size={11} />
               </button>
@@ -536,21 +536,21 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
             <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
               {transactions.length === 0 ? (
                 <div className="text-center py-6 text-zinc-400 font-light text-[10px] bg-zinc-50 rounded-xl">
-                  No replication logs committed yet.
+                  No activity logs generated yet.
                 </div>
               ) : (
                 transactions.slice(0, 5).map((tx, idx) => (
-                  <div key={idx} className="bg-zinc-50 border border-zinc-100 p-2.5 rounded-xl text-[10px] font-mono leading-normal space-y-1">
+                  <div key={idx} className="bg-zinc-50 border border-zinc-100 p-2.5 rounded-xl text-[10px] font-sans leading-normal space-y-1">
                     <div className="flex justify-between text-brand-black font-semibold">
                       <span className="truncate max-w-[130px]">{tx.operation}</span>
-                      <span className="text-emerald-600">AES-255</span>
+                      <span className="text-emerald-600">Secure</span>
                     </div>
                     <div className="text-zinc-400 flex justify-between">
-                      <span>Table: {tx.table}</span>
+                      <span>Area: {tx.table}</span>
                       <span>{tx.sizeBytes}B</span>
                     </div>
                     <div className="text-zinc-300 font-light truncate text-[8.5px]">
-                      H: {tx.hash}
+                      ID: {tx.hash}
                     </div>
                   </div>
                 ))
@@ -558,7 +558,7 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
             </div>
 
             <p className="text-[9px] text-zinc-400 italic mt-3 text-right">
-              Logs represent AES-256 cloud encryption transactions.
+              Logs represent secure cloud database operations.
             </p>
           </div>
 

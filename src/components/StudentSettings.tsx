@@ -86,7 +86,7 @@ export default function StudentSettings({ currentUser }: StudentSettingsProps) {
       type: 'grade'
     });
 
-    showToast('✓ Profile updated successfully and synced with Appwrite replication cloud!');
+    showToast('✓ Profile updated successfully!');
   };
 
   const handleResetWorkspace = () => {
