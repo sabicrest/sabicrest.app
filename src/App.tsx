@@ -99,26 +99,26 @@ export default function App() {
     switch (currentUser.role) {
       case 'student':
         return [
-          { id: 'dashboard', label: 'Student Space', icon: LayoutDashboard },
-          { id: 'hub', label: 'Sabicrest Hub', icon: Compass },
-          { id: 'messaging', label: 'Secure Chat', icon: MessageSquare },
-          { id: 'scheduling', label: 'Scheduling', icon: CalendarDays },
-          { id: 'collaboration', label: 'Horizon Team', icon: Users },
-          { id: 'profile', label: 'Profile Settings', icon: Settings }
+          { id: 'dashboard', label: 'Space', icon: LayoutDashboard },
+          { id: 'hub', label: 'Hub', icon: Compass },
+          { id: 'messaging', label: 'Chats', icon: MessageSquare },
+          { id: 'scheduling', label: 'Schedules', icon: CalendarDays },
+          { id: 'collaboration', label: 'Team', icon: Users },
+          { id: 'profile', label: 'Settings', icon: Settings }
         ];
       case 'trainer':
         return [
-          { id: 'dashboard', label: 'Trainer Hub', icon: LayoutDashboard },
-          { id: 'hub', label: 'Sabicrest Hub', icon: Compass },
-          { id: 'messaging', label: 'Secure Chat', icon: MessageSquare },
-          { id: 'scheduling', label: 'Scheduling', icon: CalendarDays }
+          { id: 'dashboard', label: 'Space', icon: LayoutDashboard },
+          { id: 'hub', label: 'Hub', icon: Compass },
+          { id: 'messaging', label: 'Chats', icon: MessageSquare },
+          { id: 'scheduling', label: 'Schedules', icon: CalendarDays }
         ];
       case 'admin':
         return [
-          { id: 'dashboard', label: 'System Admin', icon: LayoutDashboard },
-          { id: 'hub', label: 'Sabicrest Hub', icon: Compass },
-          { id: 'messaging', label: 'Secure Chat', icon: MessageSquare },
-          { id: 'scheduling', label: 'Scheduling', icon: CalendarDays }
+          { id: 'dashboard', label: 'Space', icon: LayoutDashboard },
+          { id: 'hub', label: 'Hub', icon: Compass },
+          { id: 'messaging', label: 'Chats', icon: MessageSquare },
+          { id: 'scheduling', label: 'Schedules', icon: CalendarDays }
         ];
       default:
         return [];
