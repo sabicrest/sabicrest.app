@@ -54,8 +54,13 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
           {/* Logo & Platform Title */}
           <div className="flex items-center gap-10">
             <div id="nav-brand" className="flex items-center gap-2.5 cursor-pointer" onClick={() => setActiveTab(tabs[0].id)}>
-              <div id="nav-logo-box" className="px-2.5 py-1 bg-white border border-black text-black rounded-lg flex items-center justify-center font-bold text-xs">
-                Sabicrest
+              <div className="w-8 h-8 bg-zinc-100 border border-zinc-200 flex items-center justify-center rounded-none overflow-hidden shadow-xs">
+                <img
+                  src="/src/assets/images/sabicrest_logo_1780159096569.png"
+                  alt="Sabicrest Logo"
+                  className="w-full h-full rounded-none object-cover"
+                  referrerPolicy="no-referrer"
+                />
               </div>
               <span className="text-xl font-bold tracking-tight text-black">
                 Sabicrest
