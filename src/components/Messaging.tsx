@@ -21,7 +21,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
   // Custom interactive cipher inspector
   const [revealEncryptedVersion, setRevealEncryptedVersion] = useState(false);
   
-  const bottomScrollRef = useRef<HTMLDivElement>(null);
+  const chatStreamRef = useRef<HTMLDivElement>(null);
 
   const loadMessages = () => {
     setMessages(db.getMessages());
@@ -35,7 +35,9 @@ export default function Messaging({ currentUser }: MessagingProps) {
   }, []);
 
   useEffect(() => {
-    bottomScrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatStreamRef.current) {
+      chatStreamRef.current.scrollTop = chatStreamRef.current.scrollHeight;
+    }
   }, [messages, activeChannelId, activeDmUser]);
 
   const handleSend = (e: React.FormEvent) => {
@@ -101,38 +103,6 @@ export default function Messaging({ currentUser }: MessagingProps) {
 
   return (
     <div id="messaging-root" className="max-w-7xl mx-auto px-4 py-6 select-none">
-      
-      {/* Encryption Banner Header */}
-      <div id="messaging-secure-banner" className="bg-amber-50/10 border border-brand-yellow/30 p-4 rounded-2xl mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <Shield className="text-brand-yellow shrink-0" size={18} />
-          <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-brand-black">End-to-End Appwrite DB Storage Decryption</h4>
-            <p className="text-[11px] font-thin text-zinc-500 leading-normal">
-              Every message below is salted and encrypted transit-bound via custom algorithm profiles before reaching Cloud storage.
-            </p>
-          </div>
-        </div>
-
-        <button
-          id="toggle-cipher-view-btn"
-          onClick={() => setRevealEncryptedVersion(!revealEncryptedVersion)}
-          className="flex items-center gap-1.5 border border-zinc-200 hover:border-zinc-400 bg-white text-brand-black text-[10px] tracking-wide uppercase px-3.5 py-2 rounded-xl transition-all cursor-pointer shadow-xs font-light"
-        >
-          {revealEncryptedVersion ? (
-            <>
-              <EyeOff size={12} className="text-zinc-500" />
-              <span>Hide Cipher Logs</span>
-            </>
-          ) : (
-            <>
-              <Eye size={12} className="text-brand-yellow" />
-              <span>Expose Ciphertext (AES-256)</span>
-            </>
-          )}
-        </button>
-      </div>
-
       <div id="messaging-layout-grid" className="grid grid-cols-1 md:grid-cols-4 border border-zinc-100 rounded-3xl overflow-hidden bg-white min-h-[500px]">
         
         {/* Left Sidebar Pane */}
@@ -249,7 +219,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
           </div>
 
           {/* Messages stream view */}
-          <div id="chat-stream-panel" className="flex-1 p-6 space-y-4 overflow-y-auto max-h-[380px] bg-zinc-50/20">
+          <div ref={chatStreamRef} id="chat-stream-panel" className="flex-1 p-6 space-y-4 overflow-y-auto max-h-[380px] bg-zinc-50/20">
             {filteredMessages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-zinc-400 font-light text-xs gap-1 py-10">
                 <Unlock size={20} className="text-zinc-300" />
@@ -308,7 +278,6 @@ export default function Messaging({ currentUser }: MessagingProps) {
                 );
               })
             )}
-            <div ref={bottomScrollRef} />
           </div>
 
           {/* Secure text submission box */}

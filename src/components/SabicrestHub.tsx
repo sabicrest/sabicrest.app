@@ -44,7 +44,7 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
   // Mobile drawer toggle state for the sidebar ("Community Spaces") - closed on load
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const bottomScrollRef = useRef<HTMLDivElement>(null);
+  const hubStreamRef = useRef<HTMLDivElement>(null);
 
   const loadHubMessages = () => {
     setMessages(db.getHubMessages());
@@ -57,7 +57,9 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
   }, []);
 
   useEffect(() => {
-    bottomScrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (hubStreamRef.current) {
+      hubStreamRef.current.scrollTop = hubStreamRef.current.scrollHeight;
+    }
   }, [messages, activeTag]);
 
   // Inherit selected tag from active sidebar tab automatically
@@ -325,7 +327,7 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
           </div>
 
           {/* Messages loop stream container */}
-          <div id="hub-chat-stream" className="flex-1 p-6 space-y-6 overflow-y-auto max-h-[440px] bg-zinc-50/20">
+          <div ref={hubStreamRef} id="hub-chat-stream" className="flex-1 p-6 space-y-6 overflow-y-auto max-h-[440px] bg-zinc-50/20">
             {filteredMessages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-zinc-400 font-light text-xs gap-1.5 py-12">
                 <Compass size={28} className="text-zinc-300" />
@@ -489,7 +491,6 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
                 );
               })
             )}
-            <div ref={bottomScrollRef} />
           </div>
 
           {/* Reply referencing Quote Preview Banner banner (WhatsApp reply state) */}
