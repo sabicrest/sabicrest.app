@@ -7,6 +7,8 @@ import React, { useState, useEffect } from 'react';
 import { User, NotificationAlert } from '../types';
 import { db } from '../db';
 import { Bell, LogOut, CheckCircle, Shield, Menu, X, Terminal, Sparkles } from 'lucide-react';
+// @ts-ignore
+import sabicrestLogo from '../assets/images/sabicrest_logo_1780159096569.png';
 
 interface NavigationProps {
   currentUser: User;
@@ -56,7 +58,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
             <div id="nav-brand" className="flex items-center gap-2.5 cursor-pointer" onClick={() => setActiveTab(tabs[0].id)}>
               <div className="w-8 h-8 bg-zinc-100 border border-zinc-200 flex items-center justify-center rounded-none overflow-hidden shadow-xs">
                 <img
-                  src="/src/assets/images/sabicrest_logo_1780159096569.png"
+                  src={sabicrestLogo}
                   alt="Sabicrest Logo"
                   className="w-full h-full rounded-none object-cover"
                   referrerPolicy="no-referrer"
