@@ -169,7 +169,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             Sabicrest
           </h1>
           <p id="sabicrest-tagline" className="text-xs font-medium text-black tracking-wide mt-1 uppercase">
-            Mentorship & Design Collaboration Workspace
+            Accesss Your Dashboard/Workspace
           </p>
         </div>
 
