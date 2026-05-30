@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { Client, Databases, Query } from 'appwrite';
 import {
   User,
   Message,
@@ -16,6 +17,22 @@ import {
   DbTransactionLog,
   CourseEnrollment
 } from './types';
+
+let appwriteClient: Client | null = null;
+let appwriteDatabases: Databases | null = null;
+
+export function getAppwrite(): Databases | null {
+  const endpoint = import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1';
+  const projectId = import.meta.env.VITE_APPWRITE_PROJECT_ID;
+  if (!projectId) {
+    return null;
+  }
+  if (!appwriteClient) {
+    appwriteClient = new Client().setEndpoint(endpoint).setProject(projectId);
+    appwriteDatabases = new Databases(appwriteClient);
+  }
+  return appwriteDatabases;
+}
 
 // Simple simulated encryption tools for Appwrite database privacy compliance.
 export const encryptPayload = (text: string, fakeKey: string = 'SABICREST_APPWRITE_AES_256_GCM'): string => {
@@ -55,465 +72,18 @@ const generateTxHash = (): string => {
   return hash;
 };
 
-// Initial state mock definitions
-const INITIAL_USERS: User[] = [
-  {
-    id: 'u-1',
-    name: 'Alex Rivera',
-    email: 'alex.rivera@edu.sabicrest.com',
-    role: 'student',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-    verified: true,
-    joinedDate: '2026-01-10',
-    status: 'active',
-    bio: 'Product Design Enthusiast interested in UI/UX architectures, spatial alignments, and minimal typography patterns.',
-    skills: ['UI Design', 'Figma', 'Typography', 'Sass'],
-    teamId: 't-1',
-    phone: '+1 (555) 234-5678',
-    slackHandle: '@alex_design',
-    location: 'San Francisco, CA',
-    enrolledCourseIds: ['c-1']
-  },
-  {
-    id: 'u-2',
-    name: 'Jordan Lee',
-    email: 'jordan.lee@edu.sabicrest.com',
-    role: 'student',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    verified: true,
-    joinedDate: '2026-02-15',
-    status: 'active',
-    bio: 'Interface specialist focusing on digital security, system layout mapping, and secure user dashboards.',
-    skills: ['Interface Security', 'Data Systems', 'Information Architecture', 'Tailwind'],
-    teamId: 't-1',
-    phone: '+1 (555) 876-5432',
-    slackHandle: '@jordan_gate',
-    location: 'Austin, TX',
-    enrolledCourseIds: ['c-1']
-  },
-  {
-    id: 'u-trainer-1',
-    name: 'Dr. Sarah Sterling',
-    email: 'sarah.sterling@sabicrest.com',
-    role: 'trainer',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-    verified: true,
-    joinedDate: '2025-05-12',
-    status: 'active',
-    bio: 'Certified Senior Design Coach, previous Principal Architect. Teaching Typography Systems, Layout Design, and Advanced Spatial Rhythms.',
-    skills: ['System Design', 'Visual Communication', 'Creative Direction']
-  },
-  {
-    id: 'u-trainer-2',
-    name: 'Marcus Vance',
-    email: 'marcus.vance@sabicrest.com',
-    role: 'trainer',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-    verified: true,
-    joinedDate: '2025-08-20',
-    status: 'active',
-    bio: 'Appwrite Enterprise Platform Architect. Specializes in cost-optimized serverless layouts, secure database indexation models, and user privacy pipelines.',
-    skills: ['Serverless Design', 'Appwrite platform', 'Data Privacy', 'Workflow Audits']
-  },
-  {
-    id: 'u-admin-1',
-    name: 'Chief Admin Officer',
-    email: 'officialsabicrest@gmail.com', // Prefilled with user email for realism
-    role: 'admin',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
-    verified: true,
-    joinedDate: '2025-01-01',
-    status: 'active',
-    bio: 'Core Platform Overseer at Sabicrest. Approving curriculum projects, onboarding trainers, and governing secure database protocols.'
-  }
-];
-
-const INITIAL_MESSAGES: Message[] = [
-  {
-    id: 'm-1',
-    senderId: 'u-trainer-1',
-    senderName: 'Dr. Sarah Sterling',
-    senderAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-    channelId: 'team-general',
-    content: 'Welcome students to Sabicrest! We are hosting our kick-off UI/UX spatial typography lecture tomorrow at 10:00 AM. Please make sure to check the scheduling tool and mark your calendar details.',
-    encryptedContent: '', // dynamically processed
-    timestamp: '2026-05-28T09:12:00Z',
-    isEncrypted: true,
-    algorithm: 'AES-256-GCM / Appwrite Database Crypt'
-  },
-  {
-    id: 'm-2',
-    senderId: 'u-1',
-    senderName: 'Alex Rivera',
-    senderAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-    channelId: 'team-general',
-    content: 'Thank you Dr. Sterling! Confirmed. Extremely excited to review the typography module curricula. Jordan, are you ready to collaborate on the system assignment tomorrow?',
-    encryptedContent: '',
-    timestamp: '2026-05-28T10:05:00Z',
-    isEncrypted: true,
-    algorithm: 'AES-256-GCM / Appwrite Database Crypt'
-  },
-  {
-    id: 'm-3',
-    senderId: 'u-2',
-    senderName: 'Jordan Lee',
-    senderAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    channelId: 'team-general',
-    content: 'Absolutely Alex, I created our collaboration workspace file and added research notes. Looking forward to our 1-on-1 team review scheduled with Marcus.',
-    encryptedContent: '',
-    timestamp: '2026-05-28T10:15:00Z',
-    isEncrypted: true,
-    algorithm: 'AES-256-GCM / Appwrite Database Crypt'
-  }
-];
-
-// Pre-fill encryptedContent for initial messages
-INITIAL_MESSAGES.forEach(m => {
-  m.encryptedContent = encryptPayload(m.content);
-});
-
-const INITIAL_EVENTS: ScheduleEvent[] = [
-  {
-    id: 'e-1',
-    title: 'UI/UX Spatial Typography & Visual Rhythm Lecture',
-    description: 'Core lecture reviewing minimalist spacing rules, thin font alignment, and visual-first design principles with Dr. Sarah Sterling.',
-    date: '2026-05-30',
-    time: '10:00',
-    durationMinutes: 60,
-    hostId: 'u-trainer-1',
-    hostName: 'Dr. Sarah Sterling',
-    attendeeId: 'team-general',
-    status: 'confirmed',
-    meetLink: 'https://meet.google.com/sc-uux-type',
-    roleType: 'office-hours'
-  },
-  {
-    id: 'e-2',
-    title: 'Individual Design Review Slot: Alex Rivera',
-    description: 'Reviewing the submitted typography wireframes and grading feedback guidelines.',
-    date: '2026-05-31',
-    time: '14:30',
-    durationMinutes: 30,
-    hostId: 'u-trainer-1',
-    hostName: 'Dr. Sarah Sterling',
-    attendeeId: 'u-1',
-    status: 'pending',
-    meetLink: 'https://meet.google.com/sc-uux-alex',
-    roleType: '1-on-1'
-  },
-  {
-    id: 'e-3',
-    title: 'Serverless Storage Optimization Consultation',
-    description: 'Active discussion on configuring serverless clusters with minimal cold starts and encrypted fields.',
-    date: '2026-06-02',
-    time: '11:00',
-    durationMinutes: 45,
-    hostId: 'u-trainer-2',
-    hostName: 'Marcus Vance',
-    attendeeId: 'u-2',
-    status: 'confirmed',
-    meetLink: 'https://meet.google.com/sc-cloud-marcus',
-    roleType: '1-on-1'
-  }
-];
-
-const INITIAL_CURRICULA: Curriculum[] = [
-  {
-    id: 'c-1',
-    trainerId: 'u-trainer-1',
-    trainerName: 'Dr. Sarah Sterling',
-    title: 'Minimalist Spatial Typography Schemes',
-    description: 'A comprehensive system exploring font hierarchy using thin and ultra-light weights, fluid margins, high color contrasts, and intentional white-space density.',
-    category: 'Visual Design',
-    level: 'Intermediate',
-    durationWeeks: 6,
-    modules: [
-      'Anatomy of Light Weights (100-300)',
-      'Constructing Consistent Spatial Grids',
-      'High-Contrast Color Harmonies without Noise',
-      'The Art of Negative Space in Modern Dashboards',
-      'Testing Micro-Transitions with Motion React'
-    ],
-    status: 'approved',
-    submittedAt: '2026-05-20T10:00:00Z',
-    approvedAt: '2026-05-22T14:30:00Z',
-    price: 35000
-  },
-  {
-    id: 'c-2',
-    trainerId: 'u-trainer-2',
-    trainerName: 'Marcus Vance',
-    title: 'Serverless Layout Systems: Enterprise Performance & Privacy',
-    description: 'Advanced workspace organization. Structure secure layout configurations, leverage data decryption at rest, and optimize delivery latencies.',
-    category: 'Cloud Architecture',
-    level: 'Advanced',
-    durationWeeks: 8,
-    modules: [
-      'Simulating Enterprise Workspace Configurations',
-      'Database Security Frameworks (AES / Advanced Hash)',
-      'Optimizing Node Response Standards & Delivery',
-      'Securing User Spaces with Custom Authentication Headers',
-      'Designing Scalable Content Pipelines'
-    ],
-    status: 'pending',
-    submittedAt: '2026-05-28T16:00:00Z',
-    price: 45000
-  },
-  {
-    id: 'c-3',
-    trainerId: 'u-trainer-1',
-    trainerName: 'Dr. Sarah Sterling',
-    title: 'Advanced React Layout Systems & Micro-Interactions',
-    description: 'Master the creation of seamless workspace transitions and motion layouts. Explore container grids, robust multi-device fluidity, and responsive density structures.',
-    category: 'Visual Design',
-    level: 'Advanced',
-    durationWeeks: 10,
-    modules: [
-      'Tailwind Container Fluidity & Margins',
-      'Staggered Orchestrated Entrances',
-      'Orchestrating Sidebar Transitions with CSS variables',
-      'Performance and Layout Optimization on Device Viewports'
-    ],
-    status: 'approved',
-    submittedAt: '2026-05-22T10:00:00Z',
-    approvedAt: '2026-05-24T12:00:00Z',
-    price: 55000
-  },
-  {
-    id: 'c-4',
-    trainerId: 'u-trainer-2',
-    trainerName: 'Marcus Vance',
-    title: 'Enterprise Server Security & Best Practices',
-    description: 'Learn secure application governance, data safety rules, secure database setups, user permissions, and compliance log generation.',
-    category: 'Cloud Architecture',
-    level: 'Advanced',
-    durationWeeks: 12,
-    modules: [
-      'Secure User Log-In & Authentication Flows',
-      'Developing Secure Application Routing',
-      'Securing Client & Server Data Storage',
-      'Creating Real-time Activity Logs & Indicators'
-    ],
-    status: 'approved',
-    submittedAt: '2026-05-24T12:00:00Z',
-    approvedAt: '2026-05-25T15:30:00Z',
-    price: 65000
-  }
-];
-
-const INITIAL_ASSIGNMENTS: Assignment[] = [
-  {
-    id: 'a-1',
-    title: 'Spatial Grid Layout Design Project',
-    description: 'Design a web frame mockup that relies exclusively on font-weight differences (thin, light, normal) with white backgrounds and precise micro-margins. Provide links and design details below.',
-    dueDate: '2026-05-29',
-    maxPoints: 100,
-    studentId: 'u-1',
-    studentName: 'Alex Rivera',
-    trainerId: 'u-trainer-1',
-    trainerName: 'Dr. Sarah Sterling',
-    status: 'pending_review',
-    submittedAt: '2026-05-28T22:30:00Z',
-    submissionContent: 'Here is my typography dashboard mockup. I utilized the 100-300 Outfit weights and structured the padding around a 24px grid system to deliver maximum clarity.',
-    linkUrl: 'https://figma.com/file/sabicrest-spatial-mockup'
-  },
-  {
-    id: 'a-2',
-    title: 'Encrypted Appwrite Workspace Configuration Strategy',
-    description: 'Formulate an end-to-end user data strategy that secures layout configurations within Appwrite serverless storage.',
-    dueDate: '2026-06-03',
-    maxPoints: 100,
-    studentId: 'u-2',
-    studentName: 'Jordan Lee',
-    trainerId: 'u-trainer-2',
-    trainerName: 'Marcus Vance',
-    status: 'not_submitted'
-  },
-  {
-    id: 'a-3',
-    title: 'Visual Hierarchy Portfolio Submission',
-    description: 'Demonstrate balance in dark vs light accent placements, using black and yellow branding highlights on a pure light canvas.',
-    dueDate: '2026-05-22',
-    maxPoints: 100,
-    studentId: 'u-1',
-    studentName: 'Alex Rivera',
-    trainerId: 'u-trainer-1',
-    trainerName: 'Dr. Sarah Sterling',
-    status: 'graded',
-    submittedAt: '2026-05-21T11:20:00Z',
-    submissionContent: 'Integrated the Sabicrest golden tone in headers with extremely light font weights for clean, minimalist navigation accents.',
-    linkUrl: 'https://figma.com/file/portfolio-sabicrest',
-    grade: 'A',
-    points: 98,
-    feedback: 'Excellent typography pairing. The choice of thin weights beautifully highlights key elements. Background contrast is outstanding.',
-    gradedAt: '2026-05-22T09:00:00Z'
-  }
-];
-
-const INITIAL_TEAMS: Team[] = [
-  {
-    id: 't-1',
-    name: 'Team Horizon',
-    projectTitle: 'Sabicrest Strategic Layout Ecosystem',
-    description: 'Structuring a collaborative user workspace leveraging light design parameters and Appwrite layout privacy protections.',
-    members: ['u-1', 'u-2'],
-    tasks: [
-      { id: 'task-1', title: 'Design typographic canvas margins', assignedTo: 'Alex Rivera', status: 'done' },
-      { id: 'task-2', title: 'Configure encrypted layout parameters', assignedTo: 'Jordan Lee', status: 'in_progress' },
-      { id: 'task-3', title: 'Formulate workspace notification models', assignedTo: 'Alex Rivera', status: 'todo' },
-      { id: 'task-4', title: 'Optimize core layout response speed', assignedTo: 'Jordan Lee', status: 'todo' }
-    ],
-    sharedNotes: 'Welcome to Horizon! Our team focus is minimalism and lightweight design. Let us use dark text offsets, 100-300-400 font weights, and avoid visual clutter.'
-  }
-];
-
-const INITIAL_CERTIFICATES: Certificate[] = [
-  {
-    id: 'cert-1',
-    studentId: 'u-1',
-    studentName: 'Alex Rivera',
-    curriculumTitle: 'Advanced Spatial Grid Alignment & Micro-Margins',
-    trainerName: 'Dr. Sarah Sterling',
-    issuedDate: '2026-04-15',
-    hash: '0x3f5c9e2a1b4d8c6e7f0980aa829bf42901ce104d',
-    status: 'verified'
-  }
-];
-
-const INITIAL_NOTIFICATIONS: NotificationAlert[] = [
-  {
-    id: 'n-1',
-    userId: 'u-1',
-    title: 'Assignment Submitted Successfully',
-    message: 'Your submittal for "Spatial Grid Layout Design Project" is now pending tutor evaluation.',
-    type: 'grade',
-    read: false,
-    createdAt: '2026-05-28T22:30:00Z'
-  },
-  {
-    id: 'n-2',
-    userId: 'u-trainer-1',
-    title: 'New Student Submission',
-    message: 'Alex Rivera submitted work for "Spatial Grid Layout Design Project". Action suggested.',
-    type: 'curriculum',
-    read: false,
-    createdAt: '2026-05-28T22:30:10Z'
-  },
-  {
-    id: 'n-3',
-    userId: 'u-admin-1',
-    title: 'New Curriculum Proposed',
-    message: 'Marcus Vance proposed a new curriculum: "Serverless Functions: Enterprise Performance & Privacy". Review required.',
-    type: 'curriculum',
-    read: false,
-    createdAt: '2026-05-28T16:00:15Z'
-  }
-];
-
-const INITIAL_TRANSACTIONS: DbTransactionLog[] = [
-  {
-    timestamp: '2026-05-29T16:00:12Z',
-    operation: 'READ_USERS_QUERY',
-    table: 'Users',
-    encryptionKey: 'AES-256-UNIFIED',
-    hash: '0x992cf...3a1',
-    sizeBytes: 1240
-  },
-  {
-    timestamp: '2026-05-29T16:01:05Z',
-    operation: 'REPLICATION_SYNC',
-    table: 'Appwrite_Replica_01',
-    encryptionKey: 'RSA-4096-REPL',
-    hash: '0xdfe21...28b',
-    sizeBytes: 8940
-  }
-];
-
-const INITIAL_HUB_MESSAGES: HubMessage[] = [
-  {
-    id: 'hm-1',
-    senderId: 'u-1',
-    senderName: 'Alex Rivera',
-    senderAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-    content: 'Hey everyone! Has anyone started preparing for the typography layout challenge yet? Looking to team up with someone or share notes!',
-    timestamp: '2026-05-29T10:15:00Z',
-    tag: 'collab',
-    reactions: { '👍': ['u-2', 'u-trainer-1'], '❤️': ['u-2'] }
-  },
-  {
-    id: 'hm-2',
-    senderId: 'u-2',
-    senderName: 'Jordan Lee',
-    senderAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    content: "Absolutely Alex, count me in! I've been researching layout spacing standards. Let's start a call.",
-    timestamp: '2026-05-29T10:20:00Z',
-    tag: 'collab',
-    replyToId: 'hm-1',
-    replyToSender: 'Alex Rivera',
-    replyToText: 'Hey everyone! Has anyone started preparing for the typography layout challenge yet? Looking to team up with someone or share notes!',
-    reactions: { '👍': ['u-1'] }
-  },
-  {
-    id: 'hm-3',
-    senderId: 'u-1',
-    senderName: 'Alex Rivera',
-    senderAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-    content: 'Which Google Font should we prefer if we want a classic mid-century Swiss modernist design system? Space Grotesk, Inter, or something like Helvetica?',
-    timestamp: '2026-05-29T11:00:00Z',
-    tag: 'question',
-    isSolved: true,
-    reactions: { '🤔': ['u-2'] }
-  },
-  {
-    id: 'hm-4',
-    senderId: 'u-trainer-1',
-    senderName: 'Dr. Sarah Sterling',
-    senderAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-    content: 'For mid-century Swiss design, Inter is an excellent neo-grotesque candidate. If you use Google Fonts, try "Arimo" or "DM Sans" as highly neutral structures! It gives spectacular visual balance.',
-    timestamp: '2026-05-29T11:30:00Z',
-    tag: 'question',
-    replyToId: 'hm-3',
-    replyToSender: 'Alex Rivera',
-    replyToText: 'Which Google Font should we prefer if we want a classic mid-century Swiss modernist design system?',
-    reactions: { '❤️': ['u-1', 'u-2'], '🙏': ['u-1'] }
-  }
-];
-
-// Student Course Enrollments initial list pre-filled
-const INITIAL_ENROLLMENTS: CourseEnrollment[] = [
-  {
-    id: 'enr-1',
-    studentId: 'u-1',
-    studentName: 'Alex Rivera',
-    studentEmail: 'alex.rivera@edu.sabicrest.com',
-    courseId: 'c-1',
-    courseTitle: 'Minimalist Spatial Typography Schemes',
-    trainerId: 'u-trainer-1',
-    trainerName: 'Dr. Sarah Sterling',
-    amount: 35000,
-    paymentLinkUrl: 'https://checkout.paystack.com/sabicrest-c1-mock',
-    paymentStatus: 'approved',
-    paymentReference: 'PSTK-918230982-ALX',
-    submittedAt: '2026-05-10T11:00:00Z',
-    verifiedAt: '2026-05-11T09:00:00Z'
-  },
-  {
-    id: 'enr-2',
-    studentId: 'u-2',
-    studentName: 'Jordan Lee',
-    studentEmail: 'jordan.lee@edu.sabicrest.com',
-    courseId: 'c-1',
-    courseTitle: 'Minimalist Spatial Typography Schemes',
-    trainerId: 'u-trainer-1',
-    trainerName: 'Dr. Sarah Sterling',
-    amount: 35000,
-    paymentLinkUrl: 'https://checkout.paystack.com/sabicrest-c1-mock',
-    paymentStatus: 'approved',
-    paymentReference: 'PSTK-918230983-JDN',
-    submittedAt: '2026-05-15T15:00:00Z',
-    verifiedAt: '2026-05-16T10:00:00Z'
-  }
-];
+/// Initial state mock definitions (Empty for production readiness)
+const INITIAL_USERS: User[] = [];
+const INITIAL_MESSAGES: Message[] = [];
+const INITIAL_EVENTS: ScheduleEvent[] = [];
+const INITIAL_CURRICULA: Curriculum[] = [];
+const INITIAL_ASSIGNMENTS: Assignment[] = [];
+const INITIAL_TEAMS: Team[] = [];
+const INITIAL_CERTIFICATES: Certificate[] = [];
+const INITIAL_NOTIFICATIONS: NotificationAlert[] = [];
+const INITIAL_TRANSACTIONS: DbTransactionLog[] = [];
+const INITIAL_HUB_MESSAGES: HubMessage[] = [];
+const INITIAL_ENROLLMENTS: CourseEnrollment[] = [];
 
 // Database Engine Provider Class
 export class AppwriteDatabase {
@@ -530,6 +100,22 @@ export class AppwriteDatabase {
   private enrollments: CourseEnrollment[];
 
   constructor() {
+    // Force reset old mock keys on first run to clean up active browser storage
+    if (localStorage.getItem('sabicrest_clean_v2') !== 'true') {
+      localStorage.removeItem('sc_users');
+      localStorage.removeItem('sc_messages');
+      localStorage.removeItem('sc_hub_messages');
+      localStorage.removeItem('sc_events');
+      localStorage.removeItem('sc_curricula');
+      localStorage.removeItem('sc_assignments');
+      localStorage.removeItem('sc_teams');
+      localStorage.removeItem('sc_certificates');
+      localStorage.removeItem('sc_notifications');
+      localStorage.removeItem('sc_transactions');
+      localStorage.removeItem('sc_enrollments');
+      localStorage.setItem('sabicrest_clean_v2', 'true');
+    }
+
     this.users = JSON.parse(localStorage.getItem('sc_users') || JSON.stringify(INITIAL_USERS));
     this.messages = JSON.parse(localStorage.getItem('sc_messages') || JSON.stringify(INITIAL_MESSAGES));
     this.hubMessages = JSON.parse(localStorage.getItem('sc_hub_messages') || JSON.stringify(INITIAL_HUB_MESSAGES));
@@ -543,6 +129,7 @@ export class AppwriteDatabase {
     this.enrollments = JSON.parse(localStorage.getItem('sc_enrollments') || JSON.stringify(INITIAL_ENROLLMENTS));
 
     this.saveToStorage();
+    this.syncFromAppwrite();
   }
 
   private saveToStorage() {
@@ -572,6 +159,214 @@ export class AppwriteDatabase {
     this.saveToStorage();
   }
 
+  async syncFromAppwrite() {
+    const dbSvc = getAppwrite();
+    if (!dbSvc) return;
+
+    try {
+      const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID || 'sabicrest_db';
+      console.log('Appwrite Background Sync Starting...');
+      
+      // Sync Users
+      try {
+        const res = await dbSvc.listDocuments(databaseId, 'users');
+        if (res.documents.length > 0) {
+          this.users = res.documents.map(doc => {
+            const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
+            return { id: $id, ...data } as any;
+          });
+        }
+      } catch (err) {
+        console.warn('Appwrite sync error [users]:', err);
+      }
+
+      // Sync Messages
+      try {
+        const res = await dbSvc.listDocuments(databaseId, 'messages');
+        if (res.documents.length > 0) {
+          this.messages = res.documents.map(doc => {
+            const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
+            return { id: $id, ...data } as any;
+          });
+        }
+      } catch (err) {
+        console.warn('Appwrite sync error [messages]:', err);
+      }
+
+      // Sync Hub Messages
+      try {
+        const res = await dbSvc.listDocuments(databaseId, 'hub_messages');
+        if (res.documents.length > 0) {
+          this.hubMessages = res.documents.map(doc => {
+            const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
+            let parsedReactions = {};
+            if (typeof data.reactions === 'string') {
+              try { parsedReactions = JSON.parse(data.reactions); } catch(e){}
+            } else if (data.reactions) {
+              parsedReactions = data.reactions;
+            }
+            return { id: $id, ...data, reactions: parsedReactions } as any;
+          });
+        }
+      } catch (err) {
+        console.warn('Appwrite sync error [hub_messages]:', err);
+      }
+
+      // Sync Events
+      try {
+        const res = await dbSvc.listDocuments(databaseId, 'events');
+        if (res.documents.length > 0) {
+          this.events = res.documents.map(doc => {
+            const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
+            return { id: $id, ...data } as any;
+          });
+        }
+      } catch (err) {
+        console.warn('Appwrite sync error [events]:', err);
+      }
+
+      // Sync Curricula
+      try {
+        const res = await dbSvc.listDocuments(databaseId, 'curricula');
+        if (res.documents.length > 0) {
+          this.curricula = res.documents.map(doc => {
+            const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
+            let parsedModules = [];
+            if (typeof data.modules === 'string') {
+              try { parsedModules = JSON.parse(data.modules); } catch(e){}
+            } else if (Array.isArray(data.modules)) {
+              parsedModules = data.modules;
+            }
+            return { id: $id, ...data, modules: parsedModules } as any;
+          });
+        }
+      } catch (err) {
+        console.warn('Appwrite sync error [curricula]:', err);
+      }
+
+      // Sync Assignments
+      try {
+        const res = await dbSvc.listDocuments(databaseId, 'assignments');
+        if (res.documents.length > 0) {
+          this.assignments = res.documents.map(doc => {
+            const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
+            return { id: $id, ...data } as any;
+          });
+        }
+      } catch (err) {
+        console.warn('Appwrite sync error [assignments]:', err);
+      }
+
+      // Sync Teams
+      try {
+        const res = await dbSvc.listDocuments(databaseId, 'teams');
+        if (res.documents.length > 0) {
+          this.teams = res.documents.map(doc => {
+            const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
+            let parsedMembers = [];
+            if (typeof data.members === 'string') {
+              try { parsedMembers = JSON.parse(data.members); } catch(e){}
+            } else if (Array.isArray(data.members)) {
+              parsedMembers = data.members;
+            }
+            let parsedTasks = [];
+            if (typeof data.tasks === 'string') {
+              try { parsedTasks = JSON.parse(data.tasks); } catch(e){}
+            } else if (Array.isArray(data.tasks)) {
+              parsedTasks = data.tasks;
+            }
+            return { id: $id, ...data, members: parsedMembers, tasks: parsedTasks } as any;
+          });
+        }
+      } catch (err) {
+        console.warn('Appwrite sync error [teams]:', err);
+      }
+
+      // Sync Certificates
+      try {
+        const res = await dbSvc.listDocuments(databaseId, 'certificates');
+        if (res.documents.length > 0) {
+          this.certificates = res.documents.map(doc => {
+            const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
+            return { id: $id, ...data } as any;
+          });
+        }
+      } catch (err) {
+        console.warn('Appwrite sync error [certificates]:', err);
+      }
+
+      // Sync Notifications
+      try {
+        const res = await dbSvc.listDocuments(databaseId, 'notifications');
+        if (res.documents.length > 0) {
+          this.notifications = res.documents.map(doc => {
+            const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
+            return { id: $id, ...data } as any;
+          });
+        }
+      } catch (err) {
+        console.warn('Appwrite sync error [notifications]:', err);
+      }
+
+      // Sync Enrollments
+      try {
+        const res = await dbSvc.listDocuments(databaseId, 'enrollments');
+        if (res.documents.length > 0) {
+          this.enrollments = res.documents.map(doc => {
+            const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
+            return { id: $id, ...data } as any;
+          });
+        }
+      } catch (err) {
+        console.warn('Appwrite sync error [enrollments]:', err);
+      }
+
+      this.saveToStorage();
+      console.log('Appwrite Background Sync Completed Successfully!');
+    } catch (globalErr) {
+      console.error('Appwrite Global sync error:', globalErr);
+    }
+  }
+
+  async saveToAppwrite(collectionId: string, documentId: string, data: any, isDelete = false) {
+    const dbSvc = getAppwrite();
+    if (!dbSvc) return;
+
+    const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID || 'sabicrest_db';
+    const sanitizedDocId = documentId.replace(/[^a-zA-Z0-9_\.\-]/g, '_').slice(0, 36);
+
+    try {
+      if (isDelete) {
+        await dbSvc.deleteDocument(databaseId, collectionId, sanitizedDocId);
+        this.logTransaction('APPWRITE_DELETE_SUCCESS', collectionId, `id: ${sanitizedDocId}`);
+      } else {
+        const appwriteData = { ...data };
+        delete appwriteData.id;
+
+        for (const key of Object.keys(appwriteData)) {
+          if (typeof appwriteData[key] === 'object' && appwriteData[key] !== null) {
+            appwriteData[key] = JSON.stringify(appwriteData[key]);
+          }
+        }
+
+        try {
+          await dbSvc.updateDocument(databaseId, collectionId, sanitizedDocId, appwriteData);
+          this.logTransaction('APPWRITE_UPDATE_SUCCESS', collectionId, JSON.stringify(appwriteData));
+        } catch (updateErr: any) {
+          if (updateErr.code === 404 || updateErr.status === 404) {
+            await dbSvc.createDocument(databaseId, collectionId, sanitizedDocId, appwriteData);
+            this.logTransaction('APPWRITE_CREATE_SUCCESS', collectionId, JSON.stringify(appwriteData));
+          } else {
+            throw updateErr;
+          }
+        }
+      }
+    } catch (err: any) {
+      console.error(`Appwrite failure on collection ${collectionId}:`, err);
+      this.logTransaction('APPWRITE_SYNC_FAILURE', collectionId, `${err.message || 'Unknown network error'}`);
+    }
+  }
+
   // --- Users CRUD ---
   getUsers(): User[] {
     return this.users;
@@ -585,12 +380,14 @@ export class AppwriteDatabase {
     this.users = this.users.map(u => u.id === user.id ? user : u);
     this.saveToStorage();
     this.logTransaction('UPDATE_USER_RECORD', 'Users', JSON.stringify(user));
+    this.saveToAppwrite('users', user.id, user);
   }
 
   addUser(user: User) {
     this.users.push(user);
     this.saveToStorage();
     this.logTransaction('INSERT_USER_RECORD', 'Users', JSON.stringify(user));
+    this.saveToAppwrite('users', user.id, user);
   }
 
   // --- Messages CRUD ---
@@ -610,6 +407,7 @@ export class AppwriteDatabase {
     this.messages.push(newMsg);
     this.saveToStorage();
     this.logTransaction('INSERT_SECURE_MESSAGE', 'Messages', JSON.stringify(newMsg));
+    this.saveToAppwrite('messages', newMsg.id, newMsg);
     return newMsg;
   }
 
@@ -628,6 +426,7 @@ export class AppwriteDatabase {
     this.hubMessages.push(newMsg);
     this.saveToStorage();
     this.logTransaction('INSERT_HUB_MESSAGE', 'HubMessages', JSON.stringify(newMsg));
+    this.saveToAppwrite('hub_messages', newMsg.id, newMsg);
     return newMsg;
   }
 
@@ -650,6 +449,10 @@ export class AppwriteDatabase {
     });
     this.saveToStorage();
     this.logTransaction('TOGGLE_HUB_REACTION', 'HubMessages', `msgId: ${msgId}, emoji: ${emoji}`);
+    const updated = this.hubMessages.find(m => m.id === msgId);
+    if (updated) {
+      this.saveToAppwrite('hub_messages', msgId, updated);
+    }
   }
 
   toggleHubSolved(msgId: string): void {
@@ -661,6 +464,10 @@ export class AppwriteDatabase {
     });
     this.saveToStorage();
     this.logTransaction('TOGGLE_HUB_SOLVED', 'HubMessages', `msgId: ${msgId}`);
+    const updated = this.hubMessages.find(m => m.id === msgId);
+    if (updated) {
+      this.saveToAppwrite('hub_messages', msgId, updated);
+    }
   }
 
   // --- Events CRUD ---
@@ -676,6 +483,7 @@ export class AppwriteDatabase {
     this.events.push(newEvent);
     this.saveToStorage();
     this.logTransaction('INSERT_EVENT_RECORD', 'ScheduleEvents', JSON.stringify(newEvent));
+    this.saveToAppwrite('events', newEvent.id, newEvent);
     return newEvent;
   }
 
@@ -683,6 +491,7 @@ export class AppwriteDatabase {
     this.events = this.events.map(e => e.id === event.id ? event : e);
     this.saveToStorage();
     this.logTransaction('UPDATE_EVENT_RECORD', 'ScheduleEvents', JSON.stringify(event));
+    this.saveToAppwrite('events', event.id, event);
   }
 
   // --- Curricula CRUD ---
@@ -700,6 +509,7 @@ export class AppwriteDatabase {
     this.curricula.push(newCurriculum);
     this.saveToStorage();
     this.logTransaction('PROPOSE_CURRICULUM_RECORD', 'Curricula', JSON.stringify(newCurriculum));
+    this.saveToAppwrite('curricula', newCurriculum.id, newCurriculum);
     return newCurriculum;
   }
 
@@ -707,6 +517,7 @@ export class AppwriteDatabase {
     this.curricula = this.curricula.map(c => c.id === curriculum.id ? curriculum : c);
     this.saveToStorage();
     this.logTransaction('UPDATE_CURRICULUM_RECORD', 'Curricula', JSON.stringify(curriculum));
+    this.saveToAppwrite('curricula', curriculum.id, curriculum);
   }
 
   // --- Assignments CRUD ---
@@ -723,6 +534,7 @@ export class AppwriteDatabase {
     this.assignments.push(newAssignment);
     this.saveToStorage();
     this.logTransaction('CREATE_ASSIGNMENT_RECORD', 'Assignments', JSON.stringify(newAssignment));
+    this.saveToAppwrite('assignments', newAssignment.id, newAssignment);
     return newAssignment;
   }
 
@@ -730,6 +542,7 @@ export class AppwriteDatabase {
     this.assignments = this.assignments.map(a => a.id === assignment.id ? assignment : a);
     this.saveToStorage();
     this.logTransaction('UPDATE_ASSIGNMENT_RECORD', 'Assignments', JSON.stringify(assignment));
+    this.saveToAppwrite('assignments', assignment.id, assignment);
   }
 
   // --- Teams CRUD ---
@@ -741,6 +554,7 @@ export class AppwriteDatabase {
     this.teams = this.teams.map(t => t.id === team.id ? team : t);
     this.saveToStorage();
     this.logTransaction('UPDATE_TEAM_RECORD', 'Teams', JSON.stringify(team));
+    this.saveToAppwrite('teams', team.id, team);
   }
 
   // --- Certificates CRUD ---
@@ -762,6 +576,7 @@ export class AppwriteDatabase {
     this.certificates.push(newCert);
     this.saveToStorage();
     this.logTransaction('ISSUE_VERIFIED_CERTIFICATE', 'Certificates', JSON.stringify(newCert));
+    this.saveToAppwrite('certificates', newCert.id, newCert);
     return newCert;
   }
 
@@ -779,17 +594,26 @@ export class AppwriteDatabase {
     };
     this.notifications.push(newNotif);
     this.saveToStorage();
+    this.saveToAppwrite('notifications', newNotif.id, newNotif);
     return newNotif;
   }
 
   markAllNotificationsRead(userId: string) {
-    this.notifications = this.notifications.map(n => n.userId === userId ? { ...n, read: true } : n);
+    this.notifications = this.notifications.map(n => {
+      if (n.userId === userId) {
+        const updated = { ...n, read: true };
+        this.saveToAppwrite('notifications', n.id, updated);
+        return updated;
+      }
+      return n;
+    });
     this.saveToStorage();
   }
 
   clearNotification(id: string) {
     this.notifications = this.notifications.filter(n => n.id !== id);
     this.saveToStorage();
+    this.saveToAppwrite('notifications', id, null, true);
   }
 
   // --- Transaction Logs CR ---
@@ -819,6 +643,7 @@ export class AppwriteDatabase {
     this.enrollments.push(newEnr);
     this.saveToStorage();
     this.logTransaction('INITIATE_COURSE_PAYMENT', 'CourseEnrollments', JSON.stringify(newEnr));
+    this.saveToAppwrite('enrollments', newEnr.id, newEnr);
     return newEnr;
   }
 
@@ -826,6 +651,7 @@ export class AppwriteDatabase {
     this.enrollments = this.enrollments.map(e => e.id === enr.id ? enr : e);
     this.saveToStorage();
     this.logTransaction('UPDATE_COURSE_ENROLLMENT', 'CourseEnrollments', JSON.stringify(enr));
+    this.saveToAppwrite('enrollments', enr.id, enr);
   }
 }
 

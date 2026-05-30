@@ -469,11 +469,24 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
 
       </div>
 
-      {/* Toast Alert Box */}
+      {/* Centered Modal for Alerts & Confirmations */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 bg-black text-white px-5 py-3.5 rounded-2xl border border-zinc-800 shadow-2xl z-50 flex items-center gap-2.5 max-w-sm animate-in slide-in-from-bottom duration-300 select-none">
-          <div className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
-          <span className="text-xs font-light">{toastMessage}</span>
+        <div id="toast-modal-overlay" className="fixed inset-0 bg-brand-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-55 animate-in fade-in duration-150 select-none">
+          <div className="bg-white border border-zinc-150 rounded-2xl p-6 shadow-xl max-w-sm w-full text-center space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center mx-auto text-brand-yellow">
+              <CheckCircle2 size={24} />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-brand-black">Instruction Alert</h3>
+              <p className="text-xs font-light text-zinc-650 leading-normal">{toastMessage}</p>
+            </div>
+            <button
+              onClick={() => setToastMessage(null)}
+              className="bg-brand-black hover:bg-zinc-850 text-white text-xs font-light tracking-wide uppercase px-4 py-2.5 rounded-xl transition-all w-full cursor-pointer"
+            >
+              Okay
+            </button>
+          </div>
         </div>
       )}
 
@@ -640,10 +653,10 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
         <div id="student-register-courses-view" className="space-y-6 animate-in fade-in duration-200">
           <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs">
             <h3 className="text-sm font-light tracking-tight text-brand-black mb-1">
-              Course Enrollment Panel // <span className="font-semibold text-brand-yellow">Micro-Degree Registries</span>
+              Join New Classes // <span className="font-semibold text-brand-yellow">Available Courses</span>
             </h3>
             <p className="text-xs text-brand-gray font-light mb-6">
-              As a design mentee, register on other curricula below. Enrolling automatically allocates introductory milestones and routes your progress logs directly into active tutor evaluation channels.
+              Sign up for our classes below. When you join, we will give you beginner projects, and your teacher will help check your work and keep track of your progress here.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

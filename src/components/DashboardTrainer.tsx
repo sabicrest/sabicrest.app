@@ -353,23 +353,36 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
 
         <div className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs">
           <div className="flex items-center justify-between text-zinc-400 mb-3">
-            <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Assigned Mentees</span>
+            <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">My Students</span>
             <FileText size={16} className="text-brand-yellow" />
           </div>
           <div className="text-3xl font-light text-brand-black tracking-tight">
             <span>{coachedStudentsCount}</span>
             <span className="text-xs text-indigo-600 ml-2 font-light">Students</span>
           </div>
-          <p className="text-[10px] font-light text-brand-gray mt-2">Connecting design learners & layout designers across academic collaboration channels.</p>
+          <p className="text-[10px] font-light text-brand-gray mt-2">Connecting students and teachers together for learning and sharing work.</p>
         </div>
 
       </div>
 
-      {/* Toast Alert Feedback */}
+      {/* Centered Modal for Alerts & Confirmations */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 bg-black text-white px-5 py-3.5 rounded-2xl border border-zinc-800 shadow-2xl z-50 flex items-center gap-2.5 max-w-sm animate-in slide-in-from-bottom duration-300 select-none">
-          <div className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
-          <span className="text-xs font-light">{toastMessage}</span>
+        <div id="toast-modal-overlay-trainer" className="fixed inset-0 bg-brand-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-55 animate-in fade-in duration-150 select-none">
+          <div className="bg-white border border-zinc-150 rounded-2xl p-6 shadow-xl max-w-sm w-full text-center space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center mx-auto text-brand-yellow">
+              <CheckCircle2 size={24} />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-brand-black">Mentor Alert</h3>
+              <p className="text-xs font-light text-zinc-650 leading-normal">{toastMessage}</p>
+            </div>
+            <button
+              onClick={() => setToastMessage(null)}
+              className="bg-brand-black hover:bg-zinc-850 text-white text-xs font-light tracking-wide uppercase px-4 py-2.5 rounded-xl transition-all w-full cursor-pointer"
+            >
+              Okay
+            </button>
+          </div>
         </div>
       )}
 
@@ -598,7 +611,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                   type="submit"
                   className="bg-brand-black hover:bg-zinc-900 text-white px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider cursor-pointer font-light transition-colors"
                 >
-                  Save Coach credentials
+                  Save Profile Information
                 </button>
               </div>
 
@@ -610,14 +623,14 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
             
             <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs space-y-4">
               <h4 className="text-xs font-semibold uppercase tracking-wider text-brand-black border-b border-zinc-50 pb-2 flex items-center gap-1.5 font-light">
-                <Sliders size={13} className="text-brand-yellow" /> Mentor Workspace Options
+                <Sliders size={13} className="text-brand-yellow" /> App Settings
               </h4>
 
               <div className="space-y-3 pt-1">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[11px] font-medium text-brand-black block leading-none">Submission Alerts</span>
-                    <span className="text-[9px] text-zinc-400 block">Deliver immediate emails on student work uploads</span>
+                    <span className="text-[11px] font-medium text-brand-black block leading-none">Work Alerts</span>
+                    <span className="text-[9px] text-zinc-400 block">Email me as soon as a student submits homework</span>
                   </div>
                   <input
                     type="checkbox"
@@ -629,8 +642,8 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[11px] font-medium text-brand-black block leading-none">Admin Workspace Sync</span>
-                    <span className="text-[9px] text-zinc-400 block">Autoshare curricula reviews in slack channels</span>
+                    <span className="text-[11px] font-medium text-brand-black block leading-none">Work Updates</span>
+                    <span className="text-[9px] text-zinc-400 block">Share course reviews in team channels</span>
                   </div>
                   <input
                     type="checkbox"
@@ -642,8 +655,8 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[11px] font-medium text-brand-black block leading-none">Grade chime trigger</span>
-                    <span className="text-[9px] text-zinc-400 block">Acoustic chimes sound upon secure certificate issuance</span>
+                    <span className="text-[11px] font-medium text-brand-black block leading-none">Alert Sounds</span>
+                    <span className="text-[9px] text-zinc-400 block">Play a sound when a certificate is given to a student</span>
                   </div>
                   <input
                     type="checkbox"

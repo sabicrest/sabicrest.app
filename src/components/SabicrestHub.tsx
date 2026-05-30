@@ -33,6 +33,7 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
   const [activeTag, setActiveTag] = useState<'all' | 'general' | 'question' | 'collab' | 'idea'>('all');
   const [typedMsg, setTypedMsg] = useState('');
   const [selectedTag, setSelectedTag] = useState<'general' | 'question' | 'collab' | 'idea'>('general');
+  const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
   // WhatsApp-style reply quote state
@@ -515,20 +516,46 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
           {/* Secure text submission box */}
           <form id="hub-input-form" onSubmit={handleSend} className="p-4 border-t border-zinc-100 bg-white flex flex-col md:flex-row gap-3">
             
-            {/* Tag pick select list */}
-            <div className="flex items-center gap-1 bg-zinc-50 rounded-xl px-2.5 py-1 text-xs shrink-0 max-w-max border border-zinc-100">
-              <span className="text-[9px] font-semibold text-zinc-400 uppercase tracking-widest mr-1">Post in:</span>
-              <select
-                id="select-post-tag"
-                value={selectedTag}
-                onChange={(e) => setSelectedTag(e.target.value as any)}
-                className="bg-transparent border-none text-[10px] uppercase font-semibold text-brand-black focus:outline-hidden cursor-pointer h-8"
+            {/* Category Selector */}
+            <div className="relative flex items-center shrink-0">
+              <button
+                type="button"
+                id="select-post-tag-btn"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsTagDropdownOpen(!isTagDropdownOpen);
+                }}
+                className="flex items-center gap-1.5 bg-zinc-50 hover:bg-zinc-100 transition-all rounded-xl px-3 py-2 text-xs border border-zinc-100 font-semibold text-brand-black cursor-pointer h-11"
               >
-                <option value="general">#general</option>
-                <option value="question">#question</option>
-                <option value="collab">#collab</option>
-                <option value="idea">#idea</option>
-              </select>
+                <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Post in:</span>
+                <span className="text-brand-yellow">#</span>
+                <span>{selectedTag}</span>
+                <span className="text-[8px] text-zinc-400 ml-1">▼</span>
+              </button>
+
+              {isTagDropdownOpen && (
+                <div 
+                  id="tag-dropdown-list" 
+                  className="absolute left-0 bottom-full mb-2 bg-white border border-zinc-150 rounded-xl shadow-lg py-1.5 z-50 w-36 animate-in fade-in slide-in-from-bottom-2 duration-150"
+                >
+                  {(['general', 'question', 'collab', 'idea'] as const).map(tag => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        setSelectedTag(tag);
+                        setIsTagDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-xs hover:bg-zinc-50 transition-colors flex items-center gap-1.5 ${
+                        selectedTag === tag ? 'text-brand-black font-semibold bg-zinc-50' : 'text-zinc-650 font-light'
+                      }`}
+                    >
+                      <span className="text-brand-yellow">#</span>
+                      <span>{tag}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="flex-1 flex gap-2">

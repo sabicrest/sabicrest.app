@@ -527,7 +527,7 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
               <button 
                 onClick={() => setTransactions(db.getTransactions())}
                 className="text-zinc-500 hover:text-brand-black cursor-pointer"
-                title="Force Refresh Sync"
+                title="Refresh Logs"
               >
                 <RefreshCw size={11} />
               </button>
@@ -558,29 +558,29 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
             </div>
 
             <p className="text-[9px] text-zinc-400 italic mt-3 text-right">
-              Logs represent secure cloud database operations.
+              This list shows recent updates on our server.
             </p>
           </div>
 
           <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs">
             <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase mb-4 flex items-center gap-1.5 font-light">
-              <Settings size={13} className="text-brand-yellow" /> Administration Guidelines
+              <Settings size={13} className="text-brand-yellow" /> Guidelines for Admins
             </h3>
 
             <div className="space-y-4">
               <div className="bg-zinc-50 p-3.5 rounded-xl text-xs font-light text-zinc-500 leading-relaxed border border-zinc-100">
-                <span className="font-semibold text-brand-black block mb-1 text-[11px]">Approval Policy</span>
-                Verify syllabus programs cover adequate scope and milestones before granting approval. Provide specific rejection criteria if the course lacks practical modules.
+                <span className="font-semibold text-brand-black block mb-1 text-[11px]">Course Approvals</span>
+                Check that a course has good lessons and tasks before letting it launch. If a course is not ready, tell the teacher what they can do to fix it.
               </div>
 
               <div className="bg-zinc-50 p-3.5 rounded-xl text-xs font-light text-zinc-500 leading-relaxed border border-zinc-100">
-                <span className="font-semibold text-brand-black block mb-1 text-[11px]">Instructor Verification</span>
-                Instructors can design specialized curricula once approved. Ensure all instructional credentials have been vetted correctly inside active registries.
+                <span className="font-semibold text-brand-black block mb-1 text-[11px]">Teacher Verification</span>
+                Teachers can design classes once they are approved. Make sure we check their background information before approving them.
               </div>
 
               <div className="bg-zinc-55 p-3.5 rounded-xl text-xs font-light text-zinc-500 leading-relaxed border border-zinc-100">
-                <span className="font-semibold text-brand-black block mb-1 text-[11px]">User Accounts Safeguards</span>
-                Suspended users will lose instant entry access. Suspend accounts that violate cooperation guidelines or display inappropriate behaviors.
+                <span className="font-semibold text-brand-black block mb-1 text-[11px]">User Account Security</span>
+                Block any accounts that violate our rules, use unkind language, or disrupt the learning environment. Blocked users will not be able to log in.
               </div>
             </div>
           </div>

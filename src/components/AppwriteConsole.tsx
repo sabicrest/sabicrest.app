@@ -53,7 +53,11 @@ export default function AppwriteConsole() {
         <div id="console-title-container" className="flex items-center gap-2">
           <Terminal size={14} className="text-brand-yellow animate-pulse" />
           <span className="font-light tracking-wide text-zinc-300">
-            APPWRITE SECURE SERVERLESS ENGINE & DB CONSOLE — <span className="text-brand-yellow">ACTIVE (SECURE GCM)</span>
+            APPWRITE SECURE SERVERLESS ENGINE & DB CONSOLE — <span className="text-brand-yellow">
+              {import.meta.env.VITE_APPWRITE_PROJECT_ID 
+                ? `CONNECTED LIVE (Project ID: ${import.meta.env.VITE_APPWRITE_PROJECT_ID})` 
+                : 'OFFLINE GATEWAY STORE — (Set VITE_APPWRITE_PROJECT_ID for live Appwrite cloud DB)'}
+            </span>
           </span>
         </div>
         
@@ -79,16 +83,18 @@ export default function AppwriteConsole() {
               </h4>
               <div className="space-y-2 text-zinc-300">
                 <div className="flex justify-between border-b border-zinc-900 pb-1">
-                  <span className="text-zinc-500">Cloud Provider:</span>
-                  <span>Appwrite Serverless</span>
+                  <span className="text-zinc-500">Database ID:</span>
+                  <span className="font-semibold text-brand-yellow">sabicrest_db</span>
                 </div>
                 <div className="flex justify-between border-b border-zinc-900 pb-1">
-                  <span className="text-zinc-500">Active Node:</span>
-                  <span className="text-right text-[10px]">{stats.activeReplica}</span>
+                  <span className="text-zinc-500">Active Project:</span>
+                  <span className="text-right text-[10px] font-mono font-semibold text-zinc-100">
+                    {import.meta.env.VITE_APPWRITE_PROJECT_ID || 'Local Sim State'}
+                  </span>
                 </div>
                 <div className="flex justify-between border-b border-zinc-900 pb-1">
                   <span className="text-zinc-500">Security Layer:</span>
-                  <span className="text-emerald-400">AES-256-GCM CBC</span>
+                  <span className="text-emerald-400">AES-256-GCM SSL</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-zinc-500">Encrypted Writes:</span>

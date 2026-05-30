@@ -3,6 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+declare global {
+  interface ImportMeta {
+    readonly env: Record<string, string | undefined>;
+  }
+}
+
 // User roles in the Sabicrest platform
 export type UserRole = 'student' | 'trainer' | 'admin';
 

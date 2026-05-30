@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, NotificationAlert } from '../types';
 import { db } from '../db';
-import { Sliders, Bell, User as UserIcon, Mail, Phone, MapPin, Activity, SlidersHorizontal, BookOpen, UserCheck, ShieldAlert } from 'lucide-react';
+import { Sliders, Bell, User as UserIcon, Mail, Phone, MapPin, Activity, SlidersHorizontal, BookOpen, UserCheck, ShieldAlert, CheckCircle2 } from 'lucide-react';
 
 interface StudentSettingsProps {
   currentUser: User;
@@ -126,11 +126,24 @@ export default function StudentSettings({ currentUser }: StudentSettingsProps) {
   return (
     <div id="student-settings-page" className="max-w-7xl mx-auto px-4 py-8 select-none animate-in fade-in duration-300">
       
-      {/* Toast Alert Feedback */}
+      {/* Centered Modal for Alerts & Confirmations */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 bg-black text-white px-5 py-3.5 rounded-2xl border border-zinc-800 shadow-2xl z-50 flex items-center gap-2.5 max-w-sm animate-in slide-in-from-bottom duration-300 select-none">
-          <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping shrink-0" />
-          <span className="text-xs font-light">{toastMessage}</span>
+        <div id="toast-modal-overlay-settings" className="fixed inset-0 bg-brand-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-55 animate-in fade-in duration-150 select-none">
+          <div className="bg-white border border-zinc-150 rounded-2xl p-6 shadow-xl max-w-sm w-full text-center space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center mx-auto text-brand-yellow">
+              <CheckCircle2 size={24} />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-brand-black">Settings Alert</h3>
+              <p className="text-xs font-light text-zinc-650 leading-normal">{toastMessage}</p>
+            </div>
+            <button
+              onClick={() => setToastMessage(null)}
+              className="bg-brand-black hover:bg-zinc-850 text-white text-xs font-light tracking-wide uppercase px-4 py-2.5 rounded-xl transition-all w-full cursor-pointer"
+            >
+              Okay
+            </button>
+          </div>
         </div>
       )}
 
