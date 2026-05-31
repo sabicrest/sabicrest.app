@@ -148,7 +148,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
   if (isAdminMode) {
     return (
-      <div id="login-container-card" className="min-h-screen bg-white flex flex-col justify-center items-center px-4 relative overflow-hidden select-none">
+      <div id="login-container-card" className="min-h-screen bg-white flex flex-col justify-center items-center px-4 relative overflow-hidden">
         
         {/* Decorative clean ambient ring */}
         <div id="ambient-ring-login" className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-brand-yellow/5 pointer-events-none blur-3xl"></div>
@@ -173,9 +173,9 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             </div>
           )}
 
-          {!secCodeSent ? (
+           {!secCodeSent ? (
             /* Step 1: Request OTP Code */
-            <form id="admin-request-form" onSubmit={(e) => {
+            <form id="admin-request-form" onSubmit={async (e) => {
               e.preventDefault();
               if (!adminEmail) {
                 setErrorMessage('Please enter your administrator email.');
@@ -183,12 +183,26 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               }
               setLoading(true);
               setErrorMessage('');
-              setTimeout(() => {
-                const randomCode = Math.floor(100000 + Math.random() * 900000).toString();
-                setGeneratedSecCode(randomCode);
+              try {
+                const res = await fetch('/api/admin/request-code', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email: adminEmail.trim() })
+                });
+                const data = await res.json();
+                if (!res.ok || data.success === false) {
+                  throw new Error(data.error || 'Failed to generate security code.');
+                }
+                if (data.debugCode) {
+                  console.log(`%c[Sabicrest Admin Console Bypass %c● ACTIVE%c] Security Code: %c${data.debugCode}`, "color: #94a3b8; font-weight: bold;", "color: #10b981; font-weight: bold;", "color: #94a3b8;", "color: #f59e0b; font-weight: bold; font-family: monospace; font-size: 14px; background: #0f172a; padding: 2px 6px; border-radius: 4px;");
+                }
                 setSecCodeSent(true);
+              } catch (err: any) {
+                console.error('Request code error:', err);
+                setErrorMessage(err.message || 'An error occurred during verification code generation.');
+              } finally {
                 setLoading(false);
-              }, 800);
+              }
             }} className="space-y-4">
               <div id="admin-field-email">
                 <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Administrator Email</label>
@@ -233,32 +247,21 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 setErrorMessage('Please enter the 6-digit security code.');
                 return;
               }
-              if (secCode !== generatedSecCode) {
-                setErrorMessage('Invalid verification code. Please check and try again.');
-                return;
-              }
               
               setLoading(true);
               setErrorMessage('');
               try {
-                const users = await db.fetchLiveUsers();
-                let matched = users.find(u => u.email.toLowerCase() === adminEmail.toLowerCase() && u.role === 'admin');
-                
-                if (!matched) {
-                  // Admin auto-signs up for absolute clean production readiness!
-                  matched = {
-                    id: `u-admin-${Date.now()}`,
-                    name: 'System Administrator',
-                    email: adminEmail.trim().toLowerCase(),
-                    role: 'admin',
-                    verified: true,
-                    joinedDate: new Date().toISOString().split('T')[0],
-                    status: 'active',
-                    bio: 'Core Platform Overseer at Sabicrest.',
-                    skills: []
-                  };
-                  await db.addUserAsync(matched);
+                const res = await fetch('/api/admin/verify-code', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email: adminEmail.trim(), code: secCode.trim() })
+                });
+                const data = await res.json();
+                if (!res.ok || data.success === false) {
+                  throw new Error(data.error || 'Invalid verification code.');
                 }
+                
+                const matched = data.user;
                 
                 db.addNotification({
                   userId: matched.id,
@@ -277,14 +280,10 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             }} className="space-y-4">
               
               <div id="simulated-code-toast" className="p-4 bg-amber-50/50 border border-amber-100 rounded-2xl flex flex-col gap-1 select-text">
-                <span className="text-[10px] font-semibold text-amber-800 uppercase tracking-widest">Simulated Secure Inbox</span>
+                <span className="text-[10px] font-semibold text-amber-800 uppercase tracking-widest">Inbox Transpatched</span>
                 <p className="text-xs font-light text-zinc-750 leading-relaxed">
-                  A temporary security key was dispatched to <strong className="font-medium text-brand-black">{adminEmail}</strong>.
+                  A temporary security key has been dispatched to <strong className="font-medium text-brand-black">{adminEmail}</strong>. Please check your inbox for the 6-digit access code.
                 </p>
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-[10px] font-mono select-none text-zinc-400">Security Code:</span>
-                  <span className="text-xs font-mono font-bold tracking-widest text-brand-black bg-white px-2.5 py-1 border border-zinc-150 rounded-lg">{generatedSecCode}</span>
-                </div>
               </div>
 
               <div id="admin-field-code">
@@ -294,10 +293,12 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                   <input
                     id="admin-input-code"
                     type="text"
-                    maxLength={6}
                     placeholder="E.g., 123456"
                     value={secCode}
-                    onChange={(e) => setSecCode(e.target.value.replace(/\D/g, ''))}
+                    onChange={(e) => {
+                      const cleaned = e.target.value.replace(/\D/g, '').slice(0, 6);
+                      setSecCode(cleaned);
+                    }}
                     className="w-full text-sm font-semibold tracking-widest text-center bg-brand-light border border-zinc-100 rounded-xl px-4 py-3 focus:outline-hidden focus:border-brand-yellow transition-all"
                     required
                   />
@@ -326,13 +327,33 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               <div className="text-center pt-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    const randomCode = Math.floor(100000 + Math.random() * 900000).toString();
-                    setGeneratedSecCode(randomCode);
-                    setSecCode('');
+                  onClick={async () => {
+                    setLoading(true);
                     setErrorMessage('');
+                    try {
+                      const res = await fetch('/api/admin/request-code', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: adminEmail.trim() })
+                      });
+                      const data = await res.json();
+                      if (!res.ok || data.success === false) {
+                        throw new Error(data.error || 'Failed to dispatch security code.');
+                      }
+                      if (data.debugCode) {
+                        console.log(`%c[Sabicrest Admin Console Bypass %c● RESENT%c] Security Code: %c${data.debugCode}`, "color: #94a3b8; font-weight: bold;", "color: #eab308; font-weight: bold;", "color: #94a3b8;", "color: #f59e0b; font-weight: bold; font-family: monospace; font-size: 14px; background: #0f172a; padding: 2px 6px; border-radius: 4px;");
+                      }
+                      setSecCode('');
+                      setErrorMessage('');
+                    } catch (err: any) {
+                      console.error(err);
+                      setErrorMessage(err.message || 'An error occurred while generating security code.');
+                    } finally {
+                      setLoading(false);
+                    }
                   }}
-                  className="text-[11px] font-light text-zinc-400 hover:text-brand-black transition-colors"
+                  disabled={loading}
+                  className="text-[11px] font-light text-zinc-400 hover:text-brand-black transition-colors disabled:opacity-50"
                 >
                   Resend security code
                 </button>
@@ -371,7 +392,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   }
 
   return (
-    <div id="login-container-card" className="min-h-screen bg-white flex flex-col justify-center items-center px-4 relative overflow-hidden select-none">
+    <div id="login-container-card" className="min-h-screen bg-white flex flex-col justify-center items-center px-4 relative overflow-hidden">
       
       {/* Decorative clean ambient ring */}
       <div id="ambient-ring-login" className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-brand-yellow/5 pointer-events-none blur-3xl"></div>
