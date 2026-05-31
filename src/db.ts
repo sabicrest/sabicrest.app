@@ -23,7 +23,9 @@ let appwriteDatabases: Databases | null = null;
 let appwriteAccount: Account | null = null;
 
 export function getAppwriteClient(): Client | null {
-  const endpoint = import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
+  const endpoint = import.meta.env.VITE_APPWRITE_ENDPOINT && !import.meta.env.VITE_APPWRITE_ENDPOINT.includes('fra.cloud.appwrite.io')
+    ? import.meta.env.VITE_APPWRITE_ENDPOINT
+    : `${window.location.origin}/api/appwrite-proxy`;
   const projectId = import.meta.env.VITE_APPWRITE_PROJECT_ID || '6a19e810001156433516';
   if (!projectId) {
     return null;

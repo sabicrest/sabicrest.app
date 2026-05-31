@@ -28,71 +28,9 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   // Secure Admin Login state
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [adminEmail, setAdminEmail] = useState('');
-  const [secCode, setSecCode] = useState('');
-  const [generatedSecCode, setGeneratedSecCode] = useState<string | null>(null);
-  const [secCodeSent, setSecCodeSent] = useState(false);
-
-  // Magic URL token verification states
-  const [magicLinkVerifying, setMagicLinkVerifying] = useState(false);
-  const [magicLinkSuccess, setMagicLinkSuccess] = useState(false);
-
-  useEffect(() => {
-    const checkMagicURLCallback = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const userId = params.get('userId');
-      const secret = params.get('secret');
-
-      if (userId && secret) {
-        setIsAdminMode(true);
-        setMagicLinkVerifying(true);
-        setErrorMessage('');
-        try {
-          const account = getAppwriteAccount();
-          if (!account) {
-            throw new Error('Appwrite services are not initialized.');
-          }
-
-          // 1. Complete authentication natively in Appwrite
-          await account.updateMagicURLSession(userId, secret);
-
-          // 2. Clear query parameters cleanly from browser context URL
-          window.history.replaceState({}, document.title, window.location.pathname);
-
-          // 3. User is verified! Read their registered email from authentication system
-          const appwriteUser = await account.get();
-          const email = appwriteUser.email;
-
-          // 4. Load full profile info (bio, name, status, role etc.) matching database
-          const res = await fetch('/api/admin/get-profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email })
-          });
-          const data = await res.json();
-          if (!res.ok || !data.success) {
-            throw new Error(data.error || 'Identity matching backend profile search returned failure.');
-          }
-
-          db.addNotification({
-            userId: data.user.id,
-            title: 'Secure Administrator Session Instantiated',
-            message: 'Workspace access unlocked via secure corporate Magic URL verification.',
-            type: 'system'
-          });
-
-          setMagicLinkSuccess(true);
-          onLoginSuccess(data.user);
-        } catch (err: any) {
-          console.error('Magic URL authentication error:', err);
-          setErrorMessage(err.message || 'The magic link has expired or is invalid. Please enter your email to request a new link.');
-        } finally {
-          setMagicLinkVerifying(false);
-        }
-      }
-    };
-
-    checkMagicURLCallback();
-  }, []);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
 
   // Custom standard login
   const handleCustomSubmit = async (e: React.FormEvent) => {
@@ -209,6 +147,93 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   };
 
   if (isAdminMode) {
+    const handleAdminEmailSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!adminEmail) {
+        setErrorMessage('Please enter your administrator email.');
+        return;
+      }
+      setLoading(true);
+      setErrorMessage('');
+      try {
+        // 1. Verify existence of the email in Appwrite Auth and database users collection
+        const res = await fetch('/api/admin/verify-admin-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: adminEmail.trim() })
+        });
+        const data = await res.json();
+        if (!res.ok || data.success === false) {
+          throw new Error(data.error || 'Identity checks failed. Restricted portal entry access denied.');
+        }
+        
+        // Email verified successfully! Go to step 2
+        setIsEmailVerified(true);
+        setErrorMessage('');
+      } catch (err: any) {
+        console.error('Email verification error:', err);
+        setErrorMessage(err.message || 'An error occurred during administrator search.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const handleAdminPasswordSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!adminPassword) {
+        setErrorMessage('Please enter your account security password.');
+        return;
+      }
+      setLoading(true);
+      setErrorMessage('');
+      try {
+        const account = getAppwriteAccount();
+        if (!account) {
+          throw new Error('Appwrite services are not configured in the application environment.');
+        }
+
+        // Try creating a direct session in Appwrite natively using the client-side SDK.
+        try {
+          // Attempt modern SDK standard
+          await account.createEmailPasswordSession(adminEmail.trim(), adminPassword);
+        } catch (sessionErr: any) {
+          if (sessionErr.message && sessionErr.message.includes('not a function')) {
+            // Fallback for older SDK
+            await (account as any).createEmailSession(adminEmail.trim(), adminPassword);
+          } else {
+            throw sessionErr;
+          }
+        }
+
+        // Fetch the matched profile from database to inject user state
+        const res = await fetch('/api/admin/get-profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: adminEmail.trim() })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Identity confirmed in Auth list, but failed to load corresponding profile.');
+        }
+
+        db.addNotification({
+          userId: data.user.id,
+          title: 'Secure Administrator Session Estantiated',
+          message: 'Workspace access unlocked via verified account credentials.',
+          type: 'system'
+        });
+
+        // Clear Admin Password state
+        setAdminPassword('');
+        onLoginSuccess(data.user);
+      } catch (err: any) {
+        console.error('Password authentication error:', err);
+        setErrorMessage(err.message || 'The password entered is incorrect or credentials were rejected by Appwrite.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     return (
       <div id="login-container-card" className="min-h-screen bg-white flex flex-col justify-center items-center px-4 relative overflow-hidden">
         
@@ -235,68 +260,11 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             </div>
           )}
 
-          {magicLinkVerifying ? (
-            /* Layout Mode: Currently Decrypting and Verifying the Link Callback */
-            <div className="flex flex-col items-center justify-center py-10 text-center space-y-4">
-              <Shield size={44} className="animate-spin text-amber-500" />
-              <h3 className="text-lg font-light tracking-tight text-brand-black">Authenticating Admin Session</h3>
-              <p className="text-xs font-light text-zinc-400 max-w-xs leading-relaxed">
-                Decrypting Magic URL security credentials and mapping your database administrator roles. Please wait...
-              </p>
-            </div>
-          ) : magicLinkSuccess ? (
-            /* Layout Mode: Authentication Complete and Loading Dashboard */
-            <div className="flex flex-col items-center justify-center py-10 text-center space-y-4">
-              <CheckCircle2 size={44} className="text-emerald-500 animate-bounce" />
-              <h3 className="text-md font-medium tracking-tight text-brand-black">Access Confirmed</h3>
-              <p className="text-xs font-light text-zinc-400 leading-relaxed max-w-xs">
-                Credentials approved by Appwrite. Instantiating secure workspace environment...
-              </p>
-            </div>
-          ) : !secCodeSent ? (
-            /* Step 1: Request Email address for magic link URL */
-            <form id="admin-request-form" onSubmit={async (e) => {
-              e.preventDefault();
-              if (!adminEmail) {
-                setErrorMessage('Please enter your administrator email.');
-                return;
-              }
-              setLoading(true);
-              setErrorMessage('');
-              try {
-                // 1. Confirm with our backend that the user is actually registered as an administrator
-                const res = await fetch('/api/admin/request-code', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ email: adminEmail.trim() })
-                });
-                const data = await res.json();
-                if (!res.ok || data.success === false) {
-                  throw new Error(data.error || 'Identity checks failed. Restricted portal entry access denied.');
-                }
-
-                // 2. Resolve account initialization natively in Appwrite client
-                const account = getAppwriteAccount();
-                if (!account) {
-                  throw new Error('Appwrite services are not configured in the application environment.');
-                }
-
-                const appwriteUserId = data.appwriteUserId || 'unique';
-                const redirectUrl = `${window.location.origin}/`;
-
-                console.log(`Requesting Appwrite Magic URL token for ${adminEmail} (User ID: ${appwriteUserId})`);
-                await account.createMagicURLToken(appwriteUserId, adminEmail.trim(), redirectUrl);
-                
-                setSecCodeSent(true);
-              } catch (err: any) {
-                console.error('Magic URL request failure:', err);
-                setErrorMessage(err.message || 'An error occurred triggering authorization token routing.');
-              } finally {
-                setLoading(false);
-              }
-            }} className="space-y-4">
+          {!isEmailVerified ? (
+            /* Step 1: Request Email address and verify identity in database */
+            <form id="admin-request-form" onSubmit={handleAdminEmailSubmit} className="space-y-4">
               <div id="admin-field-email">
-                <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Administrator Email</label>
+                <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">Administrator Email</label>
                 <div className="relative">
                   <Mail size={14} className="absolute left-4 top-4 text-zinc-300" />
                   <input
@@ -305,7 +273,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                     placeholder="E.g., CAO officialsabicrest@gmail.com"
                     value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
-                    className="w-full text-sm font-light bg-brand-light border border-zinc-100 rounded-xl pl-10 pr-4 py-3 focus:outline-hidden focus:border-brand-yellow transition-all"
+                    className="w-full text-sm font-light bg-brand-light border border-zinc-100 rounded-xl pl-10 pr-4 py-3 focus:outline-hidden focus:border-brand-yellow transition-all text-black"
                     required
                   />
                 </div>
@@ -325,76 +293,78 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 ) : (
                   <span className="flex items-center gap-1.5">
                     <Key size={12} className="text-brand-yellow" />
-                    Send Magic URL Link
+                    Verify Admin Identity
                   </span>
                 )}
               </button>
             </form>
           ) : (
-            /* Step 2: Confirming dispatch of Link to inbox */
-            <div id="magic-link-sent-info" className="space-y-6 text-center py-4">
-              <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto transition-transform hover:scale-105 duration-150">
-                <Mail size={30} className="stroke-1.5" />
-              </div>
+            /* Step 2: Confirm password registered natively in Appwrite */
+            <form id="admin-password-form" onSubmit={handleAdminPasswordSubmit} className="space-y-4 animate-in fade-in duration-155">
               
-              <div className="space-y-2">
-                <h3 className="text-md font-medium text-black">Magic Login URL Dispatched</h3>
-                <p className="text-xs font-light text-zinc-500 leading-relaxed max-w-sm mx-auto">
-                  A unique, secure authorization link has been routed to <strong className="font-medium text-zinc-850 select-all">{adminEmail}</strong> via Appwrite's secure mailing systems.
-                </p>
-              </div>
-
-              <div className="p-4 bg-zinc-50 border border-zinc-150 rounded-2xl text-[11px] font-light text-zinc-500 space-y-2 text-left">
-                <div className="font-semibold text-black uppercase tracking-wider text-[9px] flex items-center gap-1">
-                  <Shield size={10} className="text-amber-500" />
-                  Security Connection Rules
+              {/* Display verified email */}
+              <div id="admin-verified-email-badge" className="p-3 bg-zinc-50 border border-zinc-100 rounded-xl flex items-center justify-between text-xs mb-2">
+                <div className="flex flex-col">
+                  <span className="text-[9px] text-zinc-400 uppercase tracking-widest font-semibold flex items-center gap-1">
+                    <CheckCircle2 size={10} className="text-emerald-500" /> Identity Verified
+                  </span>
+                  <span className="font-semibold text-zinc-800 break-all">{adminEmail}</span>
                 </div>
-                <ul className="list-disc pl-4 space-y-1">
-                  <li>Please check your primary inbox (and spam/promotions filter).</li>
-                  <li>Click on the login URL inside the email to authorize access.</li>
-                  <li>The app will capture the token, audit your role, and load the workspace automatically.</li>
-                </ul>
-              </div>
-
-              <div className="text-center pt-2">
                 <button
                   type="button"
-                  onClick={async () => {
-                    setLoading(true);
+                  onClick={() => {
+                    setIsEmailVerified(false);
+                    setAdminPassword('');
                     setErrorMessage('');
-                    try {
-                      const account = getAppwriteAccount();
-                      if (!account) {
-                        throw new Error('Appwrite services are not configured.');
-                      }
-                      
-                      // Query the user token lookup endpoint
-                      const res = await fetch('/api/admin/request-code', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: adminEmail.trim() })
-                      });
-                      const data = await res.json();
-                      if (!res.ok || data.success === false) {
-                        throw new Error(data.error || 'Restricted entry checks failed.');
-                      }
-
-                      await account.createMagicURLToken(data.appwriteUserId || 'unique', adminEmail.trim(), `${window.location.origin}/`);
-                      setErrorMessage('A fresh magic link has been resent!');
-                    } catch (err: any) {
-                      console.error(err);
-                      setErrorMessage(err.message || 'An error occurred resending the Magic URL.');
-                    } finally {
-                      setLoading(false);
-                    }
                   }}
-                  disabled={loading}
-                  className="text-[11px] font-semibold text-amber-600 hover:text-amber-700 transition-colors disabled:opacity-50 uppercase tracking-wider underline underline-offset-4"
+                  className="text-[10px] text-amber-500 hover:text-amber-600 transition-all font-medium whitespace-nowrap"
                 >
-                  Resend Magic URL
+                  Change Email
                 </button>
               </div>
-            </div>
+
+              <div id="admin-field-password">
+                <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">Enter Security Password</label>
+                <div className="relative">
+                  <Lock size={14} className="absolute left-4 top-4 text-zinc-300" />
+                  <input
+                    id="admin-input-password"
+                    type={showAdminPassword ? 'text' : 'password'}
+                    placeholder="Enter Appwrite Account Password"
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    className="w-full text-sm font-light bg-brand-light border border-zinc-100 rounded-xl pl-10 pr-10 py-3 focus:outline-hidden focus:border-brand-yellow transition-all text-black"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminPassword(!showAdminPassword)}
+                    className="absolute right-4 top-4 text-zinc-400 hover:text-zinc-600 focus:outline-hidden"
+                  >
+                    {showAdminPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                id="admin-login-btn"
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 px-4 bg-brand-black hover:bg-zinc-900 text-white rounded-xl text-xs uppercase tracking-wider transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer focus-ring mt-2 font-semibold animate-bounce"
+              >
+                {loading ? (
+                  <span className="flex items-center gap-1.5">
+                    <Shield size={12} className="animate-spin text-brand-yellow" />
+                    Locating credentials...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5">
+                    <Key size={12} className="text-brand-yellow" />
+                    Unlock Workspace
+                  </span>
+                )}
+              </button>
+            </form>
           )}
 
           {/* Core Navigation Back */}
@@ -402,12 +372,11 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             <button
               id="back-student-portal-btn"
               type="button"
-              disabled={magicLinkVerifying}
               onClick={() => {
                 setIsAdminMode(false);
                 setErrorMessage('');
-                setSecCodeSent(false);
-                setGeneratedSecCode(null);
+                setIsEmailVerified(false);
+                setAdminPassword('');
               }}
               className="text-xs font-light text-zinc-400 hover:text-brand-black transition-colors underline underline-offset-4 disabled:opacity-50"
             >
@@ -420,7 +389,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         {/* Modern, minimalist footer branding details */}
         <div id="login-footer-info" className="mt-6 text-[10px] font-light text-zinc-300 tracking-wider uppercase text-center flex flex-col gap-1">
           <span>Sabicrest Administrator Gateway // Restricted Core Access</span>
-          <span>Appwrite Native Magic URL Authentication Layer</span>
+          <span>Appwrite Account Credentials Validation Layer</span>
         </div>
 
       </div>
@@ -591,9 +560,8 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             onClick={() => {
               setIsAdminMode(true);
               setErrorMessage('');
-              setSecCodeSent(false);
-              setGeneratedSecCode(null);
-              setSecCode('');
+              setIsEmailVerified(false);
+              setAdminPassword('');
             }}
             className="text-xs font-light text-brand-black hover:text-amber-500 underline underline-offset-4 cursor-pointer transition-colors"
           >
