@@ -13,18 +13,25 @@ async function startServer() {
   const appwriteEndpoint = process.env.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
   const appwriteProjectId = process.env.VITE_APPWRITE_PROJECT_ID || '6a19e810001156433516';
   const appwriteDatabaseId = process.env.VITE_APPWRITE_DATABASE_ID || '6a1aeae3002f269f4946';
+  const appwriteApiKey = process.env.APPWRITE_API_KEY || process.env.VITE_APPWRITE_API_KEY || process.env.APPWRITE_KEY || '';
 
   // API Proxy Route for Listing Documents
   app.get('/api/appwrite/list/:collectionId', async (req, res) => {
     const { collectionId } = req.params;
     try {
       const url = `${appwriteEndpoint}/databases/${appwriteDatabaseId}/collections/${collectionId}/documents?limit=100`;
+      
+      const headers: Record<string, string> = {
+        'X-Appwrite-Project': appwriteProjectId,
+        'Content-Type': 'application/json',
+      };
+      if (appwriteApiKey) {
+        headers['X-Appwrite-Key'] = appwriteApiKey;
+      }
+
       const response = await fetch(url, {
         method: 'GET',
-        headers: {
-          'X-Appwrite-Project': appwriteProjectId,
-          'Content-Type': 'application/json',
-        }
+        headers
       });
 
       if (!response.ok) {
@@ -46,13 +53,18 @@ async function startServer() {
     try {
       const sanitizedDocId = documentId.replace(/[^a-zA-Z0-9_\.\-]/g, '_').slice(0, 36);
       
+      const baseHeaders: Record<string, string> = {
+        'X-Appwrite-Project': appwriteProjectId,
+      };
+      if (appwriteApiKey) {
+        baseHeaders['X-Appwrite-Key'] = appwriteApiKey;
+      }
+
       if (isDelete) {
         const url = `${appwriteEndpoint}/databases/${appwriteDatabaseId}/collections/${collectionId}/documents/${sanitizedDocId}`;
         const response = await fetch(url, {
           method: 'DELETE',
-          headers: {
-            'X-Appwrite-Project': appwriteProjectId,
-          }
+          headers: baseHeaders
         });
 
         if (!response.ok && response.status !== 404) {
@@ -68,7 +80,7 @@ async function startServer() {
       const updateResponse = await fetch(updateUrl, {
         method: 'PATCH',
         headers: {
-          'X-Appwrite-Project': appwriteProjectId,
+          ...baseHeaders,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -82,18 +94,30 @@ async function startServer() {
       }
 
       // If not found, create document
-      if (updateResponse.status === 404) {
+      if (updateResponse.status === 404 || updateResponse.status === 401) {
+        // Fall back to creating if update was not found (404) or blocked as guest/users scope draft
         const createUrl = `${appwriteEndpoint}/databases/${appwriteDatabaseId}/collections/${collectionId}/documents`;
+        const createPayload: any = {
+          documentId: sanitizedDocId,
+          data: documentData
+        };
+
+        // Explicitly override permissions if we don't have an administrator API Key,
+        // to assign strictly allowed scopes (any, guests)
+        if (!appwriteApiKey) {
+          createPayload.permissions = [
+            "read(\"any\")",
+            "write(\"any\")"
+          ];
+        }
+
         const createResponse = await fetch(createUrl, {
           method: 'POST',
           headers: {
-            'X-Appwrite-Project': appwriteProjectId,
+            ...baseHeaders,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            documentId: sanitizedDocId,
-            data: documentData
-          })
+          body: JSON.stringify(createPayload)
         });
 
         if (!createResponse.ok) {
