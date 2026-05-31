@@ -392,7 +392,7 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
         <div className="absolute top-0 right-0 w-96 h-96 bg-zinc-800/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
         <div className="relative z-10 space-y-2 max-w-2xl">
           <span className="text-[10px] uppercase font-mono tracking-widest bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full border border-zinc-700">
-            Secure Personal Dashboard Segment
+            Welcome back
           </span>
           <h2 className="text-2xl md:text-3xl font-light tracking-tight">
             Welcome back, <span className="font-semibold text-brand-yellow">{currentUser.name}</span>

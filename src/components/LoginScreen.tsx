@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
 import { db, encryptPayload } from '../db';
-import { Shield, Sparkles, Key, Mail, Lock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Shield, Sparkles, Key, Mail, Lock, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 // @ts-ignore
 import sabicrestLogo from '../assets/images/sabicrest_logo_1780159096569.png';
 
@@ -23,6 +23,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [oauthProvider, setOauthProvider] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Secure Admin Login state
   const [isAdminMode, setIsAdminMode] = useState(false);
@@ -411,7 +412,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             onClick={() => { setIsRegistering(false); setErrorMessage(''); }}
             className={`flex-1 py-1 text-center transition-all ${!isRegistering ? 'text-brand-black border-b-2 border-brand-black font-semibold' : 'hover:text-zinc-600'}`}
           >
-            Sign-In Gateway
+            Sign In
           </button>
           <button
             id="tab-signup-btn"
@@ -470,13 +471,22 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               <Lock size={14} className="absolute left-4 top-4 text-zinc-300" />
               <input
                 id="login-input-pass"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full text-sm font-light bg-brand-light border border-zinc-100 rounded-xl pl-10 pr-4 py-3 focus:outline-hidden focus:border-brand-yellow transition-all"
+                className="w-full text-sm font-light bg-brand-light border border-zinc-100 rounded-xl pl-10 pr-10 py-3 focus:outline-hidden focus:border-brand-yellow transition-all"
                 required
               />
+              <button
+                type="button"
+                id="login-password-toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-3.5 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer"
+                title={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
           </div>
 

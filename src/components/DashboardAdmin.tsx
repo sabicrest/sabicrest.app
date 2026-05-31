@@ -232,15 +232,20 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
   return (
     <div id="admin-dashboard-root" className="py-6 max-w-7xl mx-auto px-4 select-none">
       
-      {/* Admin Title Brief panel */}
-      <div id="admin-title-hero" className="mb-8 border-b border-zinc-100 pb-6">
-        <h2 className="text-2xl font-light tracking-tight text-brand-black flex items-center gap-2">
-          <Shield className="text-brand-yellow font-normal" size={22} />
-          Administration Dashboard // <span className="font-semibold">Sabicrest Control</span>
-        </h2>
-        <p className="text-xs font-light tracking-wide text-brand-gray uppercase mt-1">
-          Review course proposals, approve educational materials, manage user accounts, and view platform activity
-        </p>
+      {/* Header Banner - Upgraded to match Student/Trainer aesthetics */}
+      <div id="admin-hero-banner" className="bg-brand-black text-white rounded-3xl p-8 mb-8 relative overflow-hidden shadow-xs">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-zinc-800/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+        <div className="relative z-10 space-y-2 max-w-2xl">
+          <span className="text-[10px] uppercase font-mono tracking-widest bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full border border-zinc-700">
+            Welcome back
+          </span>
+          <h2 className="text-2xl md:text-3xl font-light tracking-tight">
+            Administration dashboard // <span className="font-semibold text-brand-yellow">{currentUser.name}</span>
+          </h2>
+          <p className="text-xs text-zinc-400 font-light leading-relaxed">
+            Review course proposals, approve educational materials, manage user accounts, and view platform activity.
+          </p>
+        </div>
       </div>
 
       {/* Admin Metrics panel row */}

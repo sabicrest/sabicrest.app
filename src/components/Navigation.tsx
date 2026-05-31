@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, NotificationAlert } from '../types';
 import { db } from '../db';
-import { Bell, LogOut, CheckCircle, Shield, Menu, X, Terminal, Sparkles } from 'lucide-react';
+import { Bell, LogOut, CheckCircle, Shield, Menu, X, Terminal, Sparkles, AlertTriangle } from 'lucide-react';
 // @ts-ignore
 import sabicrestLogo from '../assets/images/sabicrest_logo_1780159096569.png';
 
@@ -22,6 +22,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
   const [notifs, setNotifs] = useState<NotificationAlert[]>([]);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Load and refresh notifications list
   const loadNotifications = () => {
@@ -192,7 +193,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
             {/* Logout control button */}
             <button
               id="logout-btn"
-              onClick={onLogout}
+              onClick={() => setShowLogoutConfirm(true)}
               className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50/40 rounded-xl transition-all cursor-pointer"
               title="End Secure Session"
             >
@@ -234,6 +235,47 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
               </button>
             );
           })}
+        </div>
+      )}
+
+      {/* Logout Confirmation popover overlay modal */}
+      {showLogoutConfirm && (
+        <div id="logout-confirm-overlay" className="fixed inset-0 bg-zinc-950/60 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in duration-200">
+          <div id="logout-confirm-card" className="bg-white border border-zinc-100 rounded-3xl p-6 max-w-sm w-full mx-4 shadow-xl space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-red-50 text-red-600 rounded-2xl">
+                <AlertTriangle size={20} />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-semibold text-brand-black">
+                  Confirm Account Logout
+                </h4>
+                <p className="text-xs text-brand-gray font-light leading-relaxed">
+                  Are you sure you want to end your secure session? You will need to authenticate again to access the Sabicrest dashboards.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-2.5 pt-2">
+              <button
+                id="logout-confirm-cancel-btn"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="px-4 py-2 bg-zinc-50 hover:bg-zinc-100 text-zinc-600 rounded-xl text-xs font-medium cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                id="logout-confirm-agree-btn"
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  onLogout();
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-medium cursor-pointer transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </nav>
