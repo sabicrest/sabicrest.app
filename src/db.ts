@@ -97,7 +97,7 @@ const INITIAL_USERS: User[] = [
     joinedDate: '2026-02-15',
     status: 'active',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    bio: 'Lead Interface Instructor at Sabicrest. Passionate about typography mechanics and spatial grids.',
+    bio: 'Lead Interface Trainer at Sabicrest. Passionate about typography mechanics and spatial grids.',
     skills: ['Figma', 'Grid Systems', 'Interactive Prototyping', 'User Research']
   },
   {
@@ -136,7 +136,7 @@ const INITIAL_EVENTS: ScheduleEvent[] = [
   },
   {
     id: 'e-2',
-    title: 'Milestone 2 - Design QA Audit',
+    title: 'Assignment 2 - Design QA Audit',
     description: 'Office Hour review of spatial micro-interaction prototypes.',
     date: '2026-06-05',
     time: '11:00',
@@ -245,7 +245,7 @@ const INITIAL_HUB_MESSAGES: HubMessage[] = [
     senderId: 'u-trainer-1',
     senderName: 'Nike Shoyinka',
     senderAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    content: 'Welcome everyone! Ensure to complete your first assignment by the upcoming milestone.',
+    content: 'Welcome everyone! Ensure to complete your first assignment by the upcoming task deadline.',
     timestamp: '2026-05-29T10:00:00Z',
     tag: 'collab',
     reactions: { '🔥': ['u-student-1'] }
@@ -333,7 +333,11 @@ export class AppwriteDatabase {
       const errRes = await res.json().catch(() => ({}));
       throw new Error(errRes.error || `Proxy listing failed: ${res.statusText}`);
     }
-    return await res.json();
+    const data = await res.json();
+    if (data && data.success === false) {
+      throw new Error(data.error || 'Proxy list returned success=false');
+    }
+    return data;
   }
 
   private async proxySave(collectionId: string, documentId: string, data: any, isDelete = false): Promise<any> {
@@ -353,7 +357,11 @@ export class AppwriteDatabase {
       const errRes = await res.json().catch(() => ({}));
       throw new Error(errRes.error || `Proxy saving failed: ${res.statusText}`);
     }
-    return await res.json();
+    const dataRes = await res.json();
+    if (dataRes && dataRes.success === false) {
+      throw new Error(dataRes.error || 'Proxy save returned success=false');
+    }
+    return dataRes;
   }
 
   private parseUserDoc(doc: any): User {

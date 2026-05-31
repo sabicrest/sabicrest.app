@@ -498,7 +498,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                   }`}
                 >
                   <Shield size={14} className={role === 'trainer' ? 'text-brand-yellow' : 'text-zinc-300'} />
-                  <span>Tutor / Instructor</span>
+                  <span>Trainer / Mentor</span>
                 </button>
               </div>
             </div>

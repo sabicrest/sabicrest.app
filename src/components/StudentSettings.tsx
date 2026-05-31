@@ -511,7 +511,7 @@ export default function StudentSettings({ currentUser }: StudentSettingsProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-[11px] font-medium text-brand-black block leading-none">Slack Webhook Sync</span>
-                  <span className="text-[9px] text-zinc-400 block">Publish milestone grades in workspace channels</span>
+                  <span className="text-[9px] text-zinc-400 block">Publish assignment grades in workspace channels</span>
                 </div>
                 <input
                   type="checkbox"
@@ -524,7 +524,7 @@ export default function StudentSettings({ currentUser }: StudentSettingsProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-[11px] font-medium text-brand-black block leading-none">Notification Sound FX</span>
-                  <span className="text-[9px] text-zinc-400 block">Acoustic chime triggers on new milestones</span>
+                  <span className="text-[9px] text-zinc-400 block">Acoustic chime triggers on new assignments</span>
                 </div>
                 <input
                   type="checkbox"

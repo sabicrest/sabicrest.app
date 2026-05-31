@@ -61,7 +61,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
   const [newModuleText, setNewModuleText] = useState('');
   const [moduleList, setModuleList] = useState<string[]>([]);
 
-  // Assign Milestone System States
+  // Assign Assignment System States
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [assignStudentId, setAssignStudentId] = useState('');
   const [assignTitle, setAssignTitle] = useState('');
@@ -152,7 +152,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
     reloadTrainerData();
   };
 
-  const handleAssignMilestone = (e: React.FormEvent) => {
+  const handleAssignAssignment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!assignStudentId || !assignTitle || !assignDesc || !assignDueDate) return;
 
@@ -173,7 +173,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
 
         db.addNotification({
           userId: selectedStudent.id,
-          title: 'New Milestone Assigned',
+          title: 'New Assignment Assigned',
           message: `Your coach, ${currentUser.name}, has assigned you a new project: "${assignTitle}".`,
           type: 'grade'
         });
@@ -303,7 +303,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
             Welcome back
           </span>
           <h2 className="text-2xl md:text-3xl font-light tracking-tight">
-            Instructor dashboard // <span className="font-semibold text-brand-yellow">{currentUser.name}</span>
+            Trainer dashboard // <span className="font-semibold text-brand-yellow">{currentUser.name}</span>
           </h2>
           <p className="text-xs text-zinc-400 font-light leading-relaxed">
             Propose core courses, review student submissions, and grade completed works.
@@ -312,11 +312,11 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
 
         <div className="relative z-10 flex flex-wrap items-center gap-2 shrink-0">
           <button
-            id="assign-milestone-trigger"
+            id="assign-assignment-trigger"
             onClick={() => setShowAssignModal(true)}
             className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 rounded-xl py-2.5 px-4 text-xs font-light tracking-wide uppercase transition-all cursor-pointer shadow-xs focus-ring"
           >
-            <Plus size={14} className="text-zinc-400 font-normal" /> Assign Student Milestone
+            <Plus size={14} className="text-zinc-400 font-normal" /> Assign Student Assignment
           </button>
 
           <button
@@ -346,7 +346,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
 
         <div className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs">
           <div className="flex items-center justify-between text-zinc-400 mb-3">
-            <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Milestones Graded</span>
+            <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Assignments Graded</span>
             <CheckCircle2 size={16} className="text-brand-yellow" />
           </div>
           <div className="text-3xl font-light text-brand-black tracking-tight">
@@ -402,7 +402,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
           }`}
         >
           <ClipboardCheck size={13} className={activeSubTab === 'work' ? 'text-brand-yellow font-bold' : 'text-zinc-400'} />
-          Deliverables Queue & Milestones
+          Deliverables Queue & Assignments
         </button>
 
         <button
@@ -452,7 +452,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                             onClick={() => handleOpenGrading(ass)}
                             className="bg-brand-black hover:bg-zinc-900 text-white rounded-xl text-[10px] tracking-wide uppercase px-3 py-2 font-light cursor-pointer shadow-xs transition-colors shrink-0"
                           >
-                            Grade Milestone
+                            Grade Assignment
                           </button>
                         </div>
 
@@ -534,10 +534,10 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
           <div className="lg:col-span-2 bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs space-y-6">
             <div>
               <h3 className="text-sm font-light tracking-tight text-brand-black mb-1">
-                Aesthetic Instructor workspace // <span className="font-semibold text-brand-yellow">Coach profile</span>
+                Aesthetic Trainer workspace // <span className="font-semibold text-brand-yellow">Coach profile</span>
               </h3>
               <p className="text-xs text-brand-gray font-light">
-                Configure your public instructor display name, digital identifiers, contact handles, and visual mentoring background layout.
+                Configure your public trainer display name, digital identifiers, contact handles, and visual mentoring background layout.
               </p>
             </div>
 
@@ -972,14 +972,14 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
         </div>
       )}
 
-      {/* Assign Milestone Modal Window */}
+      {/* Assign Assignment Modal Window */}
       {showAssignModal && (
-        <div id="assign-milestone-modal" className="fixed inset-0 bg-brand-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
+        <div id="assign-assignment-modal" className="fixed inset-0 bg-brand-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
           <div className="bg-white border border-zinc-100 rounded-3xl w-full max-w-lg p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
             
             <div className="flex items-center justify-between border-b border-zinc-50 pb-4 mb-4">
               <h3 className="text-base font-light tracking-tight text-brand-black">
-                Assign New Milestone // <span className="font-semibold">Mentee Task Assignment</span>
+                Assign New Assignment // <span className="font-semibold">Mentee Task Assignment</span>
               </h3>
               <button
                 id="close-assign-modal-btn"
@@ -990,7 +990,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
               </button>
             </div>
 
-            <form onSubmit={handleAssignMilestone} className="space-y-4">
+            <form onSubmit={handleAssignAssignment} className="space-y-4">
               <div>
                 <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Target Student</label>
                 <select
@@ -1009,7 +1009,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Milestone Name</label>
+                <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Assignment Name</label>
                 <input
                   id="assign-input-title"
                   type="text"
@@ -1022,7 +1022,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Milestone Description & Scope</label>
+                <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Assignment Description & Scope</label>
                 <textarea
                   id="assign-input-desc"
                   placeholder="Summarize visual parameters, required layouts, reference Figma pages, and spacing standards..."
@@ -1063,7 +1063,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
 
               <div className="pt-2 border-t border-zinc-50 flex gap-2">
                 <button
-                  id="final-assign-milestone-btn"
+                  id="final-assign-assignment-btn"
                   type="submit"
                   disabled={assigningInProgress}
                   className="bg-brand-black hover:bg-zinc-900 text-white px-4 py-2.5 rounded-xl text-xs font-light uppercase tracking-wide cursor-pointer flex-1 transition-colors"
@@ -1071,7 +1071,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                   {assigningInProgress ? 'Generating Task...' : 'Confirm Assignment'}
                 </button>
                 <button
-                  id="cancel-assign-milestone-btn"
+                  id="cancel-assign-assignment-btn"
                   type="button"
                   onClick={() => setShowAssignModal(false)}
                   className="bg-zinc-100 text-zinc-600 px-4 py-2.5 rounded-xl text-xs font-light uppercase cursor-pointer"

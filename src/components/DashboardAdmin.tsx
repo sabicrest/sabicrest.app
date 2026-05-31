@@ -124,7 +124,7 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
     const course = db.getCurricula().find(c => c.id === enr.courseId);
     if (course) {
       db.addAssignment({
-        title: `${course.title}: Getting Started Milestone`,
+        title: `${course.title}: Getting Started Assignment`,
         description: `Starter evaluation task for the newly registered syllabus: "${course.title}". Scope focus represents Week 1: "${course.modules[0] || 'Foundational Principles'}". Submit your work here when accomplished for tutor grading.`,
         dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 14 days out
         maxPoints: 100,

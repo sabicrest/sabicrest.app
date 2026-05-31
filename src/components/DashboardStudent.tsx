@@ -819,7 +819,7 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
                 <div className="bg-amber-50/20 border border-brand-yellow/20 rounded-xl p-3.5 text-[10px] text-zinc-500 font-light leading-normal flex items-start gap-2">
                   <AlertCircle size={14} className="text-brand-yellow shrink-0 mt-0.5" />
                   <span>
-                    Your submission will be stored and shared with your instructors securely.
+                    Your submission will be stored and shared with your trainers securely.
                   </span>
                 </div>
 
@@ -872,7 +872,7 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
 
               <div className="grid grid-cols-2 gap-4 mt-8 pt-6 border-t border-zinc-100 text-left text-xs font-light max-w-lg mx-auto">
                 <div>
-                  <span className="text-[9px] uppercase font-semibold text-brand-gray block">Certified Instructor</span>
+                  <span className="text-[9px] uppercase font-semibold text-brand-gray block">Certified Trainer</span>
                   <span className="text-brand-black">{selectedCertToPrint.trainerName}</span>
                 </div>
                 <div>
@@ -951,7 +951,7 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
                   <strong className="text-brand-black text-sm text-[13px] font-mono font-bold">₦{(selectedCourse.price || 35000).toLocaleString()}</strong>
                 </div>
                 <div className="md:col-span-3 pt-2 mt-2 border-t border-zinc-100 flex items-center justify-between text-zinc-500">
-                  <span>Instructor: <strong className="text-brand-black font-medium">{selectedCourse.trainerName}</strong></span>
+                  <span>Trainer: <strong className="text-brand-black font-medium">{selectedCourse.trainerName}</strong></span>
                   <span className="bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded text-[10px] font-mono">{selectedCourse.category}</span>
                 </div>
               </div>

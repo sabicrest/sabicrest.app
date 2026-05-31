@@ -19,7 +19,7 @@ export default function TeamCollaboration({ currentUser }: TeamCollaborationProp
     id: 'team-fallback',
     name: 'General Collaboration Space',
     projectTitle: 'Sabicrest Core Platform v2',
-    description: 'System-wide joint collaboration note board and milestone tracker.',
+    description: 'System-wide joint collaboration note board and task tracker.',
     members: [currentUser.id],
     tasks: [
       { id: 't-fallback-1', title: 'Verify setup environment', assignedTo: currentUser.name, status: 'done' },
@@ -116,7 +116,7 @@ export default function TeamCollaboration({ currentUser }: TeamCollaborationProp
           Student <span className="font-semibold">Team Collaboration</span>
         </h2>
         <p className="text-xs font-light tracking-wide text-brand-gray uppercase mt-1">
-          Synchronize on joint project milestones, divide task responsibilities, and edit research canvas boards
+          Synchronize on joint project tasks, divide task responsibilities, and edit research canvas boards
         </p>
       </div>
 
@@ -173,10 +173,10 @@ export default function TeamCollaboration({ currentUser }: TeamCollaborationProp
           </div>
         </div>
 
-        {/* Right Columns: Milestone Tasks & Live Notes Canvas */}
+        {/* Right Columns: Project Tasks & Live Notes Canvas */}
         <div id="collab-main-blocks" className="lg:col-span-2 space-y-8">
           
-          {/* Milestone Tasks list */}
+          {/* Project Tasks list */}
           <div className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-xs">
             <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase mb-4 flex items-center justify-between font-light">
               <span className="flex items-center gap-1.5"><CheckSquare size={13} className="text-brand-yellow" /> Task Roadmapping Grid</span>
@@ -189,7 +189,7 @@ export default function TeamCollaboration({ currentUser }: TeamCollaborationProp
                 <input
                   id="task-input-title"
                   type="text"
-                  placeholder="Draft new milestone milestone..."
+                  placeholder="Draft new project task..."
                   value={newTaskTitle}
                   onChange={(e) => setNewTaskTitle(e.target.value)}
                   className="w-full text-xs font-light bg-white border border-zinc-200 rounded-xl px-3 py-2.5 focus:outline-hidden focus:border-brand-yellow"

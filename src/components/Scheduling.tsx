@@ -139,7 +139,7 @@ export default function Scheduling({ currentUser }: SchedulingProps) {
                 { id: 'pending', label: 'Pending Approvals' },
                 { id: 'confirmed', label: 'Confirmed Sessions' },
                 { id: '1-on-1', label: '1-on-1 Mentorship' },
-                { id: 'office-hours', label: 'Instructors Open Hours' },
+                { id: 'office-hours', label: 'Trainers Open Hours' },
                 { id: 'team-review', label: 'Collaborative Review' }
               ].map(opt => (
                 <button
@@ -359,7 +359,7 @@ export default function Scheduling({ currentUser }: SchedulingProps) {
                     className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3 py-2"
                   >
                     <option value="1-on-1">1-on-1 Mentorship</option>
-                    <option value="office-hours">Instructors open Hours</option>
+                    <option value="office-hours">Trainers Open Hours</option>
                     <option value="team-review">Team Workspace Review</option>
                   </select>
                 </div>

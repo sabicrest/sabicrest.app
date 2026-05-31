@@ -78,7 +78,7 @@ export interface ScheduleEvent {
   roleType: '1-on-1' | 'office-hours' | 'team-review';
 }
 
-// Curriculum details proposed by Instructors/Trainers
+// Curriculum details proposed by Trainers/Mentors
 export interface Curriculum {
   id: string;
   trainerId: string;

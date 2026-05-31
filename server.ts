@@ -43,7 +43,7 @@ async function startServer() {
       res.json(data);
     } catch (err: any) {
       console.warn(`[Proxy Warning] GET /api/appwrite/list/${collectionId}:`, err.message || err);
-      res.status(500).json({ error: err.message || 'Failed to fetch from Appwrite' });
+      res.status(200).json({ success: false, error: err.message || 'Failed to fetch from Appwrite', offlineFallback: true });
     }
   });
 
@@ -134,7 +134,7 @@ async function startServer() {
       throw new Error(`Appwrite update error response: ${updateResponse.status} - ${errorText}`);
     } catch (err: any) {
       console.warn('[Proxy Warning] POST /api/appwrite/save:', err.message || err);
-      res.status(500).json({ error: err.message || 'Failed to save to Appwrite via proxy' });
+      res.status(200).json({ success: false, error: err.message || 'Failed to save to Appwrite via proxy', offlineFallback: true });
     }
   });
 
