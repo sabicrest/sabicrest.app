@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
-import { db, encryptPayload } from '../db';
+import { db, encryptPayload, getAppwriteAccount } from '../db';
 import { Shield, Sparkles, Key, Mail, Lock, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 // @ts-ignore
 import sabicrestLogo from '../assets/images/sabicrest_logo_1780159096569.png';
@@ -31,6 +31,68 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const [secCode, setSecCode] = useState('');
   const [generatedSecCode, setGeneratedSecCode] = useState<string | null>(null);
   const [secCodeSent, setSecCodeSent] = useState(false);
+
+  // Magic URL token verification states
+  const [magicLinkVerifying, setMagicLinkVerifying] = useState(false);
+  const [magicLinkSuccess, setMagicLinkSuccess] = useState(false);
+
+  useEffect(() => {
+    const checkMagicURLCallback = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const userId = params.get('userId');
+      const secret = params.get('secret');
+
+      if (userId && secret) {
+        setIsAdminMode(true);
+        setMagicLinkVerifying(true);
+        setErrorMessage('');
+        try {
+          const account = getAppwriteAccount();
+          if (!account) {
+            throw new Error('Appwrite services are not initialized.');
+          }
+
+          // 1. Complete authentication natively in Appwrite
+          await account.updateMagicURLSession(userId, secret);
+
+          // 2. Clear query parameters cleanly from browser context URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+
+          // 3. User is verified! Read their registered email from authentication system
+          const appwriteUser = await account.get();
+          const email = appwriteUser.email;
+
+          // 4. Load full profile info (bio, name, status, role etc.) matching database
+          const res = await fetch('/api/admin/get-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email })
+          });
+          const data = await res.json();
+          if (!res.ok || !data.success) {
+            throw new Error(data.error || 'Identity matching backend profile search returned failure.');
+          }
+
+          db.addNotification({
+            userId: data.user.id,
+            title: 'Secure Administrator Session Instantiated',
+            message: 'Workspace access unlocked via secure corporate Magic URL verification.',
+            type: 'system'
+          });
+
+          setMagicLinkSuccess(true);
+          onLoginSuccess(data.user);
+        } catch (err: any) {
+          console.error('Magic URL authentication error:', err);
+          setErrorMessage(err.message || 'The magic link has expired or is invalid. Please enter your email to request a new link.');
+        } finally {
+          setMagicLinkVerifying(false);
+        }
+      }
+    };
+
+    checkMagicURLCallback();
+  }, []);
 
   // Custom standard login
   const handleCustomSubmit = async (e: React.FormEvent) => {
@@ -173,8 +235,26 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             </div>
           )}
 
-           {!secCodeSent ? (
-            /* Step 1: Request OTP Code */
+          {magicLinkVerifying ? (
+            /* Layout Mode: Currently Decrypting and Verifying the Link Callback */
+            <div className="flex flex-col items-center justify-center py-10 text-center space-y-4">
+              <Shield size={44} className="animate-spin text-amber-500" />
+              <h3 className="text-lg font-light tracking-tight text-brand-black">Authenticating Admin Session</h3>
+              <p className="text-xs font-light text-zinc-400 max-w-xs leading-relaxed">
+                Decrypting Magic URL security credentials and mapping your database administrator roles. Please wait...
+              </p>
+            </div>
+          ) : magicLinkSuccess ? (
+            /* Layout Mode: Authentication Complete and Loading Dashboard */
+            <div className="flex flex-col items-center justify-center py-10 text-center space-y-4">
+              <CheckCircle2 size={44} className="text-emerald-500 animate-bounce" />
+              <h3 className="text-md font-medium tracking-tight text-brand-black">Access Confirmed</h3>
+              <p className="text-xs font-light text-zinc-400 leading-relaxed max-w-xs">
+                Credentials approved by Appwrite. Instantiating secure workspace environment...
+              </p>
+            </div>
+          ) : !secCodeSent ? (
+            /* Step 1: Request Email address for magic link URL */
             <form id="admin-request-form" onSubmit={async (e) => {
               e.preventDefault();
               if (!adminEmail) {
@@ -184,6 +264,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               setLoading(true);
               setErrorMessage('');
               try {
+                // 1. Confirm with our backend that the user is actually registered as an administrator
                 const res = await fetch('/api/admin/request-code', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
@@ -191,15 +272,25 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 });
                 const data = await res.json();
                 if (!res.ok || data.success === false) {
-                  throw new Error(data.error || 'Failed to generate security code.');
+                  throw new Error(data.error || 'Identity checks failed. Restricted portal entry access denied.');
                 }
-                if (data.debugCode) {
-                  console.log(`%c[Sabicrest Admin Console Bypass %c● ACTIVE%c] Security Code: %c${data.debugCode}`, "color: #94a3b8; font-weight: bold;", "color: #10b981; font-weight: bold;", "color: #94a3b8;", "color: #f59e0b; font-weight: bold; font-family: monospace; font-size: 14px; background: #0f172a; padding: 2px 6px; border-radius: 4px;");
+
+                // 2. Resolve account initialization natively in Appwrite client
+                const account = getAppwriteAccount();
+                if (!account) {
+                  throw new Error('Appwrite services are not configured in the application environment.');
                 }
+
+                const appwriteUserId = data.appwriteUserId || 'unique';
+                const redirectUrl = `${window.location.origin}/`;
+
+                console.log(`Requesting Appwrite Magic URL token for ${adminEmail} (User ID: ${appwriteUserId})`);
+                await account.createMagicURLToken(appwriteUserId, adminEmail.trim(), redirectUrl);
+                
                 setSecCodeSent(true);
               } catch (err: any) {
-                console.error('Request code error:', err);
-                setErrorMessage(err.message || 'An error occurred during verification code generation.');
+                console.error('Magic URL request failure:', err);
+                setErrorMessage(err.message || 'An error occurred triggering authorization token routing.');
               } finally {
                 setLoading(false);
               }
@@ -229,100 +320,41 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 {loading ? (
                   <span className="flex items-center gap-1.5">
                     <Shield size={12} className="animate-spin text-brand-yellow" />
-                    Generating Session Key...
+                    Checking privilege...
                   </span>
                 ) : (
                   <span className="flex items-center gap-1.5">
                     <Key size={12} className="text-brand-yellow" />
-                    Send Verification Code
+                    Send Magic URL Link
                   </span>
                 )}
               </button>
             </form>
           ) : (
-             /* Step 2: Validate 6 digit code */
-            <form id="admin-validate-form" onSubmit={async (e) => {
-              e.preventDefault();
-              if (!secCode) {
-                setErrorMessage('Please enter the 6-digit security code.');
-                return;
-              }
+            /* Step 2: Confirming dispatch of Link to inbox */
+            <div id="magic-link-sent-info" className="space-y-6 text-center py-4">
+              <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto transition-transform hover:scale-105 duration-150">
+                <Mail size={30} className="stroke-1.5" />
+              </div>
               
-              setLoading(true);
-              setErrorMessage('');
-              try {
-                const res = await fetch('/api/admin/verify-code', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ email: adminEmail.trim(), code: secCode.trim() })
-                });
-                const data = await res.json();
-                if (!res.ok || data.success === false) {
-                  throw new Error(data.error || 'Invalid verification code.');
-                }
-                
-                const matched = data.user;
-                
-                db.addNotification({
-                  userId: matched.id,
-                  title: 'Secure Administrator Login Approved',
-                  message: 'Successfully verified and authorized core workspace access using one-time token security checks.',
-                  type: 'system'
-                });
-
-                onLoginSuccess(matched);
-              } catch (err: any) {
-                console.error('Admin submit validation failure:', err);
-                setErrorMessage(err.message || 'An error occurred during Admin verification.');
-              } finally {
-                setLoading(false);
-              }
-            }} className="space-y-4">
-              
-              <div id="simulated-code-toast" className="p-4 bg-amber-50/50 border border-amber-100 rounded-2xl flex flex-col gap-1 select-text">
-                <span className="text-[10px] font-semibold text-amber-800 uppercase tracking-widest">Inbox Transpatched</span>
-                <p className="text-xs font-light text-zinc-750 leading-relaxed">
-                  A temporary security key has been dispatched to <strong className="font-medium text-brand-black">{adminEmail}</strong>. Please check your inbox for the 6-digit access code.
+              <div className="space-y-2">
+                <h3 className="text-md font-medium text-black">Magic Login URL Dispatched</h3>
+                <p className="text-xs font-light text-zinc-500 leading-relaxed max-w-sm mx-auto">
+                  A unique, secure authorization link has been routed to <strong className="font-medium text-zinc-850 select-all">{adminEmail}</strong> via Appwrite's secure mailing systems.
                 </p>
               </div>
 
-              <div id="admin-field-code">
-                <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">6-Digit Verification Code</label>
-                <div className="relative">
-                  <Lock size={14} className="absolute left-4 top-4 text-zinc-300" />
-                  <input
-                    id="admin-input-code"
-                    type="text"
-                    placeholder="E.g., 123456"
-                    value={secCode}
-                    onChange={(e) => {
-                      const cleaned = e.target.value.replace(/\D/g, '').slice(0, 6);
-                      setSecCode(cleaned);
-                    }}
-                    className="w-full text-sm font-semibold tracking-widest text-center bg-brand-light border border-zinc-100 rounded-xl px-4 py-3 focus:outline-hidden focus:border-brand-yellow transition-all"
-                    required
-                  />
+              <div className="p-4 bg-zinc-50 border border-zinc-150 rounded-2xl text-[11px] font-light text-zinc-500 space-y-2 text-left">
+                <div className="font-semibold text-black uppercase tracking-wider text-[9px] flex items-center gap-1">
+                  <Shield size={10} className="text-amber-500" />
+                  Security Connection Rules
                 </div>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>Please check your primary inbox (and spam/promotions filter).</li>
+                  <li>Click on the login URL inside the email to authorize access.</li>
+                  <li>The app will capture the token, audit your role, and load the workspace automatically.</li>
+                </ul>
               </div>
-
-              <button
-                id="admin-approve-btn"
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 px-4 bg-brand-black hover:bg-zinc-900 text-white rounded-xl text-xs uppercase tracking-wider transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer focus-ring mt-2 font-semibold"
-              >
-                {loading ? (
-                  <span className="flex items-center gap-1.5">
-                    <Shield size={12} className="animate-spin text-brand-yellow" />
-                    Authorizing Gateway...
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 size={12} className="text-brand-yellow" />
-                    Approve Admin Access
-                  </span>
-                )}
-              </button>
 
               <div className="text-center pt-2">
                 <button
@@ -331,6 +363,12 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                     setLoading(true);
                     setErrorMessage('');
                     try {
+                      const account = getAppwriteAccount();
+                      if (!account) {
+                        throw new Error('Appwrite services are not configured.');
+                      }
+                      
+                      // Query the user token lookup endpoint
                       const res = await fetch('/api/admin/request-code', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -338,28 +376,25 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                       });
                       const data = await res.json();
                       if (!res.ok || data.success === false) {
-                        throw new Error(data.error || 'Failed to dispatch security code.');
+                        throw new Error(data.error || 'Restricted entry checks failed.');
                       }
-                      if (data.debugCode) {
-                        console.log(`%c[Sabicrest Admin Console Bypass %c● RESENT%c] Security Code: %c${data.debugCode}`, "color: #94a3b8; font-weight: bold;", "color: #eab308; font-weight: bold;", "color: #94a3b8;", "color: #f59e0b; font-weight: bold; font-family: monospace; font-size: 14px; background: #0f172a; padding: 2px 6px; border-radius: 4px;");
-                      }
-                      setSecCode('');
-                      setErrorMessage('');
+
+                      await account.createMagicURLToken(data.appwriteUserId || 'unique', adminEmail.trim(), `${window.location.origin}/`);
+                      setErrorMessage('A fresh magic link has been resent!');
                     } catch (err: any) {
                       console.error(err);
-                      setErrorMessage(err.message || 'An error occurred while generating security code.');
+                      setErrorMessage(err.message || 'An error occurred resending the Magic URL.');
                     } finally {
                       setLoading(false);
                     }
                   }}
                   disabled={loading}
-                  className="text-[11px] font-light text-zinc-400 hover:text-brand-black transition-colors disabled:opacity-50"
+                  className="text-[11px] font-semibold text-amber-600 hover:text-amber-700 transition-colors disabled:opacity-50 uppercase tracking-wider underline underline-offset-4"
                 >
-                  Resend security code
+                  Resend Magic URL
                 </button>
               </div>
-
-            </form>
+            </div>
           )}
 
           {/* Core Navigation Back */}
@@ -367,13 +402,14 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             <button
               id="back-student-portal-btn"
               type="button"
+              disabled={magicLinkVerifying}
               onClick={() => {
                 setIsAdminMode(false);
                 setErrorMessage('');
                 setSecCodeSent(false);
                 setGeneratedSecCode(null);
               }}
-              className="text-xs font-light text-zinc-400 hover:text-brand-black transition-colors underline underline-offset-4"
+              className="text-xs font-light text-zinc-400 hover:text-brand-black transition-colors underline underline-offset-4 disabled:opacity-50"
             >
               Return to Student or Tutor Access
             </button>
@@ -384,7 +420,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         {/* Modern, minimalist footer branding details */}
         <div id="login-footer-info" className="mt-6 text-[10px] font-light text-zinc-300 tracking-wider uppercase text-center flex flex-col gap-1">
           <span>Sabicrest Administrator Gateway // Restricted Core Access</span>
-          <span>Dual OTP Token Key active under Sabicrest policy</span>
+          <span>Appwrite Native Magic URL Authentication Layer</span>
         </div>
 
       </div>

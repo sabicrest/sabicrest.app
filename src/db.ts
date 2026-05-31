@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Client, Databases, Query } from 'appwrite';
+import { Client, Databases, Query, Account } from 'appwrite';
 import {
   User,
   Message,
@@ -20,8 +20,9 @@ import {
 
 let appwriteClient: Client | null = null;
 let appwriteDatabases: Databases | null = null;
+let appwriteAccount: Account | null = null;
 
-export function getAppwrite(): Databases | null {
+export function getAppwriteClient(): Client | null {
   const endpoint = import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
   const projectId = import.meta.env.VITE_APPWRITE_PROJECT_ID || '6a19e810001156433516';
   if (!projectId) {
@@ -29,9 +30,30 @@ export function getAppwrite(): Databases | null {
   }
   if (!appwriteClient) {
     appwriteClient = new Client().setEndpoint(endpoint).setProject(projectId);
-    appwriteDatabases = new Databases(appwriteClient);
+  }
+  return appwriteClient;
+}
+
+export function getAppwrite(): Databases | null {
+  const client = getAppwriteClient();
+  if (!client) {
+    return null;
+  }
+  if (!appwriteDatabases) {
+    appwriteDatabases = new Databases(client);
   }
   return appwriteDatabases;
+}
+
+export function getAppwriteAccount(): Account | null {
+  const client = getAppwriteClient();
+  if (!client) {
+    return null;
+  }
+  if (!appwriteAccount) {
+    appwriteAccount = new Account(client);
+  }
+  return appwriteAccount;
 }
 
 // Simple simulated encryption tools for Appwrite database privacy compliance.
