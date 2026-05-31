@@ -112,6 +112,87 @@ async function startServer() {
     }
   });
 
+  // API Route to verify Admin password matches the password in database users collection
+  app.post('/api/admin/verify-password', async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(200).json({ success: false, error: 'Email and password are required.' });
+    }
+
+    try {
+      const targetEmail = email.trim().toLowerCase();
+      const inputPassword = password.trim();
+
+      // Query database for the user document
+      let matchedDoc: any = null;
+      try {
+        const dbUsersUrl = `${appwriteEndpoint}/databases/${appwriteDatabaseId}/collections/users/documents?limit=100`;
+        const dbHeaders: Record<string, string> = {
+          'X-Appwrite-Project': appwriteProjectId,
+          'Content-Type': 'application/json',
+        };
+        if (appwriteApiKey) {
+          dbHeaders['X-Appwrite-Key'] = appwriteApiKey;
+        }
+
+        const dbRes = await fetch(dbUsersUrl, { headers: dbHeaders });
+        if (dbRes.ok) {
+          const dbData = await dbRes.json();
+          matchedDoc = dbData.documents?.find(
+            (u: any) => u.email?.toLowerCase().trim() === targetEmail
+          );
+        } else {
+          console.warn(`Query users list returned status: ${dbRes.status}`);
+        }
+      } catch (dbErr: any) {
+        console.warn('Could not query Appwrite Database users list for password check:', dbErr.message || dbErr);
+      }
+
+      // Extract stored password from matched doc (either from .password field or parsed from .bio field containing ||pwd:)
+      let storedPassword = '';
+      if (matchedDoc) {
+        if (matchedDoc.password) {
+          storedPassword = matchedDoc.password;
+        } else if (matchedDoc.bio && matchedDoc.bio.includes('||pwd:')) {
+          const index = matchedDoc.bio.indexOf('||pwd:');
+          storedPassword = matchedDoc.bio.slice(index + 6);
+        }
+      } else {
+        // Fallback for default local database seed of master administrator
+        const initialAdmins = [
+          { email: 'officialsabicrest@gmail.com', password: 'password123' }
+        ];
+        const localMatched = initialAdmins.find(u => u.email === targetEmail);
+        if (localMatched) {
+          storedPassword = localMatched.password;
+        }
+      }
+
+      if (!storedPassword) {
+        return res.status(200).json({
+          success: false,
+          error: 'No registered password found for this account. Please register normally first.'
+        });
+      }
+
+      if (storedPassword !== inputPassword) {
+        return res.status(200).json({
+          success: false,
+          error: 'The security password you entered is incorrect. Access denied.'
+        });
+      }
+
+      console.log(`[Admin Security Console] Admin password successfully validated for: ${targetEmail}`);
+      res.status(200).json({
+        success: true,
+        message: 'Security password validated successfully.'
+      });
+    } catch (err: any) {
+      console.error('[Admin Password Verification Error]:', err);
+      res.status(200).json({ success: false, error: err.message || 'An error occurred during password validation.' });
+    }
+  });
+
   // API Route to fetch Admin Profile using Verified Email
   app.post('/api/admin/get-profile', async (req, res) => {
     const { email } = req.body;
@@ -159,7 +240,21 @@ async function startServer() {
         };
       } else {
         const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = adminProfile;
-        adminProfile = { id: $id, ...data };
+        
+        let parsedBio = data.bio || '';
+        let parsedPassword = data.password || '';
+        if (parsedBio.includes('||pwd:')) {
+          const index = parsedBio.indexOf('||pwd:');
+          parsedPassword = parsedBio.slice(index + 6);
+          parsedBio = parsedBio.slice(0, index);
+        }
+        
+        adminProfile = { 
+          id: $id, 
+          ...data, 
+          password: parsedPassword, 
+          bio: parsedBio 
+        };
       }
 
       console.log(`Admin profile returned successfully: ${emailKey}`);

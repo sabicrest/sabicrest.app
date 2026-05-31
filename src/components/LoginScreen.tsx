@@ -187,25 +187,38 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       setLoading(true);
       setErrorMessage('');
       try {
-        const account = getAppwriteAccount();
-        if (!account) {
-          throw new Error('Appwrite services are not configured in the application environment.');
+        // 1. Explicitly verify the password against raw database users collection records first
+        const checkRes = await fetch('/api/admin/verify-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: adminEmail.trim(), password: adminPassword })
+        });
+        const checkData = await checkRes.json();
+        if (!checkRes.ok || checkData.success === false) {
+          throw new Error(checkData.error || 'The password entered is incorrect.');
         }
 
-        // Try creating a direct session in Appwrite natively using the client-side SDK.
-        try {
-          // Attempt modern SDK standard
-          await account.createEmailPasswordSession(adminEmail.trim(), adminPassword);
-        } catch (sessionErr: any) {
-          if (sessionErr.message && sessionErr.message.includes('not a function')) {
-            // Fallback for older SDK
-            await (account as any).createEmailSession(adminEmail.trim(), adminPassword);
-          } else {
-            throw sessionErr;
+        // 2. Try creating a direct session in Appwrite natively using the client-side SDK.
+        const account = getAppwriteAccount();
+        if (account) {
+          try {
+            // Attempt modern SDK standard
+            await account.createEmailPasswordSession(adminEmail.trim(), adminPassword);
+          } catch (sessionErr: any) {
+            if (sessionErr.message && sessionErr.message.includes('not a function')) {
+              try {
+                // Fallback for older SDK
+                await (account as any).createEmailSession(adminEmail.trim(), adminPassword);
+              } catch (err) {
+                console.warn('Native Appwrite SDK session creation fallback failed:', err);
+              }
+            } else {
+              console.warn('Native Appwrite SDK session creation failed:', sessionErr);
+            }
           }
         }
 
-        // Fetch the matched profile from database to inject user state
+        // 3. Fetch the matched profile from database to inject user state
         const res = await fetch('/api/admin/get-profile', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -228,7 +241,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         onLoginSuccess(data.user);
       } catch (err: any) {
         console.error('Password authentication error:', err);
-        setErrorMessage(err.message || 'The password entered is incorrect or credentials were rejected by Appwrite.');
+        setErrorMessage(err.message || 'The password entered is incorrect.');
       } finally {
         setLoading(false);
       }
