@@ -2,8 +2,10 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 
+// CRUCIAL FOR VERCEL: Define the app instance globally so it can be exported at the bottom
+const app = express();
+
 async function startServer() {
-  const app = express();
   const PORT = 3000;
 
   // Middleware for parsing JSON requests
@@ -456,9 +458,16 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Full-stack server running on http://localhost:${PORT}`);
-  });
+  // Only run app.listen locally in a development environment
+  if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Full-stack server running on http://localhost:${PORT}`);
+    });
+  }
 }
 
 startServer();
+
+// CRUCIAL FOR VERCEL: Export the express application instance
+export default app;
+                                   
