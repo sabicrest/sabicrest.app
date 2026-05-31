@@ -105,7 +105,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
     }, 4500);
   };
 
-  const handleSaveTrainerProfile = (e: React.FormEvent) => {
+  const handleSaveTrainerProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profileName.trim()) {
       showToast('Error: Coach display name cannot be blank!');
@@ -121,17 +121,22 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
       bio: profileBio
     };
 
-    db.updateUser(updatedUser);
+    try {
+      await db.updateUser(updatedUser);
 
-    db.addNotification({
-      userId: currentUser.id,
-      title: 'Mentor Credentials Synchronized',
-      message: 'Your public mentoring specialty, slack hooks and visual bio data was replicated successfully.',
-      type: 'curriculum'
-    });
+      db.addNotification({
+        userId: currentUser.id,
+        title: 'Mentor Credentials Synchronized',
+        message: 'Your public mentoring specialty, slack hooks and visual bio data was replicated successfully.',
+        type: 'curriculum'
+      });
 
-    showToast('✓ Coach Profile updated successfully and propagated through cloud replication!');
-    reloadTrainerData();
+      showToast('✓ Coach Profile updated successfully and propagated through cloud replication!');
+      reloadTrainerData();
+    } catch (err: any) {
+      console.error(err);
+      showToast(`❌ Storage Failure: ${err.message || err}`);
+    }
   };
 
   const handleResetTrainerWorkspace = () => {

@@ -84,7 +84,9 @@ export default function AppwriteConsole() {
               <div className="space-y-2 text-zinc-300">
                 <div className="flex justify-between border-b border-zinc-900 pb-1">
                   <span className="text-zinc-500">Database ID:</span>
-                  <span className="font-semibold text-brand-yellow">sabicrest_db</span>
+                  <span className="font-semibold text-brand-yellow">
+                    {import.meta.env.VITE_APPWRITE_DATABASE_ID || '6a1aeae3002f269f4946'}
+                  </span>
                 </div>
                 <div className="flex justify-between border-b border-zinc-900 pb-1">
                   <span className="text-zinc-500">Active Project:</span>

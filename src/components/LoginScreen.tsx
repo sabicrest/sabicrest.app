@@ -32,7 +32,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const [secCodeSent, setSecCodeSent] = useState(false);
 
   // Custom standard login
-  const handleCustomSubmit = (e: React.FormEvent) => {
+  const handleCustomSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       setErrorMessage('Please enter your email and password.');
@@ -42,8 +42,9 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     setLoading(true);
     setErrorMessage('');
     
-    setTimeout(() => {
-      const users = db.getUsers();
+    try {
+      // Direct live Appwrite users query to guarantee real-time synchronization
+      const users = await db.fetchLiveUsers();
       const matched = users.find(u => u.email.toLowerCase() === email.toLowerCase());
       
       if (isRegistering) {
@@ -63,6 +64,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           name,
           email,
           role,
+          password,
           verified: false, // Students and trainers require verification update from Administrator
           joinedDate: new Date().toISOString().split('T')[0],
           status: 'active',
@@ -70,7 +72,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           skills: []
         };
 
-        db.addUser(newUser);
+        await db.addUserAsync(newUser);
         
         db.addNotification({
           userId: newUser.id,
@@ -82,23 +84,33 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         onLoginSuccess(newUser);
       } else {
         if (matched) {
+          if (matched.password && matched.password !== password) {
+            setErrorMessage('The password entered is incorrect.');
+            setLoading(false);
+            return;
+          }
           onLoginSuccess(matched);
         } else {
           setErrorMessage('No existing account found with this email inside the database. Please click the "Create Account" tab above to sign up first!');
         }
       }
+    } catch (err: any) {
+      console.error('Custom submit error:', err);
+      setErrorMessage(err.message || 'An error occurred during authentication.');
+    } finally {
       setLoading(false);
-    }, 900);
+    }
   };
 
   // Modern simulated OAuth login callback
-  const handleOAuthLogin = (provider: 'Google' | 'GitHub') => {
+  const handleOAuthLogin = async (provider: 'Google' | 'GitHub') => {
     setOauthProvider(provider);
     setLoading(true);
     setErrorMessage('');
     
-    setTimeout(() => {
-      const users = db.getUsers();
+    try {
+      // Live sync fetch of the users from Appwrite users collection
+      const users = await db.fetchLiveUsers();
       let emailAddress = provider === 'Google' ? 'officialsabicrest@gmail.com' : 'student.mentee@edu.sabicrest.com';
       let matched = users.find(u => u.email.toLowerCase() === emailAddress.toLowerCase());
       
@@ -114,7 +126,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           bio: `Auto-authenticated through secure ${provider} credentials.`,
           skills: provider === 'Google' ? [] : ['UI/UX Design', 'Fluid Typography']
         };
-        db.addUser(matched);
+        await db.addUserAsync(matched);
       }
 
       db.addNotification({
@@ -124,9 +136,13 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         type: 'system'
       });
       onLoginSuccess(matched);
+    } catch (err: any) {
+      console.error('OAuth login error:', err);
+      setErrorMessage(err.message || 'OAuth authentication failed.');
+    } finally {
       setLoading(false);
       setOauthProvider(null);
-    }, 1200);
+    }
   };
 
   if (isAdminMode) {
@@ -217,8 +233,8 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               </button>
             </form>
           ) : (
-            /* Step 2: Validate 6 digit code */
-            <form id="admin-validate-form" onSubmit={(e) => {
+             /* Step 2: Validate 6 digit code */
+            <form id="admin-validate-form" onSubmit={async (e) => {
               e.preventDefault();
               if (!secCode) {
                 setErrorMessage('Please enter the 6-digit security code.');
@@ -231,8 +247,8 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               
               setLoading(true);
               setErrorMessage('');
-              setTimeout(() => {
-                const users = db.getUsers();
+              try {
+                const users = await db.fetchLiveUsers();
                 let matched = users.find(u => u.email.toLowerCase() === adminEmail.toLowerCase() && u.role === 'admin');
                 
                 if (!matched) {
@@ -248,7 +264,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                     bio: 'Core Platform Overseer at Sabicrest.',
                     skills: []
                   };
-                  db.addUser(matched);
+                  await db.addUserAsync(matched);
                 }
                 
                 db.addNotification({
@@ -259,8 +275,12 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 });
 
                 onLoginSuccess(matched);
+              } catch (err: any) {
+                console.error('Admin submit validation failure:', err);
+                setErrorMessage(err.message || 'An error occurred during Admin verification.');
+              } finally {
                 setLoading(false);
-              }, 900);
+              }
             }} className="space-y-4">
               
               <div id="simulated-code-toast" className="p-4 bg-amber-50/50 border border-amber-100 rounded-2xl flex flex-col gap-1 select-text">

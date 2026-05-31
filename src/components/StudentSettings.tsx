@@ -60,7 +60,7 @@ export default function StudentSettings({ currentUser }: StudentSettingsProps) {
     }, 4000);
   };
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profileName.trim()) {
       showToast('Error: Name field cannot be empty!');
@@ -77,16 +77,21 @@ export default function StudentSettings({ currentUser }: StudentSettingsProps) {
       skills: profileSkillsText.split(',').map(s => s.trim()).filter(s => s.length > 0)
     };
 
-    db.updateUser(updatedUser);
-    
-    db.addNotification({
-      userId: currentUser.id,
-      title: 'Credentials Saved',
-      message: 'Your personal workspace credentials, skills and contact details are synced.',
-      type: 'grade'
-    });
+    try {
+      await db.updateUser(updatedUser);
+      
+      db.addNotification({
+        userId: currentUser.id,
+        title: 'Credentials Saved',
+        message: 'Your personal workspace credentials, skills and contact details are synced.',
+        type: 'grade'
+      });
 
-    showToast('✓ Profile updated successfully!');
+      showToast('✓ Profile updated successfully!');
+    } catch (err: any) {
+      console.error(err);
+      showToast(`❌ Storage Failure: ${err.message || err}`);
+    }
   };
 
   const handleResetWorkspace = () => {
