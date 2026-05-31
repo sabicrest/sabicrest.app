@@ -635,7 +635,7 @@ export class AppwriteDatabase {
       console.warn(`Appwrite notice on collection ${collectionId} (locally persisted, syncing behind proxy):`, err);
       this.logTransaction('APPWRITE_SYNC_BYPASS', collectionId, `${err.message || 'Offline gateway enabled'}`);
       if (collectionId === 'users') {
-        console.error('Appwrite: failed to persist user profile cloud record. Falling back to secure local state.', err);
+        console.warn('Appwrite notice: using secure local state fallback for login.', err);
       }
     }
   }

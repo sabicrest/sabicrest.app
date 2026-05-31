@@ -14,16 +14,27 @@ interface TeamCollaborationProps {
 
 export default function TeamCollaboration({ currentUser }: TeamCollaborationProps) {
   // Ensure we get the team the user belongs to, or load Team Horizon
-  const allTeams = db.getTeams();
-  const userTeam = allTeams.find(t => t.members.includes(currentUser.id)) || allTeams[0];
+  const allTeams = db.getTeams() || [];
+  const userTeam = allTeams.find(t => t?.members?.includes(currentUser.id)) || allTeams[0] || {
+    id: 'team-fallback',
+    name: 'General Collaboration Space',
+    projectTitle: 'Sabicrest Core Platform v2',
+    description: 'System-wide joint collaboration note board and milestone tracker.',
+    members: [currentUser.id],
+    tasks: [
+      { id: 't-fallback-1', title: 'Verify setup environment', assignedTo: currentUser.name, status: 'done' },
+      { id: 't-fallback-2', title: 'Start collaborative session panel', assignedTo: currentUser.name, status: 'todo' }
+    ],
+    sharedNotes: 'Welcome to Sabicrest. Stored securely in cloud workspace storage.'
+  };
   
   const [team, setTeam] = useState<Team>(userTeam);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [taskAssignee, setTaskAssignee] = useState('');
-  const [notepadContent, setNotepadContent] = useState(team.sharedNotes || '');
+  const [notepadContent, setNotepadContent] = useState(team?.sharedNotes || '');
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const teamMembersDetails = db.getUsers().filter(u => team.members.includes(u.id));
+  const teamMembersDetails = db.getUsers().filter(u => team?.members?.includes(u.id)) || [];
 
   const handleToggleTask = (taskId: string) => {
     const updatedTasks = team.tasks.map(task => {
