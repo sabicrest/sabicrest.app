@@ -3,6 +3,7 @@ import path from 'path';
 import { createServer as createViteServer } from 'vite';
 
 async function startServer() {
+  app.use(express.json());
   const app = express();
   const PORT = 3000;
 
