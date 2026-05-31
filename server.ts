@@ -29,93 +29,83 @@ async function startServer() {
       console.log(`Checking admin privileges for email: ${email}`);
       const targetEmail = email.trim().toLowerCase();
       let isAdminAuthorized = false;
+      let rejectReason = '';
 
-      // 1. Try checking the Appwrite teams/memberships (requires an API Key)
-      if (appwriteApiKey) {
-        try {
-          let teamId = 'admins'; // Default fallback
-          const teamsUrl = `${appwriteEndpoint}/teams`;
-          const teamsHeaders: Record<string, string> = {
-            'X-Appwrite-Project': appwriteProjectId,
-            'Content-Type': 'application/json',
-            'X-Appwrite-Key': appwriteApiKey
-          };
+      // 1. Primary check: Query the Appwrite Database "users" collection directly to verify user role
+      let userDocInDb: any = null;
+      let queriedDb = false;
 
-          const teamsResponse = await fetch(teamsUrl, { method: 'GET', headers: teamsHeaders });
-          if (teamsResponse.ok) {
-            const teamsData = await teamsResponse.json();
-            const matchedTeam = teamsData.teams?.find(
-              (t: any) => t.name.toLowerCase() === 'admins' || t.$id === 'admins'
-            );
-            if (matchedTeam) {
-              teamId = matchedTeam.$id;
-              console.log(`Matched admin team ID: ${teamId}`);
-            }
-          }
-
-          const membershipsUrl = `${appwriteEndpoint}/teams/${teamId}/memberships?limit=100`;
-          const membershipsResponse = await fetch(membershipsUrl, { method: 'GET', headers: teamsHeaders });
-          if (membershipsResponse.ok) {
-            const membershipsData = await membershipsResponse.json();
-            isAdminAuthorized = membershipsData.memberships?.some(
-              (m: any) => m.userEmail.toLowerCase() === targetEmail
-            );
-            if (isAdminAuthorized) {
-              console.log(`Admin validated via Appwrite Auth Teams: ${targetEmail}`);
-            }
-          } else {
-            console.warn(`Appwrite memberships fetch failed with status: ${membershipsResponse.status}`);
-          }
-        } catch (authErr: any) {
-          console.warn('Skipping teams verification due to missing or restricted permissions:', authErr.message || authErr);
+      try {
+        const usersUrl = `${appwriteEndpoint}/databases/${appwriteDatabaseId}/collections/users/documents?limit=100`;
+        const dbHeaders: Record<string, string> = {
+          'X-Appwrite-Project': appwriteProjectId,
+          'Content-Type': 'application/json',
+        };
+        if (appwriteApiKey) {
+          dbHeaders['X-Appwrite-Key'] = appwriteApiKey;
         }
+
+        const usersRes = await fetch(usersUrl, { headers: dbHeaders });
+        if (usersRes.ok) {
+          const usersData = await usersRes.json();
+          queriedDb = true;
+          userDocInDb = usersData.documents?.find(
+            (u: any) => u.email?.toLowerCase().trim() === targetEmail
+          );
+        } else {
+          console.warn(`Appwrite users collection fetch failed with status code ${usersRes.status}`);
+        }
+      } catch (dbErr: any) {
+        console.warn('Skipping Appwrite database check:', dbErr.message || dbErr);
       }
 
-      // 2. Fallback: Query the Database "users" collection directly (accessible with or without API key if public read is allowed)
-      if (!isAdminAuthorized) {
-        try {
-          const usersUrl = `${appwriteEndpoint}/databases/${appwriteDatabaseId}/collections/users/documents?limit=100`;
-          const dbHeaders: Record<string, string> = {
-            'X-Appwrite-Project': appwriteProjectId,
-            'Content-Type': 'application/json',
-          };
-          if (appwriteApiKey) {
-            dbHeaders['X-Appwrite-Key'] = appwriteApiKey;
-          }
-
-          const usersRes = await fetch(usersUrl, { headers: dbHeaders });
-          if (usersRes.ok) {
-            const usersData = await usersRes.json();
-            const userInDb = usersData.documents?.find(
-              (u: any) => u.email.toLowerCase() === targetEmail
-            );
-            if (userInDb && userInDb.role === 'admin') {
-              isAdminAuthorized = true;
-              console.log(`Admin validated via Appwrite 'users' collection role: ${targetEmail}`);
-            }
-          }
-        } catch (dbErr: any) {
-          console.warn('Skipping Appwrite database check:', dbErr.message || dbErr);
-        }
-      }
-
-      // 3. Ultimate Fallback: Validate against our pre-seeded system owners / admins
-      if (!isAdminAuthorized) {
-        if (
-          targetEmail === 'officialsabicrest@gmail.com' ||
-          targetEmail === 'admin@sabicrest.com' ||
-          targetEmail === 'chief.admin@edu.sabicrest.com'
-        ) {
+      // 2. Evaluate Appwrite user role
+      if (queriedDb && userDocInDb) {
+        if (userDocInDb.role === 'admin') {
           isAdminAuthorized = true;
-          console.log(`Admin validated via system-seeded whitelist configurations: ${targetEmail}`);
+          console.log(`Admin validated via Appwrite 'users' collection: ${targetEmail}`);
+        } else {
+          isAdminAuthorized = false;
+          rejectReason = `Access denied. The account associated with "${email}" is registered with the '${userDocInDb.role}' role and is not an administrator. Please return to the standard Student or Tutor Access login.`;
+          console.log(`Admin verification denied for ${targetEmail}: role is '${userDocInDb.role}'`);
+        }
+      } else {
+        // 3. Fallback: Check against system pre-seeded users/roles whitelist
+        const SYSTEM_ROLES: Record<string, string> = {
+          'officialsabicrest@gmail.com': 'admin',
+          'admin@sabicrest.com': 'admin',
+          'chief.admin@edu.sabicrest.com': 'admin',
+          'trainer@edu.sabicrest.com': 'trainer',
+          'student.mentee@edu.sabicrest.com': 'student'
+        };
+
+        const matchedRole = SYSTEM_ROLES[targetEmail];
+        if (matchedRole) {
+          if (matchedRole === 'admin') {
+            isAdminAuthorized = true;
+            console.log(`Admin validated via system-seeded credentials whitelist: ${targetEmail}`);
+          } else {
+            isAdminAuthorized = false;
+            rejectReason = `Access denied. The account associated with "${email}" is registered as a '${matchedRole}' and is not an administrator. Please return to the standard Student or Tutor Access login.`;
+            console.log(`System whitelist denied for ${targetEmail}: role is '${matchedRole}'`);
+          }
+        } else {
+          // If DB was listed successfully and user wasn't there vs if listing was entirely blocked
+          if (queriedDb) {
+            isAdminAuthorized = false;
+            rejectReason = `Access denied. The email address "${email}" is not registered in our database. Please return to standard Student or Tutor Access to register first.`;
+          } else {
+            isAdminAuthorized = false;
+            rejectReason = `Access denied. The email address "${email}" is not registered as an administrator in our system. Please return to standard Student or Tutor Access login.`;
+          }
         }
       }
 
-      // Deny entry if no validation strategy cleared the user
+      // Abort if admin validation fails
       if (!isAdminAuthorized) {
         return res.status(200).json({
           success: false,
-          error: 'Access denied. Only accounts configured in the Admins team or registered as administrators have port entry.'
+          error: rejectReason || `Access denied. The account associated with "${email}" is not authorized as an administrator. Please return to standard Student or Tutor Access login.`
         });
       }
 
