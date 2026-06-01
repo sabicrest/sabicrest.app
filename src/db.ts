@@ -110,171 +110,17 @@ const INITIAL_USERS: User[] = [
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
     bio: 'System compliance curator and chief design director at Sabicrest.',
     skills: ['Cybersecurity', 'Database Auditing', 'Infrastructure Design', 'System Architecture']
-  },
-  {
-    id: 'u-trainer-1',
-    name: 'Nike Shoyinka',
-    email: 'trainer@edu.sabicrest.com',
-    role: 'trainer',
-    password: 'password123',
-    verified: true,
-    joinedDate: '2026-02-15',
-    status: 'active',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    bio: 'Lead Interface Trainer at Sabicrest. Passionate about typography mechanics and spatial grids.',
-    skills: ['Figma', 'Grid Systems', 'Interactive Prototyping', 'User Research']
-  },
-  {
-    id: 'u-student-1',
-    name: 'Alex Rivera',
-    email: 'student.mentee@edu.sabicrest.com',
-    role: 'student',
-    password: 'password123',
-    verified: true,
-    joinedDate: '2026-04-12',
-    status: 'active',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-    bio: 'Aperture design fellow. Crafting responsive visual compositions with minimalist micro-interactions.',
-    skills: ['UI/UX Design', 'Fluid Typography', 'CSS Architecture'],
-    phone: '+1 (555) 019-2831',
-    slackHandle: '@alex_rivera',
-    location: 'SF Bay Area',
-    enrolledCourseIds: ['c-1', 'c-2']
   }
 ];
 const INITIAL_MESSAGES: Message[] = [];
-const INITIAL_EVENTS: ScheduleEvent[] = [
-  {
-    id: 'e-1',
-    title: 'Figma Grids Review Session',
-    description: '1-on-1 feedback on student portfolio mockups and component alignment parameters.',
-    date: '2026-06-03',
-    time: '14:00',
-    durationMinutes: 45,
-    hostId: 'u-trainer-1',
-    hostName: 'Nike Shoyinka',
-    attendeeId: 'u-student-1',
-    status: 'confirmed',
-    meetLink: 'https://meet.google.com/abc-defg-hij',
-    roleType: '1-on-1'
-  },
-  {
-    id: 'e-2',
-    title: 'Assignment 2 - Design QA Audit',
-    description: 'Office Hour review of spatial micro-interaction prototypes.',
-    date: '2026-06-05',
-    time: '11:00',
-    durationMinutes: 60,
-    hostId: 'u-trainer-1',
-    hostName: 'Nike Shoyinka',
-    attendeeId: 'team-general',
-    status: 'confirmed',
-    meetLink: 'https://meet.google.com/xyz-qprs-tuv',
-    roleType: 'office-hours'
-  }
-];
-const INITIAL_CURRICULA: Curriculum[] = [
-  {
-    id: 'c-1',
-    trainerId: 'u-trainer-1',
-    trainerName: 'Nike Shoyinka',
-    title: 'Advanced Spatial Grids & Design Systems',
-    description: 'Learn to design complex layout frames, responsive components, and scalable token layers in production-level Figma environment.',
-    category: 'UI/UX Design',
-    level: 'Advanced',
-    durationWeeks: 8,
-    modules: [
-      'Scale-In Grids and Aspect Dimensions',
-      'Configuring Standard Layout Anchors',
-      'Establishing Global Colors and Style Constants',
-      'Micro-transitions and Layout Tokens'
-    ],
-    status: 'approved',
-    submittedAt: '2026-05-10T10:00:00Z',
-    approvedAt: '2026-05-12T15:30:00Z',
-    price: 154500
-  },
-  {
-    id: 'c-2',
-    trainerId: 'u-trainer-1',
-    trainerName: 'Nike Shoyinka',
-    title: 'Typography Mechanics and Interface Layout',
-    description: 'Fundamental tracking rules, letter spacing systems, high-legibility size hierarchy configurations for web dashboards.',
-    category: 'Visual Design',
-    level: 'Intermediate',
-    durationWeeks: 6,
-    modules: [
-      'Font Selection and Display Pairings',
-      'Visual Contrast and Leading Parameters',
-      'Responsive Font Sizing Rules',
-      'Aesthetics of Negative Space in Typography'
-    ],
-    status: 'approved',
-    submittedAt: '2026-05-14T08:00:00Z',
-    approvedAt: '2026-05-15T09:00:00Z',
-    price: 98000
-  }
-];
-const INITIAL_ASSIGNMENTS: Assignment[] = [
-  {
-    id: 'a-1',
-    title: 'Constructing Flexible Autolayout Systems',
-    description: 'Establish a responsive 12-column grid layout with fluid component frames of varied sizes.',
-    dueDate: '2026-06-15',
-    maxPoints: 100,
-    studentId: 'u-student-1',
-    studentName: 'Alex Rivera',
-    trainerId: 'u-trainer-1',
-    trainerName: 'Nike Shoyinka',
-    status: 'pending_review',
-    submittedAt: '2026-05-30T14:22:00Z',
-    submissionContent: 'Filing layout draft. Configured components in 3 distinct adaptive breakpoints.',
-    linkUrl: 'https://figma.com/file/sabicrest-layout-alex-rivera-draft',
-    courseId: 'c-1'
-  },
-  {
-    id: 'a-2',
-    title: 'Aesthetic Font Contrast Guide',
-    description: 'Conduct a pairing analysis of Inter display font face with JetBrains typography.',
-    dueDate: '2026-06-10',
-    maxPoints: 50,
-    studentId: 'u-student-1',
-    studentName: 'Alex Rivera',
-    trainerId: 'u-trainer-1',
-    trainerName: 'Nike Shoyinka',
-    status: 'not_submitted',
-    courseId: 'c-2'
-  }
-];
-const INITIAL_TEAMS: Team[] = [
-  {
-    id: 'team-general',
-    name: 'Aesthetic Nexus',
-    projectTitle: 'Sabicrest Core Platform v2',
-    description: 'Collaborative development of a secure, responsive portfolio workspace portal.',
-    members: ['u-student-1'],
-    tasks: [
-      { id: 't-1', title: 'Interface styling setup', assignedTo: 'Alex Rivera', status: 'done' },
-      { id: 't-2', title: 'Connecting Appwrite serverless proxy', assignedTo: 'Alex Rivera', status: 'in_progress' }
-    ],
-    sharedNotes: 'Welcome to Sabicrest. Make sure to complete the profile settings update before project lock.'
-  }
-];
+const INITIAL_EVENTS: ScheduleEvent[] = [];
+const INITIAL_CURRICULA: Curriculum[] = [];
+const INITIAL_ASSIGNMENTS: Assignment[] = [];
+const INITIAL_TEAMS: Team[] = [];
 const INITIAL_CERTIFICATES: Certificate[] = [];
 const INITIAL_NOTIFICATIONS: NotificationAlert[] = [];
 const INITIAL_TRANSACTIONS: DbTransactionLog[] = [];
-const INITIAL_HUB_MESSAGES: HubMessage[] = [
-  {
-    id: 'hm-1',
-    senderId: 'u-trainer-1',
-    senderName: 'Nike Shoyinka',
-    senderAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    content: 'Welcome everyone! Ensure to complete your first assignment by the upcoming task deadline.',
-    timestamp: '2026-05-29T10:00:00Z',
-    tag: 'collab',
-    reactions: { '🔥': ['u-student-1'] }
-  }
-];
+const INITIAL_HUB_MESSAGES: HubMessage[] = [];
 const INITIAL_ENROLLMENTS: CourseEnrollment[] = [];
 
 // Database Engine Provider Class
@@ -293,7 +139,7 @@ export class AppwriteDatabase {
 
   constructor() {
     // Force reset old mock keys on first run to clean up active browser storage
-    if (localStorage.getItem('sabicrest_clean_v2') !== 'true') {
+    if (localStorage.getItem('sabicrest_clean_v3') !== 'true') {
       localStorage.removeItem('sc_users');
       localStorage.removeItem('sc_messages');
       localStorage.removeItem('sc_hub_messages');
@@ -305,7 +151,7 @@ export class AppwriteDatabase {
       localStorage.removeItem('sc_notifications');
       localStorage.removeItem('sc_transactions');
       localStorage.removeItem('sc_enrollments');
-      localStorage.setItem('sabicrest_clean_v2', 'true');
+      localStorage.setItem('sabicrest_clean_v3', 'true');
     }
 
     this.users = JSON.parse(localStorage.getItem('sc_users') || JSON.stringify(INITIAL_USERS));
