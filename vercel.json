@@ -4,9 +4,21 @@
   "outputDirectory": "dist",
   "routes": [
     {
-      "src": "/(.*)",
-      "dest": "/server.cjs",
+      "src": "/api/(.*)",
+      "dest": "dist/server.cjs",
       "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/(.*\\..*)",
+      "dest": "/$1"
+    },
+    {
+      "src": "/.*",
+      "dest": "/index.html"
     }
   ]
 }
