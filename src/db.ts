@@ -21,30 +21,15 @@ import {
 let appwriteClient: Client | null = null;
 let appwriteDatabases: Databases | null = null;
 let appwriteAccount: Account | null = null;
-const USERS_COLLECTION = (import.meta.env.VITE_APPWRITE_USERS_COLLECTION as string) || 'users';
 
 export function getAppwriteClient(): Client | null {
-  const rawEndpoint = import.meta.env.VITE_APPWRITE_ENDPOINT?.trim() || '';
-  const projectId = import.meta.env.VITE_APPWRITE_PROJECT_ID?.trim() || (import.meta.env.DEV ? '6a19e810001156433516' : '');
-  const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID?.trim() || (import.meta.env.DEV ? '6a1aeae3002f269f4946' : '');
-
-  if (import.meta.env.PROD && (!projectId || !databaseId)) {
-    console.error(
-      'Missing Appwrite production configuration. Set VITE_APPWRITE_PROJECT_ID and VITE_APPWRITE_DATABASE_ID in your deployment environment.'
-    );
-  }
-
-  const endpoint = rawEndpoint
-    ? rawEndpoint.includes('fra.cloud.appwrite.io')
-      ? `${window.location.origin}/api/appwrite-proxy`
-      : rawEndpoint
+  const endpoint = import.meta.env.VITE_APPWRITE_ENDPOINT && !import.meta.env.VITE_APPWRITE_ENDPOINT.includes('fra.cloud.appwrite.io')
+    ? import.meta.env.VITE_APPWRITE_ENDPOINT
     : `${window.location.origin}/api/appwrite-proxy`;
-
+  const projectId = import.meta.env.VITE_APPWRITE_PROJECT_ID || '6a19e810001156433516';
   if (!projectId) {
-    console.warn('VITE_APPWRITE_PROJECT_ID is not configured. Appwrite client will not initialize.');
     return null;
   }
-
   if (!appwriteClient) {
     appwriteClient = new Client().setEndpoint(endpoint).setProject(projectId);
   }
@@ -458,7 +443,7 @@ export class AppwriteDatabase {
       
       // Sync Users
       try {
-        const res = await this.proxyList(USERS_COLLECTION);
+        const res = await this.proxyList('users');
         if (res && res.documents) {
           this.users = res.documents.map((doc: any) => this.parseUserDoc(doc));
         }
