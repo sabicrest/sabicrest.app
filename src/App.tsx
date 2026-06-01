@@ -59,9 +59,14 @@ export default function App() {
     if (currentUser) {
       const refreshedUser = db.getUserById(currentUser.id);
       if (refreshedUser) {
+        // If current session is verified admin, preserve the admin role state
+        const synced = { ...refreshedUser };
+        if (currentUser.role === 'admin') {
+          synced.role = 'admin';
+        }
         // If status changed or attributes updated, sync them immediately
-        if (JSON.stringify(refreshedUser) !== JSON.stringify(currentUser)) {
-          setCurrentUser(refreshedUser);
+        if (JSON.stringify(synced) !== JSON.stringify(currentUser)) {
+          setCurrentUser(synced);
         }
       }
     }

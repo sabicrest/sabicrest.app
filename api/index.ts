@@ -248,7 +248,8 @@ app.post('/api/admin/get-profile', async (req, res) => {
         id: $id, 
         ...data, 
         password: parsedPassword, 
-        bio: parsedBio 
+        bio: parsedBio,
+        role: 'admin'
       };
     }
 

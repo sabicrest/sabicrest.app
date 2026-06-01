@@ -253,7 +253,8 @@ async function startServer() {
           id: $id, 
           ...data, 
           password: parsedPassword, 
-          bio: parsedBio 
+          bio: parsedBio,
+          role: 'admin'
         };
       }
 
