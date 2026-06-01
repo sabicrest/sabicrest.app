@@ -8,7 +8,7 @@ import { User, Assignment, Curriculum } from '../types';
 import { db } from '../db';
 import { 
   BookOpen, FileText, CheckCircle2, Award, ClipboardCheck, Sparkles, Plus, AlertCircle, 
-  FileCheck, HelpCircle, Settings, Sliders, Bell, User as UserIcon, Mail, Phone, MapPin, Activity, X
+  FileCheck, HelpCircle, Settings, Sliders, Bell, User as UserIcon, Mail, Phone, MapPin, Activity, X, Search
 } from 'lucide-react';
 
 interface DashboardTrainerProps {
@@ -72,6 +72,8 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
   const [assignDueDate, setAssignDueDate] = useState('');
   const [assignMaxPoints, setAssignMaxPoints] = useState(100);
   const [assigningInProgress, setAssigningInProgress] = useState(false);
+  const [dashboardSearchQuery, setDashboardSearchQuery] = useState('');
+  const [coursesSearchQuery, setCoursesSearchQuery] = useState('');
 
   const allStudents = db.getUsers().filter(u => u.role === 'student');
 
@@ -316,6 +318,27 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
         </div>
 
         <div className="relative z-10 flex flex-wrap items-center gap-2 shrink-0">
+          {/* Dynamic header search box */}
+          <div className="relative w-full sm:w-48">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+              <Search size={12} />
+            </span>
+            <input
+              type="text"
+              placeholder="Search screen..."
+              value={dashboardSearchQuery}
+              onChange={(e) => setDashboardSearchQuery(e.target.value)}
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-8 pr-4 py-2 text-xs text-white placeholder-zinc-550 focus:outline-hidden focus:border-brand-yellow font-light"
+            />
+            {dashboardSearchQuery && (
+              <button 
+                onClick={() => setDashboardSearchQuery('')} 
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white cursor-pointer"
+              >
+                <X size={10} />
+              </button>
+            )}
+          </div>
           <button
             id="assign-assignment-trigger"
             onClick={() => setShowAssignModal(true)}
@@ -600,6 +623,11 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                 <div className="space-y-4">
                   {assignments
                     .filter(a => a.status === 'pending_review')
+                    .filter(a => 
+                      a.title.toLowerCase().includes(dashboardSearchQuery.toLowerCase()) ||
+                      a.studentName.toLowerCase().includes(dashboardSearchQuery.toLowerCase()) ||
+                      a.description.toLowerCase().includes(dashboardSearchQuery.toLowerCase())
+                    )
                     .map(ass => (
                       <div key={ass.id} className="border border-zinc-50 rounded-xl p-4 bg-zinc-50/10 hover:bg-white transition-all">
                         <div className="flex justify-between items-start mb-2">
@@ -651,8 +679,36 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                 <BookOpen size={13} className="text-brand-yellow" /> Proposed curricula Reviews
               </h3>
 
+              {/* Curriculum Search */}
+              <div className="relative w-full mb-4">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+                  <Search size={12} />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Filter key concepts/syllabi..."
+                  value={coursesSearchQuery}
+                  onChange={(e) => setCoursesSearchQuery(e.target.value)}
+                  className="w-full bg-zinc-50 border border-zinc-200 rounded-xl pl-8 pr-4 py-2 text-xs text-brand-black placeholder-zinc-400 focus:outline-hidden focus:border-brand-yellow font-light animate-in fade-in"
+                />
+                {coursesSearchQuery && (
+                  <button 
+                    onClick={() => setCoursesSearchQuery('')} 
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black cursor-pointer"
+                  >
+                    <X size={10} />
+                  </button>
+                )}
+              </div>
+
               <div className="space-y-3.5">
-                {curricula.map(curr => {
+                {curricula
+                  .filter(curr => 
+                    curr.title.toLowerCase().includes(coursesSearchQuery.toLowerCase()) ||
+                    curr.description.toLowerCase().includes(coursesSearchQuery.toLowerCase()) ||
+                    curr.category.toLowerCase().includes(coursesSearchQuery.toLowerCase())
+                  )
+                  .map(curr => {
                   const isApproved = curr.status === 'approved';
                   const isPending = curr.status === 'pending';
                   const isRejected = curr.status === 'rejected';

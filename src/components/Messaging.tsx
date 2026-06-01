@@ -6,6 +6,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Message } from '../types';
 import { db } from '../db';
+import ChannelsExplore from './ChannelsExplore';
+import WorkspaceDirectory from './WorkspaceDirectory';
 import { 
   Send, 
   MessageSquare, 
@@ -18,8 +20,19 @@ import {
   Reply, 
   X, 
   CornerDownRight, 
-  ZoomIn 
+  ZoomIn,
+  ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+  Sparkles
 } from 'lucide-react';
+
+const ALL_CHANNELS = [
+  { id: 'team-general', label: 'cohort-general', desc: 'General chatter, major announcements, and introductions.' },
+  { id: 'team-collaboration', label: 'team-active-horizon', desc: 'All team collaboration updates, cohort project syncs, and tasks.' },
+  { id: 'design-showcase', label: 'design-showcase', desc: 'Present and critique high-fidelity Figma links, design prototypes, and mockups.' },
+  { id: 'technical-support', label: 'technical-support', desc: 'Discuss application environments, system settings, APIs, and Appwrite databases.' }
+];
 
 interface MessagingProps {
   currentUser: User;
@@ -46,6 +59,65 @@ export default function Messaging({ currentUser }: MessagingProps) {
   const [dragStartX, setDragStartX] = useState<number>(0);
   const [dragOffset, setDragOffset] = useState<number>(0);
   const [longPressTimeout, setLongPressTimeout] = useState<any>(null);
+
+  // New responsive design & full-page view toggles states
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+  const [mobileActiveView, setMobileActiveView] = useState<'sidebar' | 'chat'>('sidebar');
+  const [channelsCollapsed, setChannelsCollapsed] = useState(false);
+  const [dmsCollapsed, setDmsCollapsed] = useState(false);
+  const [messagingSubView, setMessagingSubView] = useState<'chat' | 'channels' | 'directory'>('chat');
+
+  // Real-time notification/unread counts for channels and DMs
+  const [unreadCounts, setUnreadCounts] = useState<{ [key: string]: number }>({
+    'team-general': 0,
+    'team-collaboration': 2,
+    'design-showcase': 1,
+    'technical-support': 0,
+    'u-admin-1': 1,
+  });
+
+  const prevMessagesCountRef = useRef<number>(0);
+
+  useEffect(() => {
+    const key = activeDmUser ? activeDmUser.id : activeChannelId;
+    if (key) {
+      setUnreadCounts(prev => ({
+        ...prev,
+        [key]: 0
+      }));
+    }
+  }, [activeChannelId, activeDmUser]);
+
+  useEffect(() => {
+    if (messages.length > prevMessagesCountRef.current) {
+      const newMessages = messages.slice(prevMessagesCountRef.current);
+      if (prevMessagesCountRef.current > 0) {
+        setUnreadCounts(prev => {
+          const updated = { ...prev };
+          newMessages.forEach(m => {
+            if (m.senderId !== currentUser.id) {
+              const msgKey = m.channelId || m.senderId;
+              const activeKey = activeDmUser ? activeDmUser.id : activeChannelId;
+              if (msgKey && msgKey !== activeKey) {
+                updated[msgKey] = (updated[msgKey] || 0) + 1;
+              }
+            }
+          });
+          return updated;
+        });
+      }
+      prevMessagesCountRef.current = messages.length;
+    }
+  }, [messages, activeChannelId, activeDmUser, currentUser.id]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatStreamRef = useRef<HTMLDivElement>(null);
@@ -228,6 +300,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
   const usersList = db.getUsers().filter(u => u.id !== currentUser.id);
   const trainers = usersList.filter(u => u.role === 'trainer');
   const students = usersList.filter(u => u.role === 'student');
+  const displayDms = usersList;
 
   // Filter messages based on active context
   const filteredMessages = messages.filter(m => {
@@ -251,117 +324,233 @@ export default function Messaging({ currentUser }: MessagingProps) {
     }
   };
 
+  const isChannelsExpanded = !isMobile || !channelsCollapsed;
+  const isDmsExpanded = !isMobile || !dmsCollapsed;
+
+  if (messagingSubView === 'channels') {
+    return (
+      <ChannelsExplore
+        activeChannelId={activeChannelId}
+        activeDmUser={activeDmUser}
+        onChannelSelect={(chanId) => {
+          setActiveChannelId(chanId);
+          setActiveDmUser(null);
+          setReplyTo(null);
+          setAttachment(null);
+          setMessagingSubView('chat');
+          if (isMobile) {
+            setMobileActiveView('chat');
+          }
+        }}
+        onBack={() => setMessagingSubView('chat')}
+      />
+    );
+  }
+
+  if (messagingSubView === 'directory') {
+    return (
+      <WorkspaceDirectory
+        currentUser={currentUser}
+        usersList={usersList}
+        onSelectUser={(u) => {
+          setActiveDmUser(u);
+          setActiveChannelId('');
+          setReplyTo(null);
+          setAttachment(null);
+          setMessagingSubView('chat');
+          if (isMobile) {
+            setMobileActiveView('chat');
+          }
+        }}
+        onBack={() => setMessagingSubView('chat')}
+      />
+    );
+  }
+
   return (
     <div id="messaging-root" className="max-w-7xl mx-auto px-4 py-6 select-none">
-      <div id="messaging-layout-grid" className="grid grid-cols-1 md:grid-cols-4 border border-zinc-100 rounded-3xl overflow-hidden bg-white min-h-[500px]">
+      <div className="rounded-3xl p-[1px] bg-gradient-to-tr from-zinc-300 via-brand-yellow/80 to-zinc-300 shadow-xs">
+        <div id="messaging-layout-grid" className="grid grid-cols-1 md:grid-cols-4 rounded-[calc(1.5rem-1px)] overflow-hidden bg-white min-h-[500px]">
         
         {/* Left Sidebar Pane */}
-        <div id="messaging-sidebar" className="md:col-span-1 border-r border-zinc-100 flex flex-col justify-between bg-zinc-50/40 p-4 shrink-0">
+        <div 
+          id="messaging-sidebar" 
+          className={`col-span-1 md:col-span-1 border-r border-zinc-150 flex-col justify-between bg-zinc-50/40 p-4 shrink-0 ${
+            mobileActiveView !== 'sidebar' ? 'hidden md:flex' : 'flex'
+          }`}
+        >
           <div className="space-y-6">
             
             {/* Discussions Section */}
             <div>
-              <h3 className="text-[10px] uppercase font-semibold text-brand-black tracking-wider mb-2 flex items-center gap-1.5 font-light">
-                <Users size={12} className="text-zinc-400" /> Shared Channels
-              </h3>
-              <div className="space-y-1 text-xs font-light">
-                {[
-                  { id: 'team-general', label: 'cohort-general' },
-                  { id: 'team-collaboration', label: 'team-active-horizon' }
-                ].map(chan => (
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.innerWidth < 768) {
+                    setChannelsCollapsed(!channelsCollapsed);
+                  }
+                }}
+                className="w-full text-left flex items-center justify-between transition-all select-none hover:bg-zinc-150/50 p-2 rounded-xl border border-zinc-200 bg-white cursor-pointer md:hover:bg-transparent md:p-0 md:rounded-none md:border-0 md:bg-transparent md:cursor-default"
+              >
+                <h3 className="text-[10px] uppercase font-semibold text-brand-black tracking-wider flex items-center gap-1.5 font-light">
+                  <Users size={12} className="text-zinc-400" /> Shared Channels
+                </h3>
+                <span className="text-zinc-450 md:hidden">
+                  {channelsCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+                </span>
+              </button>
+ 
+               {isChannelsExpanded && (
+                <div className="space-y-1 text-xs font-light mt-2 animate-in fade-in duration-150">
+                  {ALL_CHANNELS.slice(0, 3).map(chan => {
+                    const isSelected = !activeDmUser && activeChannelId === chan.id;
+                    const count = unreadCounts[chan.id] || 0;
+                    return (
+                      <button
+                        key={chan.id}
+                        id={`channel-${chan.id}`}
+                        onClick={() => {
+                          setActiveChannelId(chan.id);
+                          setActiveDmUser(null);
+                          setReplyTo(null);
+                          setAttachment(null);
+                          if (window.innerWidth < 768) {
+                            setMobileActiveView('chat');
+                          }
+                        }}
+                        className={`w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-center justify-between gap-2 ${
+                          isSelected
+                            ? 'bg-brand-black text-white font-medium shadow-xs'
+                            : 'text-zinc-600 hover:bg-zinc-100/60'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <span className={isSelected ? 'text-brand-yellow text-xs font-bold' : 'text-zinc-400 text-xs font-bold'}>#</span>
+                          <span className="truncate">{chan.label}</span>
+                        </div>
+                        {count > 0 && (
+                          <span className="bg-brand-yellow text-brand-black text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-4 text-center shrink-0 shadow-3xs">
+                            {count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                  
                   <button
-                    key={chan.id}
-                    id={`channel-${chan.id}`}
-                    onClick={() => {
-                      setActiveChannelId(chan.id);
-                      setActiveDmUser(null);
-                      setReplyTo(null);
-                      setAttachment(null);
-                    }}
-                    className={`w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-center gap-2 ${
-                      !activeDmUser && activeChannelId === chan.id
-                        ? 'bg-brand-black text-white font-medium shadow-xs'
-                        : 'text-zinc-600 hover:bg-zinc-100/60'
-                    }`}
+                    type="button"
+                    onClick={() => setMessagingSubView('channels')}
+                    className="text-[10px] text-zinc-500 hover:text-brand-black font-semibold cursor-pointer underline hover:no-underline transition-all block mt-2 text-center w-full"
                   >
-                    <span className={(!activeDmUser && activeChannelId === chan.id) ? 'text-brand-yellow text-xs font-bold' : 'text-zinc-400 text-xs font-bold'}>#</span>
-                    <span>{chan.label}</span>
+                    View More Channels
                   </button>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
-
+ 
             {/* Direct Messages Section */}
             <div>
-              <h3 className="text-[10px] uppercase font-semibold text-brand-black tracking-wider mb-2 flex items-center gap-1.5 font-light">
-                <UserCheck size={12} className="text-zinc-400" /> Professional DMs
-              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.innerWidth < 768) {
+                    setDmsCollapsed(!dmsCollapsed);
+                  }
+                }}
+                className="w-full text-left flex items-center justify-between transition-all select-none hover:bg-zinc-150/50 p-2 rounded-xl border border-zinc-200 bg-white cursor-pointer md:hover:bg-transparent md:p-0 md:rounded-none md:border-0 md:bg-transparent md:cursor-default"
+              >
+                <h3 className="text-[10px] uppercase font-semibold text-brand-black tracking-wider flex items-center gap-1.5 font-light">
+                  <UserCheck size={12} className="text-zinc-400" /> Professional DMs
+                </h3>
+                <span className="text-zinc-450 md:hidden">
+                  {dmsCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+                </span>
+              </button>
               
-              <div className="space-y-1 text-xs font-light max-h-56 overflow-y-auto">
-                {currentUser.role !== 'trainer' ? (
-                  <>
-                    <p className="text-[9px] text-zinc-400 mb-1 tracking-wide">Trainers / Coaches</p>
-                    {trainers.map(t => (
-                      <button
-                        key={t.id}
-                        onClick={() => {
-                          setActiveDmUser(t);
-                          setReplyTo(null);
-                          setAttachment(null);
-                        }}
-                        className={`w-full text-left p-2 rounded-xl transition-all flex items-center gap-2 ${
-                          activeDmUser?.id === t.id
-                            ? 'bg-brand-black text-white font-medium shadow-xs'
-                            : 'text-zinc-600 hover:bg-zinc-100/60'
-                        }`}
-                      >
-                        <div className="w-5 h-5 rounded-full bg-zinc-200 font-bold overflow-hidden">
-                          <img src={t.avatar} alt="avatar" className="w-full h-full object-cover referrerPolicy='no-referrer'" />
-                        </div>
-                        <span className="truncate">{t.name}</span>
-                      </button>
-                    ))}
-                  </>
-                ) : (
-                  <>
-                    <p className="text-[9px] text-zinc-400 mb-1 tracking-wide">Student Roster</p>
-                    {students.map(s => (
-                      <button
-                        key={s.id}
-                        onClick={() => {
-                          setActiveDmUser(s);
-                          setReplyTo(null);
-                          setAttachment(null);
-                        }}
-                        className={`w-full text-left p-2 rounded-xl transition-all flex items-center gap-2 ${
-                          activeDmUser?.id === s.id
-                            ? 'bg-brand-black text-white font-medium shadow-xs'
-                            : 'text-zinc-600 hover:bg-zinc-100/60'
-                        }`}
-                      >
-                        <div className="w-5 h-5 rounded-full bg-zinc-200 font-bold overflow-hidden">
-                          <img src={s.avatar} alt="avatar" className="w-full h-full object-cover referrerPolicy='no-referrer'" />
-                        </div>
-                        <span className="truncate">{s.name}</span>
-                      </button>
-                    ))}
-                  </>
-                )}
-              </div>
+               {isDmsExpanded && (
+                <div className="space-y-1 text-xs font-light mt-2 animate-in fade-in duration-150">
+                  <div className="space-y-1 max-h-56 overflow-y-auto">
+                    {displayDms.slice(0, 3).map(u => {
+                      const isSelected = activeDmUser?.id === u.id;
+                      const count = unreadCounts[u.id] || 0;
+                      return (
+                        <button
+                          key={u.id}
+                          onClick={() => {
+                            setActiveDmUser(u);
+                            setReplyTo(null);
+                            setAttachment(null);
+                            if (window.innerWidth < 768) {
+                              setMobileActiveView('chat');
+                            }
+                          }}
+                          className={`w-full text-left p-2 rounded-xl transition-all flex items-center justify-between gap-2 ${
+                            isSelected
+                              ? 'bg-brand-black text-white font-medium shadow-xs'
+                              : 'text-zinc-600 hover:bg-zinc-100/60'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <div className="w-5 h-5 rounded-full bg-zinc-200 font-bold overflow-hidden shadow-2xs shrink-0 bg-white">
+                              {u.avatar ? (
+                                <img src={u.avatar} alt="avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                              ) : (
+                                <div className="w-full h-full bg-brand-black text-white flex items-center justify-center text-[10px] font-bold uppercase">
+                                  {u.name.charAt(0)}
+                                </div>
+                              )}
+                            </div>
+                            <span className="truncate">{u.name}</span>
+                          </div>
+                          {count > 0 && (
+                            <span className="bg-brand-yellow text-brand-black text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-4 text-center shrink-0 shadow-3xs">
+                              {count}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                    {displayDms.length === 0 && (
+                      <p className="text-[10px] text-zinc-400 italic p-2 text-center">No platform members available.</p>
+                    )}
+                  </div>
+ 
+                   <button
+                    type="button"
+                    onClick={() => setMessagingSubView('directory')}
+                    className="text-[10px] text-zinc-500 hover:text-brand-black font-semibold cursor-pointer underline hover:no-underline transition-all block mt-2 text-center w-full"
+                  >
+                    View More Directory
+                  </button>
+                </div>
+              )}
             </div>
-
+ 
           </div>
         </div>
-
+ 
         {/* Dynamic Chat Main Pane */}
-        <div id="messaging-main-chat" className="md:col-span-3 flex flex-col justify-between">
+        <div 
+          id="messaging-main-chat" 
+          className={`col-span-1 md:col-span-3 flex-col justify-between ${
+            mobileActiveView !== 'chat' ? 'hidden md:flex' : 'flex'
+          }`}
+        >
           
           {/* Active Banner Name */}
-          <div id="chat-header-bar" className="border-b border-zinc-100 px-6 py-4 bg-white flex items-center justify-between">
+          <div id="chat-header-bar" className="border-b border-zinc-150 px-6 py-4 bg-white flex items-center justify-between">
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setMobileActiveView('sidebar')}
+                className="md:hidden mr-2 p-1 text-zinc-500 hover:text-black transition-colors"
+                title="Back to lists"
+              >
+                <ArrowLeft size={16} />
+              </button>
               <MessageSquare size={16} className="text-brand-yellow" />
               <h3 className="text-sm font-light tracking-tight text-brand-black">
-                Active Hub: <span className="font-semibold">{activeDmUser ? activeDmUser.name : `#${activeChannelId === 'team-general' ? 'cohort-general' : 'team-active-horizon'}`}</span>
+                Active Hub: <span className="font-semibold">{activeDmUser ? activeDmUser.name : `#${activeChannelId === 'team-general' ? 'cohort-general' : activeChannelId === 'team-collaboration' ? 'team-active-horizon' : activeChannelId}`}</span>
               </h3>
             </div>
             <span className="text-[10px] text-emerald-500 font-sans flex items-center gap-1 bg-emerald-50/60 px-2 py-0.5 rounded">
@@ -663,6 +852,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
 
         </div>
       </div>
+    </div>
 
       {/* Lightbox zoomed-in Image Preview modal */}
       {zoomedImage && (

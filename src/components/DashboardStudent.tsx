@@ -9,7 +9,7 @@ import { db } from '../db';
 import { 
   Award, BookOpen, Clock, FileText, CheckCircle2, ChevronRight, Upload, Link, AlertCircle, 
   FileCheck, Printer, Settings, User as UserIcon, Mail, Phone, MapPin, Sliders, Bell, 
-  Compass, Radio, Heart, HelpCircle, Activity, CreditCard, Lock, X, ExternalLink, ShieldCheck, Coins
+  Compass, Radio, Heart, HelpCircle, Activity, CreditCard, Lock, X, ExternalLink, ShieldCheck, Coins, Search
 } from 'lucide-react';
 
 interface DashboardStudentProps {
@@ -41,6 +41,8 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
   const [prefSlackSync, setPrefSlackSync] = useState(true);
   const [prefSoundEffects, setPrefSoundEffects] = useState(true);
   const [workspaceAccent, setWorkspaceAccent] = useState<'gold' | 'emerald' | 'indigo'>('gold');
+  const [dashboardSearchQuery, setDashboardSearchQuery] = useState('');
+  const [coursesSearchQuery, setCoursesSearchQuery] = useState('');
 
   // Notifications State
   const [studentNotifs, setStudentNotifs] = useState(db.getNotifications().filter(n => n.userId === currentUser.id));
@@ -384,11 +386,21 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
   // Custom simple line score visual representation
   const linePoints = gradedAssignments.map((a, i) => `${(i / Math.max(1, gradedAssignments.length - 1)) * 100},${60 - (Number(a.points || 90) - 50) * 0.8}`);
 
+  const filteredAssignments = assignments.filter(ass => 
+    ass.title.toLowerCase().includes(dashboardSearchQuery.toLowerCase()) ||
+    ass.description.toLowerCase().includes(dashboardSearchQuery.toLowerCase())
+  );
+
+  const filteredCerts = certs.filter(cert => 
+    cert.curriculumTitle.toLowerCase().includes(dashboardSearchQuery.toLowerCase()) ||
+    cert.trainerName.toLowerCase().includes(dashboardSearchQuery.toLowerCase())
+  );
+
   return (
     <div id="student-dashboard-root" className="py-6 max-w-7xl mx-auto px-4 select-none">
       
       {/* Header Banner - Upgraded to match Settings aesthetics */}
-      <div id="student-hero-banner" className="bg-brand-black text-white rounded-3xl p-8 mb-8 relative overflow-hidden shadow-xs">
+      <div id="student-hero-banner" className="bg-brand-black text-white rounded-3xl p-8 mb-8 relative overflow-hidden shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="absolute top-0 right-0 w-96 h-96 bg-zinc-800/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
         <div className="relative z-10 space-y-2 max-w-2xl">
           <span className="text-[10px] uppercase font-mono tracking-widest bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full border border-zinc-700">
@@ -400,6 +412,28 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
           <p className="text-xs text-zinc-400 font-light leading-relaxed">
             Track certification degrees, evaluate active assignments, and collaborate in real-time.
           </p>
+        </div>
+
+        {/* Dynamic header search box */}
+        <div className="relative z-10 w-full md:w-64 shrink-0">
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400">
+            <Search size={14} />
+          </span>
+          <input
+            type="text"
+            placeholder="Search assignments or certificates..."
+            value={dashboardSearchQuery}
+            onChange={(e) => setDashboardSearchQuery(e.target.value)}
+            className="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-hidden focus:border-brand-yellow font-light shadow-2xs"
+          />
+          {dashboardSearchQuery && (
+            <button 
+              onClick={() => setDashboardSearchQuery('')} 
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white cursor-pointer"
+            >
+              <X size={12} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -565,7 +599,7 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
               </h3>
 
               <div className="space-y-4">
-                {assignments.map(ass => {
+                {filteredAssignments.map(ass => {
                   const isNotSubmit = ass.status === 'not_submitted';
                   const isPending = ass.status === 'pending_review';
                   const isGraded = ass.status === 'graded';
@@ -644,7 +678,7 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
                 </div>
               ) : (
                 <div className="space-y-3.5">
-                  {certs.map(cert => (
+                  {filteredCerts.map(cert => (
                     <div
                       key={cert.id}
                       onClick={() => setSelectedCertToPrint(cert)}
@@ -692,12 +726,42 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
             <h3 className="text-sm font-light tracking-tight text-brand-black mb-1">
               Join New Classes // <span className="font-semibold text-brand-yellow">Available Courses</span>
             </h3>
-            <p className="text-xs text-brand-gray font-light mb-6">
+            <p className="text-xs text-brand-gray font-light mb-4">
               Sign up for our classes below. When you join, we will give you beginner projects, and your teacher will help check your work and keep track of your progress here.
             </p>
 
+            {/* Courses/Catalog Search Input */}
+            <div className="relative w-full max-w-md mb-6">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400">
+                <Search size={14} />
+              </span>
+              <input
+                type="text"
+                placeholder="Type course name, teacher or syllabus category to search..."
+                value={coursesSearchQuery}
+                onChange={(e) => setCoursesSearchQuery(e.target.value)}
+                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-brand-black placeholder-zinc-400 focus:outline-hidden focus:border-brand-yellow font-light"
+              />
+              {coursesSearchQuery && (
+                <button 
+                  onClick={() => setCoursesSearchQuery('')} 
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-450 hover:text-brand-black cursor-pointer"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {db.getCurricula().filter(c => c.status === 'approved').map(course => {
+              {db.getCurricula()
+                .filter(c => c.status === 'approved')
+                .filter(course => 
+                  course.title.toLowerCase().includes(coursesSearchQuery.toLowerCase()) ||
+                  course.description.toLowerCase().includes(coursesSearchQuery.toLowerCase()) ||
+                  course.trainerName.toLowerCase().includes(coursesSearchQuery.toLowerCase()) ||
+                  course.category.toLowerCase().includes(coursesSearchQuery.toLowerCase())
+                )
+                .map(course => {
                 const alreadyEnrolled = (currentUser.enrolledCourseIds || ['c-1']).includes(course.id);
                 return (
                   <div key={course.id} className="border border-zinc-100 rounded-2xl p-5 hover:border-brand-yellow bg-zinc-50/10 hover:bg-white transition-all flex flex-col justify-between space-y-4">
