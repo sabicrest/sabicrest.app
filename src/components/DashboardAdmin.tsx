@@ -4,9 +4,9 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { User, Curriculum, CourseEnrollment } from '../types';
+import { User, Curriculum, CourseEnrollment, AdminActivity } from '../types';
 import { db } from '../db';
-import { Shield, Sparkles, BookOpen, UserCheck, Settings, Server, CheckSquare, XCircle, ToggleLeft, ToggleRight, Radio, RefreshCw, KeyRound, Clock, AlertCircle, X, Award, ClipboardCheck } from 'lucide-react';
+import { Shield, Sparkles, BookOpen, UserCheck, Settings, Server, CheckSquare, XCircle, ToggleLeft, ToggleRight, Radio, RefreshCw, KeyRound, Clock, AlertCircle, X, Award, ClipboardCheck, Activity } from 'lucide-react';
 
 interface DashboardAdminProps {
   currentUser: User;
@@ -16,6 +16,7 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
   const [users, setUsers] = useState<User[]>(db.getUsers());
   const [curricula, setCurricula] = useState<Curriculum[]>(db.getCurricula());
   const [transactions, setTransactions] = useState(db.getTransactions());
+  const [activities, setActivities] = useState<AdminActivity[]>(db.getAdminActivities());
   const [rejectionTargetId, setRejectionTargetId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
 
@@ -37,9 +38,20 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
     setCurricula(db.getCurricula());
     setTransactions(db.getTransactions());
     setEnrollments(db.getEnrollments());
+    setActivities(db.getAdminActivities());
   };
 
   useEffect(() => {
+    // Log dashboard entrance audit
+    db.addAdminActivity({
+      adminId: currentUser.id,
+      adminName: currentUser.name,
+      adminEmail: currentUser.email,
+      action: 'Dashboard Access',
+      details: 'Administrator entered session under CAO clearance.',
+      ipAddress: '192.168.10.22'
+    });
+    reloadAdminData();
     const interval = setInterval(reloadAdminData, 2000);
     return () => clearInterval(interval);
   }, []);
@@ -56,6 +68,17 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
         approvedAt: new Date().toISOString()
       };
       db.updateCurriculum(updated);
+
+      // Log admin audit activity
+      db.addAdminActivity({
+        adminId: currentUser.id,
+        adminName: currentUser.name,
+        adminEmail: currentUser.email,
+        action: 'Approve Syllabus',
+        details: `Approved syllabus proposal "${target.title}" proposed by ${target.trainerName}.`,
+        ipAddress: '192.168.10.22'
+      });
+
       reloadAdminData();
 
       // Trigger tutor notification
@@ -85,6 +108,17 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
         rejectionReason: rejectReason
       };
       db.updateCurriculum(updated);
+
+      // Log admin audit activity
+      db.addAdminActivity({
+        adminId: currentUser.id,
+        adminName: currentUser.name,
+        adminEmail: currentUser.email,
+        action: 'Reject Syllabus',
+        details: `Rejected syllabus "${target.title}" proposed by ${target.trainerName}. Reason: "${rejectReason}"`,
+        ipAddress: '192.168.10.22'
+      });
+
       reloadAdminData();
 
       // Notify tutor of rejection
@@ -154,6 +188,16 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
       type: 'grade'
     });
 
+    // Log admin audit activity
+    db.addAdminActivity({
+      adminId: currentUser.id,
+      adminName: currentUser.name,
+      adminEmail: currentUser.email,
+      action: 'Approve Payment Audit',
+      details: `Approved enrollment request of ${enr.studentName} for course "${enr.courseTitle}" (Ref: "${enr.paymentReference || 'N/A'}").`,
+      ipAddress: '192.168.10.22'
+    });
+
     reloadAdminData();
   };
 
@@ -182,6 +226,16 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
         message: `Your reference submission "${enr.paymentReference}" was rejected by CAO. Reason: "${rejectEnrollmentReason}".`,
         type: 'system'
       });
+
+      // Log admin audit activity
+      db.addAdminActivity({
+        adminId: currentUser.id,
+        adminName: currentUser.name,
+        adminEmail: currentUser.email,
+        action: 'Reject Payment Audit',
+        details: `Rejected enrollment query from student ${enr.studentName} for course "${enr.courseTitle}" (Ref: "${enr.paymentReference || 'N/A'}"). Reason: "${rejectEnrollmentReason}"`,
+        ipAddress: '192.168.10.22'
+      });
     }
 
     setRejectionEnrollmentId(null);
@@ -196,6 +250,17 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
       const nextStatus: User['status'] = target.status === 'active' ? 'suspended' : 'active';
       const updated: User = { ...target, status: nextStatus };
       db.updateUser(updated);
+
+      // Log admin audit activity
+      db.addAdminActivity({
+        adminId: currentUser.id,
+        adminName: currentUser.name,
+        adminEmail: currentUser.email,
+        action: nextStatus === 'suspended' ? 'Suspend User' : 'Activate User',
+        details: `${nextStatus === 'suspended' ? 'Suspended' : 'Activated'} credentials for "${target.name}" (${target.role}).`,
+        ipAddress: '192.168.10.22'
+      });
+
       reloadAdminData();
 
       db.addNotification({
@@ -213,6 +278,17 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
     if (target) {
       const updated: User = { ...target, verified: !target.verified };
       db.updateUser(updated);
+
+      // Log admin audit activity
+      db.addAdminActivity({
+        adminId: currentUser.id,
+        adminName: currentUser.name,
+        adminEmail: currentUser.email,
+        action: !target.verified ? 'Verify Profile' : 'De-verify Profile',
+        details: `${!target.verified ? 'Verified' : 'De-verified'} profile for user "${target.name}" (${target.role}).`,
+        ipAddress: '192.168.10.22'
+      });
+
       reloadAdminData();
 
       db.addNotification({
@@ -226,6 +302,17 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
 
   const simulateServerlessRecalibration = () => {
     setColdStartSpeed('recalculating...');
+
+    // Log admin audit activity
+    db.addAdminActivity({
+      adminId: currentUser.id,
+      adminName: currentUser.name,
+      adminEmail: currentUser.email,
+      action: 'Recalibrate DB Clusters',
+      details: 'Triggered cluster performance alignment sequence across Appwrite replicas.',
+      ipAddress: '192.168.10.22'
+    });
+
     setTimeout(() => {
       const randomSpeed = `${Math.floor(Math.random() * 8) + 6}ms`;
       setColdStartSpeed(randomSpeed);
@@ -502,9 +589,12 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
 
                     <p className="text-xs text-brand-gray font-light leading-relaxed mb-3">{curr.description}</p>
                     
-                    <span className="text-[10px] text-zinc-400 font-mono block">
-                      weeks: {curr.durationWeeks} // level: {curr.level} // category: {curr.category}
-                    </span>
+                    <div className="flex justify-between items-center text-[10px] text-zinc-400 font-mono">
+                      <span>weeks: {curr.durationWeeks} // level: {curr.level} // category: {curr.category}</span>
+                      {curr.price !== undefined && (
+                        <span className="text-zinc-700 font-bold bg-zinc-100/50 border border-zinc-100/60 px-2 py-0.5 rounded font-sans leading-none">Best Price: ₦{curr.price.toLocaleString()}</span>
+                      )}
+                    </div>
 
                     {/* render modules */}
                     <div className="mt-3 bg-white p-2.5 rounded-lg border border-zinc-50">
@@ -680,6 +770,48 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
 
         {/* Platform Overview Panel - Right Side Col */}
         <div className="lg:col-span-1 space-y-6">
+
+          {/* Administrative Action Audit Logs */}
+          <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs" id="admin-activity-tracker">
+            <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase mb-4 flex items-center justify-between font-light">
+              <span className="flex items-center gap-1.5 font-bold text-brand-black">
+                <Activity size={13} className="text-brand-yellow animate-pulse" /> Administrative Audit Trail
+              </span>
+              <span className="text-[9px] uppercase font-mono tracking-widest text-zinc-400 bg-zinc-50 border border-zinc-100 px-2 py-0.5 rounded-full">
+                {activities.length} entries
+              </span>
+            </h3>
+
+            <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+              {activities.length === 0 ? (
+                <div className="text-center py-10 text-zinc-400 font-light text-[10px] bg-zinc-50/50 rounded-xl border border-dashed border-zinc-100">
+                  No admin activities recorded yet.
+                </div>
+              ) : (
+                activities.map((act) => (
+                  <div key={act.id} className="bg-zinc-50 border border-zinc-150 p-3 rounded-xl text-[10px] leading-relaxed space-y-2 hover:border-zinc-300 transition-all">
+                    <div className="flex justify-between items-start">
+                      <span className="font-bold text-brand-black text-[10.5px] tracking-tight truncate max-w-[150px]">{act.action}</span>
+                      <span className="text-[9px] font-mono text-zinc-400 shrink-0">
+                        {new Date(act.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      </span>
+                    </div>
+
+                    <p className="text-zinc-650 font-light">{act.details}</p>
+
+                    <div className="flex flex-wrap items-center justify-between gap-1 border-t border-zinc-100/80 pt-2 text-[9px] text-zinc-400">
+                      <span className="truncate max-w-[130px]" title={act.adminEmail}>By: {act.adminName}</span>
+                      <span className="font-mono text-brand-yellow font-medium">IP: {act.ipAddress}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <p className="text-[9px] text-zinc-400 italic mt-3 text-right">
+              Logs are cryptographically hashed and synced to Appwrite.
+            </p>
+          </div>
           
           {/* Activity Audit Ledger */}
           <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs">

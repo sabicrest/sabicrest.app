@@ -193,7 +193,7 @@ export default function App() {
         return <div className="p-8 text-center text-zinc-400">Collaboration panels restricted to students.</div>;
 
       case 'profile':
-        return <StudentSettings currentUser={currentUser} />;
+        return <StudentSettings currentUser={currentUser} onUserUpdate={setCurrentUser} />;
 
       default:
         return <div className="p-8 text-center text-zinc-400">View segment not found in compilation path.</div>;
@@ -212,8 +212,8 @@ export default function App() {
         tabs={tabs}
       />
 
-      {/* Main interactive section grid */}
-      <main id="app-workspace-body" className="animate-in fade-in slide-in-from-bottom-2 duration-200">
+      {/* Main interactive section grid - pt-16 is added to prevent overlap behind fixed header */}
+      <main id="app-workspace-body" className="pt-16 animate-in fade-in slide-in-from-bottom-2 duration-200">
         {renderActiveTabContent()}
       </main>
 

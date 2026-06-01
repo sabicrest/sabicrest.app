@@ -26,9 +26,10 @@ import {
 
 interface StudentSettingsProps {
   currentUser: User;
+  onUserUpdate?: (user: User) => void;
 }
 
-export default function StudentSettings({ currentUser }: StudentSettingsProps) {
+export default function StudentSettings({ currentUser, onUserUpdate }: StudentSettingsProps) {
   // Profile fields state
   const [profileName, setProfileName] = useState(currentUser.name);
   const [profilePhone, setProfilePhone] = useState(currentUser.phone || '');
@@ -164,6 +165,10 @@ export default function StudentSettings({ currentUser }: StudentSettingsProps) {
         message: 'Your personal workspace settings and public photo parameters are synchronized.',
         type: 'grade'
       });
+
+      if (onUserUpdate) {
+        onUserUpdate(updatedUser);
+      }
 
       showToast('✓ Profile updated successfully!');
     } catch (err: any) {

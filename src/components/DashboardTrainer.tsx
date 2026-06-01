@@ -58,6 +58,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
   const [currCategory, setCurrCategory] = useState('Visual Design');
   const [currLevel, setCurrLevel] = useState<'Beginner' | 'Intermediate' | 'Advanced'>('Intermediate');
   const [currDuration, setCurrDuration] = useState(6);
+  const [currPrice, setCurrPrice] = useState<number>(150000);
   const [newModuleText, setNewModuleText] = useState('');
   const [moduleList, setModuleList] = useState<string[]>([]);
 
@@ -273,7 +274,8 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
       category: currCategory,
       level: currLevel,
       durationWeeks: Number(currDuration),
-      modules: moduleList
+      modules: moduleList,
+      price: Number(currPrice) || 0
     };
 
     db.addCurriculum(newCurr);
@@ -290,6 +292,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
     // Reset values
     setCurrTitle('');
     setCurrDesc('');
+    setCurrPrice(150000);
     setModuleList([]);
     setShowCurriculumModal(false);
   };
@@ -667,9 +670,12 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                       </div>
 
                       <p className="text-[11px] text-brand-gray font-light mt-1.5 leading-relaxed">{curr.description}</p>
-                      <span className="text-[9px] text-zinc-400 font-mono font-light mt-2 block pt-2 border-t border-zinc-50 uppercase">
-                        weeks: {curr.durationWeeks} // {curr.category}
-                      </span>
+                      <div className="text-[9px] text-zinc-400 font-mono font-light mt-2 pt-2 border-t border-zinc-50 uppercase flex justify-between items-center">
+                        <span>weeks: {curr.durationWeeks} // {curr.category}</span>
+                        {curr.price !== undefined && (
+                          <span className="text-brand-black font-semibold font-sans normal-case">₦{curr.price.toLocaleString()}</span>
+                        )}
+                      </div>
 
                       {isRejected && curr.rejectionReason && (
                         <div className="bg-red-50 text-red-700 px-3 py-2 rounded-lg text-[10px] font-light mt-2.5 leading-normal">
@@ -1026,7 +1032,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                 ></textarea>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="col-span-1">
                   <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Category</label>
                   <select
@@ -1064,6 +1070,19 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                     max={24}
                     value={currDuration}
                     onChange={(e) => setCurrDuration(Number(e.target.value))}
+                    className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-2.5 py-2 focus:outline-hidden"
+                    required
+                  />
+                </div>
+
+                <div className="col-span-1">
+                  <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Best Price (NGN)</label>
+                  <input
+                    id="cur-input-price"
+                    type="number"
+                    min={0}
+                    value={currPrice}
+                    onChange={(e) => setCurrPrice(Number(e.target.value))}
                     className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-2.5 py-2 focus:outline-hidden"
                     required
                   />

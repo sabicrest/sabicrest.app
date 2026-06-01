@@ -15,7 +15,8 @@ import {
   Certificate,
   NotificationAlert,
   DbTransactionLog,
-  CourseEnrollment
+  CourseEnrollment,
+  AdminActivity
 } from './types';
 
 let appwriteClient: Client | null = null;
@@ -136,6 +137,7 @@ export class AppwriteDatabase {
   private notifications: NotificationAlert[];
   private transactions: DbTransactionLog[];
   private enrollments: CourseEnrollment[];
+  private adminActivities: AdminActivity[];
 
   constructor() {
     // Force reset old mock keys on first run to clean up active browser storage
@@ -151,6 +153,7 @@ export class AppwriteDatabase {
       localStorage.removeItem('sc_notifications');
       localStorage.removeItem('sc_transactions');
       localStorage.removeItem('sc_enrollments');
+      localStorage.removeItem('sc_admin_activities');
       localStorage.setItem('sabicrest_clean_v3', 'true');
     }
 
@@ -165,6 +168,7 @@ export class AppwriteDatabase {
     this.notifications = JSON.parse(localStorage.getItem('sc_notifications') || JSON.stringify(INITIAL_NOTIFICATIONS));
     this.transactions = JSON.parse(localStorage.getItem('sc_transactions') || JSON.stringify(INITIAL_TRANSACTIONS));
     this.enrollments = JSON.parse(localStorage.getItem('sc_enrollments') || JSON.stringify(INITIAL_ENROLLMENTS));
+    this.adminActivities = JSON.parse(localStorage.getItem('sc_admin_activities') || '[]');
 
     this.saveToStorage();
     this.syncFromAppwrite();
@@ -182,6 +186,7 @@ export class AppwriteDatabase {
     localStorage.setItem('sc_notifications', JSON.stringify(this.notifications));
     localStorage.setItem('sc_transactions', JSON.stringify(this.transactions));
     localStorage.setItem('sc_enrollments', JSON.stringify(this.enrollments));
+    localStorage.setItem('sc_admin_activities', JSON.stringify(this.adminActivities));
   }
 
   private logTransaction(operation: string, table: string, dataStr: string) {
@@ -436,6 +441,21 @@ export class AppwriteDatabase {
         }
       } catch (err) {
         console.warn('Appwrite sync error [enrollments]:', err);
+      }
+
+      // Sync Admin Audit Activities
+      try {
+        const res = await this.proxyList('admin_activities');
+        if (res && res.documents) {
+          this.adminActivities = res.documents.map((doc: any) => {
+            const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
+            return { id: $id, ...data } as any;
+          });
+          // Sort by timestamp descending
+          this.adminActivities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        }
+      } catch (err) {
+        console.warn('Appwrite sync error [admin_activities]:', err);
       }
 
       this.saveToStorage();
@@ -832,6 +852,24 @@ export class AppwriteDatabase {
     this.saveToStorage();
     this.logTransaction('UPDATE_COURSE_ENROLLMENT', 'CourseEnrollments', JSON.stringify(enr));
     this.saveToAppwrite('enrollments', enr.id, enr);
+  }
+
+  // --- Admin Activity Audit System ---
+  getAdminActivities(): AdminActivity[] {
+    return this.adminActivities;
+  }
+
+  addAdminActivity(act: Omit<AdminActivity, 'id' | 'timestamp'>): AdminActivity {
+    const freshAct: AdminActivity = {
+      ...act,
+      id: `act-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      timestamp: new Date().toISOString()
+    };
+    this.adminActivities = [freshAct, ...this.adminActivities].slice(0, 150); // keep max 150 administrative logs
+    this.saveToStorage();
+    this.logTransaction('LOG_ADMIN_ACTIVITY', 'AdminActivities', JSON.stringify(freshAct));
+    this.saveToAppwrite('admin_activities', freshAct.id, freshAct);
+    return freshAct;
   }
 }
 

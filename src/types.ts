@@ -187,3 +187,16 @@ export interface CourseEnrollment {
   verifiedAt?: string;
   rejectionReason?: string;
 }
+
+// Administrative Audit logs for actions in the admin dashboard
+export interface AdminActivity {
+  id: string;
+  timestamp: string;
+  adminId: string;
+  adminName: string;
+  adminEmail: string;
+  action: string;
+  details: string;
+  ipAddress: string;
+}
+
