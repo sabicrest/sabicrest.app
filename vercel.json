@@ -10,10 +10,14 @@
       "use": "@vercel/node"
     }
   ],
+  "outputDirectory": "dist",
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "/server.ts"
+    },
+    {
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
