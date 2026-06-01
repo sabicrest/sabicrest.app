@@ -1,18 +1,23 @@
 {
   "version": 2,
-  "functions": {
-    "dist/server.cjs": {
-      "runtime": "nodejs18.x"
-    }
-  },
-  "rewrites": [
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "destination": "/dist/server.cjs"
+      "src": "package.json",
+      "use": "@vercel/static-build"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "server.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
