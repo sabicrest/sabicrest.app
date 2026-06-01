@@ -21,6 +21,7 @@ import {
 let appwriteClient: Client | null = null;
 let appwriteDatabases: Databases | null = null;
 let appwriteAccount: Account | null = null;
+const USERS_COLLECTION = (import.meta.env.VITE_APPWRITE_USERS_COLLECTION as string) || 'users';
 
 export function getAppwriteClient(): Client | null {
   const rawEndpoint = import.meta.env.VITE_APPWRITE_ENDPOINT?.trim() || '';
@@ -457,7 +458,7 @@ export class AppwriteDatabase {
       
       // Sync Users
       try {
-        const res = await this.proxyList('users');
+        const res = await this.proxyList(USERS_COLLECTION);
         if (res && res.documents) {
           this.users = res.documents.map((doc: any) => this.parseUserDoc(doc));
         }

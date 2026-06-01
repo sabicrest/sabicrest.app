@@ -18,6 +18,7 @@ async function startServer() {
   const appwriteEndpoint = process.env.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
   const appwriteProjectId = process.env.VITE_APPWRITE_PROJECT_ID || process.env.APPWRITE_PROJECT_ID || '';
   const appwriteDatabaseId = process.env.VITE_APPWRITE_DATABASE_ID || process.env.APPWRITE_DATABASE_ID || '';
+  const appwriteUsersCollection = process.env.VITE_APPWRITE_USERS_COLLECTION || process.env.APPWRITE_USERS_COLLECTION || 'users';
   const appwriteApiKey = process.env.APPWRITE_API_KEY || process.env.VITE_APPWRITE_API_KEY || process.env.APPWRITE_KEY || '';
 
   if (process.env.NODE_ENV === 'production') {
@@ -84,7 +85,7 @@ async function startServer() {
       // 2. Check if the email exists in the Appwrite database "users" collection
       let isRegisteredInDatabase = false;
       try {
-        const dbUsersUrl = `${appwriteEndpoint}/databases/${appwriteDatabaseId}/collections/users/documents?limit=100`;
+        const dbUsersUrl = `${appwriteEndpoint}/databases/${appwriteDatabaseId}/collections/${appwriteUsersCollection}/documents?limit=100`;
         const dbHeaders: Record<string, string> = {
           'X-Appwrite-Project': appwriteProjectId,
           'Content-Type': 'application/json',
@@ -142,7 +143,7 @@ async function startServer() {
       // Query database for the user document
       let matchedDoc: any = null;
       try {
-        const dbUsersUrl = `${appwriteEndpoint}/databases/${appwriteDatabaseId}/collections/users/documents?limit=100`;
+        const dbUsersUrl = `${appwriteEndpoint}/databases/${appwriteDatabaseId}/collections/${appwriteUsersCollection}/documents?limit=100`;
         const dbHeaders: Record<string, string> = {
           'X-Appwrite-Project': appwriteProjectId,
           'Content-Type': 'application/json',
@@ -222,7 +223,7 @@ async function startServer() {
       // Query database for admin record profiles
       let adminProfile: any = null;
       try {
-        const usersUrl = `${appwriteEndpoint}/databases/${appwriteDatabaseId}/collections/users/documents?limit=100`;
+        const usersUrl = `${appwriteEndpoint}/databases/${appwriteDatabaseId}/collections/${appwriteUsersCollection}/documents?limit=100`;
         const headers: Record<string, string> = {
           'X-Appwrite-Project': appwriteProjectId,
           'Content-Type': 'application/json',
