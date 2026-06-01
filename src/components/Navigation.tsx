@@ -114,7 +114,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
 
               {/* Notification dropdown menu */}
               {showNotifDropdown && (
-                <div id="noti-dropdown-box" className="absolute right-0 mt-2 w-80 bg-white border border-zinc-100 rounded-2xl shadow-lg py-2 z-50 animate-in fade-in slide-in-from-top-3 duration-150">
+                <div id="noti-dropdown-box" className="fixed sm:absolute top-16 sm:top-auto left-4 sm:left-auto right-4 sm:right-0 mx-auto sm:mx-0 mt-2 w-auto sm:w-80 max-w-[calc(100vw-2rem)] sm:max-w-none bg-white border border-zinc-100 rounded-2xl shadow-lg py-2 z-50 animate-in fade-in slide-in-from-top-3 duration-150">
                   <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-50">
                     <span className="text-xs font-medium text-brand-black tracking-wide uppercase">Real-Time Alerts</span>
                     {unreadCount > 0 && (
