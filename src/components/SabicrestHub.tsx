@@ -9,7 +9,6 @@ import { db } from '../db';
 import { 
   Compass, 
   Send, 
-  MessageCircle, 
   HelpCircle, 
   Users, 
   Lightbulb, 
@@ -18,10 +17,12 @@ import {
   Reply, 
   Smile, 
   X, 
-  HelpCircle as QuestionIcon,
-  MessageSquare,
-  Search,
-  BookOpen
+  MessageSquare, 
+  Search, 
+  BookOpen,
+  Paperclip,
+  Image,
+  ZoomIn
 } from 'lucide-react';
 
 interface SabicrestHubProps {
@@ -38,12 +39,23 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
   
   // WhatsApp-style reply quote state
   const [replyTo, setReplyTo] = useState<HubMessage | null>(null);
-  
-  // Hover reaction overlay state (messageId of the message showing emoji picker)
   const [activeEmojiPickerId, setActiveEmojiPickerId] = useState<string | null>(null);
-
-  // Mobile drawer toggle state for the sidebar ("Community Spaces") - closed on load
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  
+  // File uploads
+  const [attachment, setAttachment] = useState<{ url: string; name: string; type: 'image' | 'file' } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Drag replies
+  const [draggedMessageId, setDraggedMessageId] = useState<string | null>(null);
+  const [dragStartX, setDragStartX] = useState<number>(0);
+  const [dragOffset, setDragOffset] = useState<number>(0);
+  const [longPressTimeout, setLongPressTimeout] = useState<any>(null);
+
+  // Real-time typing Indicators
+  const hubChatId = `hub-${activeTag}`;
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
 
   const hubStreamRef = useRef<HTMLDivElement>(null);
 
@@ -54,32 +66,118 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
   useEffect(() => {
     window.scrollTo(0, 0);
     loadHubMessages();
-    const interval = setInterval(loadHubMessages, 2500);
+    const interval = setInterval(loadHubMessages, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Poll typing statuses
+  useEffect(() => {
+    const checkTyping = () => {
+      const activeTyping = db.getTypingUsers(hubChatId).filter(name => name !== currentUser.name);
+      setTypingUsers(activeTyping);
+    };
+    checkTyping();
+    const interval = setInterval(checkTyping, 1000);
+    return () => clearInterval(interval);
+  }, [hubChatId, currentUser.name]);
+
+  // Set typing status during user input
+  useEffect(() => {
+    if (typedMsg.trim()) {
+      db.setTypingStatus(hubChatId, currentUser.id, currentUser.name, true);
+      const timer = setTimeout(() => {
+        db.setTypingStatus(hubChatId, currentUser.id, currentUser.name, false);
+      }, 3500);
+      return () => clearTimeout(timer);
+    } else {
+      db.setTypingStatus(hubChatId, currentUser.id, currentUser.name, false);
+    }
+  }, [typedMsg, hubChatId, currentUser.id, currentUser.name]);
 
   useEffect(() => {
     if (hubStreamRef.current) {
       hubStreamRef.current.scrollTop = hubStreamRef.current.scrollHeight;
     }
-  }, [messages, activeTag]);
+  }, [messages, activeTag, typingUsers]);
 
-  // Inherit selected tag from active sidebar tab automatically
   useEffect(() => {
     if (activeTag !== 'all') {
       setSelectedTag(activeTag);
     }
   }, [activeTag]);
 
+  // Touch & Mouse Drag swiping setup
+  const handleTouchStart = (msgId: string, clientX: number) => {
+    setDraggedMessageId(msgId);
+    setDragStartX(clientX);
+    setDragOffset(0);
+  };
+
+  const handleTouchMove = (clientX: number) => {
+    if (!draggedMessageId) return;
+    const deltaX = clientX - dragStartX;
+    setDragOffset(Math.max(-80, Math.min(80, deltaX)));
+  };
+
+  const handleTouchEnd = (msg: HubMessage) => {
+    if (!draggedMessageId) return;
+    if (Math.abs(dragOffset) > 55) {
+      setReplyTo(msg);
+      if ('vibrate' in navigator) {
+        try { navigator.vibrate(15); } catch {}
+      }
+    }
+    setDraggedMessageId(null);
+    setDragOffset(0);
+  };
+
+  const handlePressStart = (msgId: string, e: any) => {
+    const isTouch = e.type.startsWith('touch');
+    const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+    handleTouchStart(msgId, clientX);
+
+    const timeout = setTimeout(() => {
+      setActiveEmojiPickerId(msgId);
+      if ('vibrate' in navigator) {
+        try { navigator.vibrate([25]); } catch {}
+      }
+    }, 700);
+    setLongPressTimeout(timeout);
+  };
+
+  const handlePressEnd = (msg: HubMessage) => {
+    if (longPressTimeout) {
+      clearTimeout(longPressTimeout);
+    }
+    handleTouchEnd(msg);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const isImg = file.type.startsWith('image/');
+      setAttachment({
+        url: reader.result as string,
+        name: file.name,
+        type: isImg ? 'image' : 'file'
+      });
+    };
+    reader.readAsDataURL(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!typedMsg.trim()) return;
+    if (!typedMsg.trim() && !attachment) return;
 
     const payload: Omit<HubMessage, 'id' | 'timestamp' | 'reactions'> = {
       senderId: currentUser.id,
       senderName: currentUser.name,
       senderAvatar: currentUser.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-      content: typedMsg,
+      content: typedMsg || `Posted an attachment: ${attachment?.name}`,
       tag: selectedTag,
     };
 
@@ -93,9 +191,17 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
       payload.replyToText = replyTo.content;
     }
 
+    if (attachment) {
+      payload.attachmentUrl = attachment.url;
+      payload.attachmentName = attachment.name;
+      payload.attachmentType = attachment.type;
+    }
+
     db.addHubMessage(payload);
     setTypedMsg('');
     setReplyTo(null);
+    setAttachment(null);
+    db.setTypingStatus(hubChatId, currentUser.id, currentUser.name, false);
     loadHubMessages();
 
     // Notify others in the system
@@ -127,9 +233,9 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
     const el = document.getElementById(`hub-msg-${id}`);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      el.classList.add('bg-brand-yellow/10', 'scale-[1.01]', 'duration-300');
+      el.classList.add('bg-brand-yellow/10', 'ring-2', 'ring-amber-300', 'duration-300');
       setTimeout(() => {
-        el.classList.remove('bg-brand-yellow/10', 'scale-[1.01]');
+        el.classList.remove('bg-brand-yellow/10', 'ring-2', 'ring-amber-300');
       }, 1500);
     }
   };
@@ -143,7 +249,6 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
     return matchesTag && matchesSearch;
   });
 
-  // Sidebar helpers
   const countTag = (tag: 'general' | 'question' | 'collab' | 'idea') => {
     return messages.filter(m => m.tag === tag).length;
   };
@@ -153,7 +258,7 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
   return (
     <div id="sabicrest-hub-viewport" className="max-w-7xl mx-auto px-4 py-6 select-none animate-in fade-in duration-300">
       
-      {/* Sabicrest Hub Chat Section: Now positioned first at the top */}
+      {/* Sabicrest Hub Chat Section */}
       <div id="hub-main-grid" className="grid grid-cols-1 lg:grid-cols-4 border border-zinc-100 rounded-3xl overflow-hidden bg-white min-h-[580px] shadow-xs mb-8">
         
         {/* Left Community Hub sidebar */}
@@ -161,7 +266,6 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
           <div className="space-y-6">
             
             <div>
-              {/* Collapsed on load toggle header on mobile, standard label on desktop */}
               <div 
                 id="mobile-spaces-toggle-btn"
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -180,7 +284,7 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
                   {/* All discussions tab */}
                   <button
                     id="tab-all-discussions"
-                    onClick={() => { setActiveTag('all'); setIsSidebarOpen(false); }}
+                    onClick={() => { setActiveTag('all'); setIsSidebarOpen(false); setReplyTo(null); setAttachment(null); }}
                     className={`w-full text-left px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between ${
                       activeTag === 'all'
                         ? 'bg-brand-black text-white font-medium shadow-xs'
@@ -199,7 +303,7 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
                   {/* General category tab */}
                   <button
                     id="tab-general"
-                    onClick={() => { setActiveTag('general'); setIsSidebarOpen(false); }}
+                    onClick={() => { setActiveTag('general'); setIsSidebarOpen(false); setReplyTo(null); setAttachment(null); }}
                     className={`w-full text-left px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between ${
                       activeTag === 'general'
                         ? 'bg-brand-black text-white font-medium shadow-xs'
@@ -218,7 +322,7 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
                   {/* Q&A / Ask Questions tab */}
                   <button
                     id="tab-question"
-                    onClick={() => { setActiveTag('question'); setIsSidebarOpen(false); }}
+                    onClick={() => { setActiveTag('question'); setIsSidebarOpen(false); setReplyTo(null); setAttachment(null); }}
                     className={`w-full text-left px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between ${
                       activeTag === 'question'
                         ? 'bg-brand-black text-white font-medium shadow-xs'
@@ -239,7 +343,7 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
                   {/* Collaborations space tab */}
                   <button
                     id="tab-collab"
-                    onClick={() => { setActiveTag('collab'); setIsSidebarOpen(false); }}
+                    onClick={() => { setActiveTag('collab'); setIsSidebarOpen(false); setReplyTo(null); setAttachment(null); }}
                     className={`w-full text-left px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between ${
                       activeTag === 'collab'
                         ? 'bg-brand-black text-white font-medium shadow-xs'
@@ -258,7 +362,7 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
                   {/* Aesthetic Ideas tab */}
                   <button
                     id="tab-idea"
-                    onClick={() => { setActiveTag('idea'); setIsSidebarOpen(false); }}
+                    onClick={() => { setActiveTag('idea'); setIsSidebarOpen(false); setReplyTo(null); setAttachment(null); }}
                     className={`w-full text-left px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between ${
                       activeTag === 'idea'
                         ? 'bg-brand-black text-white font-medium shadow-xs'
@@ -300,7 +404,6 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
 
           </div>
 
-          {/* Guidelines info card bottom */}
           <div className={`${isSidebarOpen ? 'block' : 'hidden lg:block'} bg-white border border-zinc-100 p-3.5 rounded-2xl mt-8`}>
             <div className="flex items-center gap-1 text-[10px] font-semibold text-brand-black uppercase mb-1">
               <BookOpen size={11} className="text-brand-yellow" /> Community Rules
@@ -315,7 +418,6 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
         {/* Dynamic community chat stream */}
         <div id="hub-messages-pane" className="lg:col-span-3 flex flex-col justify-between">
           
-          {/* Active section navigation info */}
           <div id="hub-stream-header" className="border-b border-zinc-100 px-6 py-4 bg-white flex items-center justify-between">
             <h3 className="text-sm font-light tracking-tight text-brand-black">
               Guild Hallway // <span className="font-semibold capitalize">{activeTag === 'all' ? 'All Spaces Shared' : `${activeTag} category`}</span>
@@ -329,19 +431,26 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
           </div>
 
           {/* Messages loop stream container */}
-          <div ref={hubStreamRef} id="hub-chat-stream" className="flex-1 p-6 space-y-6 overflow-y-auto max-h-[440px] bg-zinc-50/20">
+          <div 
+            ref={hubStreamRef} 
+            id="hub-chat-stream" 
+            className="flex-1 p-6 space-y-6 overflow-y-auto max-h-[440px] bg-zinc-50/20"
+            onMouseMove={(e) => handleTouchMove(e.clientX)}
+            onMouseUp={() => { if (draggedMessageId) setDraggedMessageId(null); }}
+          >
             {filteredMessages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-zinc-400 font-light text-xs gap-1.5 py-12">
                 <Compass size={28} className="text-zinc-300" />
                 <p>No community topics listed inside this space segment.</p>
-                <p className="text-[10px] text-zinc-300">Be the pioneer and spark the conversation draft below.</p>
+                <p className="text-[10px] text-zinc-300">Drag items to reply, tap & hold for emojis, or upload sketches!</p>
               </div>
             ) : (
               filteredMessages.map((msg) => {
                 const isMine = msg.senderId === currentUser.id;
-                const hasReactions = msg.reactions && Object.keys(msg.reactions).length > 0;
+                const messageReactions = msg.reactions || {};
+                const hasReactions = Object.keys(messageReactions).length > 0;
+                const isThisMessageDragged = draggedMessageId === msg.id;
                 
-                // Color mapping for Tag indicators
                 const tagColors = {
                   general: 'bg-zinc-100 text-zinc-600 border-zinc-200/50',
                   question: msg.isSolved ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100',
@@ -353,31 +462,58 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
                   <div
                     key={msg.id}
                     id={`hub-msg-${msg.id}`}
+                    onMouseDown={(e) => handlePressStart(msg.id, e)}
+                    onMouseUp={() => handlePressEnd(msg)}
+                    onMouseLeave={() => { if (longPressTimeout) clearTimeout(longPressTimeout); }}
+                    onTouchStart={(e) => handlePressStart(msg.id, e)}
+                    onTouchEnd={() => handlePressEnd(msg)}
+                    onTouchMove={(e) => handleTouchMove(e.touches[0].clientX)}
+                    style={{
+                      transform: isThisMessageDragged ? `translateX(${dragOffset}px)` : 'none',
+                      transition: isThisMessageDragged ? 'none' : 'transform 0.15s ease-out'
+                    }}
                     className={`flex items-start gap-3.5 max-w-[85%] group/msg relative transition-all p-2 rounded-2xl ${
                       isMine ? 'ml-auto flex-row-reverse' : 'mr-auto'
                     }`}
                   >
+                    {isThisMessageDragged && Math.abs(dragOffset) > 25 && (
+                      <div className={`absolute top-1/2 -translate-y-1/2 text-brand-yellow font-bold flex items-center ${
+                        dragOffset > 0 ? '-left-10' : '-right-10'
+                      }`}>
+                        <Reply size={16} className="animate-pulse" />
+                      </div>
+                    )}
                     
-                    {/* User profile avatar inside bubbles */}
-                    <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-zinc-200">
-                      <img src={msg.senderAvatar} alt="sender avatar" className="w-full h-full object-cover referrerPolicy='no-referrer'" />
-                    </div>
+                    {/* Live configuration lookups */}
+                    {(() => {
+                      const sender = db.getUserById(msg.senderId);
+                      const liveAvatar = sender?.avatar || msg.senderAvatar;
+                      const liveName = sender?.name || msg.senderName;
+                      return (
+                        <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-zinc-200 shadow-2xs">
+                          {liveAvatar ? (
+                            <img src={liveAvatar} alt="sender avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          ) : (
+                            <div className="w-full h-full bg-brand-black text-white flex items-center justify-center text-xs font-semibold font-mono uppercase">
+                              {liveName.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     <div className="space-y-1.5 w-full">
-                      {/* Name, time and category flag labels */}
                       <div className={`flex items-center gap-2 text-[10px] ${isMine ? 'justify-end' : ''}`}>
-                        <span className="font-semibold text-brand-black">{msg.senderName}</span>
+                        <span className="font-semibold text-brand-black">{db.getUserById(msg.senderId)?.name || msg.senderName}</span>
                         <span className="text-zinc-400 font-light">
                           {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                         
-                        {/* Interactive Tag indicators */}
                         <span className={`text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-md border font-sans ${tagColors[msg.tag]}`}>
                           {msg.tag} {msg.tag === 'question' && (msg.isSolved ? '✓ Solved' : '● Open')}
                         </span>
                       </div>
 
-                      {/* Decrypted or encrypted display bubble */}
                       <div
                         className={`p-4 rounded-2xl text-xs font-light leading-relaxed relative ${
                           isMine
@@ -405,37 +541,75 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
 
                         <p className="whitespace-pre-wrap">{msg.content}</p>
 
-                        {/* Hover elements: Direct Replies & Emoji reaction bar */}
-                        <div className={`absolute top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 group-hover/msg:opacity-100 transition-opacity duration-150 ${
-                          isMine ? 'left-0 -translate-x-[110%]' : 'right-0 translate-x-[110%]'
+                        {/* Attachments rendering */}
+                        {msg.attachmentUrl && (
+                          <div className="mt-2 text-left">
+                            {msg.attachmentType === 'image' ? (
+                              <div className="relative rounded-lg overflow-hidden border border-zinc-150 max-w-sm group/thumb cursor-zoom-in">
+                                <img 
+                                  src={msg.attachmentUrl} 
+                                  alt="attachment thumbnail" 
+                                  className="max-h-52 object-cover rounded-lg w-full"
+                                  onClick={() => setZoomedImage(msg.attachmentUrl || null)}
+                                />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 flex items-center justify-center transition-opacity">
+                                  <ZoomIn size={16} className="text-white" />
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="p-2.5 rounded-xl bg-zinc-50 hover:bg-zinc-100 border border-zinc-150 flex items-center justify-between gap-3 text-left transition-colors max-w-sm">
+                                <div className="flex items-center gap-2 truncate">
+                                  <Paperclip size={14} className="text-zinc-400 shrink-0" />
+                                  <span className="text-[10.5px] text-zinc-700 font-medium truncate font-mono">{msg.attachmentName}</span>
+                                </div>
+                                <a href={msg.attachmentUrl} download={msg.attachmentName} className="text-[9.5px] text-brand-yellow font-semibold shrink-0 hover:underline">
+                                  Download
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Message Options row underneath content (never overflows) */}
+                        <div className={`flex items-center flex-wrap gap-3 mt-3 pt-2.5 border-t text-[10px] select-none ${
+                          isMine 
+                            ? 'border-white/10 text-zinc-300 justify-end' 
+                            : 'border-zinc-100 text-zinc-400 justify-start'
                         }`}>
-                          {/* Quote reply trigger icon */}
                           <button
+                            type="button"
                             onClick={() => setReplyTo(msg)}
-                            className="p-1.5 bg-white border border-zinc-100 hover:border-zinc-300 text-zinc-400 hover:text-black rounded-lg shadow-sm cursor-pointer transition-all"
+                            className={`flex items-center gap-1 hover:text-amber-400 transition-colors cursor-pointer ${
+                              isMine ? 'hover:text-white' : 'hover:text-black'
+                            }`}
                             title="Quoted Reply like WhatsApp"
                           >
-                            <Reply size={12} />
+                            <Reply size={11} /> <span>Reply</span>
                           </button>
 
-                          {/* Smiley Emoji pick overlays */}
                           <div className="relative">
                             <button
+                              type="button"
                               onClick={() => setActiveEmojiPickerId(activeEmojiPickerId === msg.id ? null : msg.id)}
-                              className="p-1.5 bg-white border border-zinc-100 hover:border-zinc-300 text-zinc-400 hover:text-black rounded-lg shadow-sm cursor-pointer transition-all"
+                              className={`flex items-center gap-1 hover:text-amber-400 transition-colors cursor-pointer ${
+                                isMine ? 'hover:text-white' : 'hover:text-black'
+                              }`}
                               title="Reaction Emojis"
                             >
-                              <Smile size={12} />
+                              <Smile size={11} /> <span>React</span>
                             </button>
 
                             {/* Standard Emojis selector list */}
                             {activeEmojiPickerId === msg.id && (
-                              <div className="absolute top-1/2 -translate-y-[120%] left-0 bg-white border border-zinc-200 rounded-full shadow-lg p-1.5 flex gap-1 z-50 animate-in zoom-in-50 duration-150">
+                              <div className={`absolute bottom-6 bg-white border border-zinc-205 rounded-full shadow-lg p-1.5 flex gap-1 z-30 animate-in zoom-in-50 duration-150 ${
+                                isMine ? 'right-0' : 'left-0'
+                              }`}>
                                 {['👍', '❤️', '😂', '😮', '🤔', '🙏'].map(emoji => (
                                   <button
                                     key={emoji}
+                                    type="button"
                                     onClick={() => handleReaction(msg.id, emoji)}
-                                    className="hover:scale-125 px-1 py-0.5 text-xs transition-transform cursor-pointer"
+                                    className="hover:scale-125 px-1 py-0.5 text-xs text-black transition-transform cursor-pointer"
                                   >
                                     {emoji}
                                   </button>
@@ -444,26 +618,26 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
                             )}
                           </div>
 
-                          {/* Solved/Unsolved status triggers for authors + trainer/admin */}
                           {msg.tag === 'question' && (currentUser.role !== 'student' || currentUser.id === msg.senderId) && (
                             <button
+                              type="button"
                               onClick={() => handleToggleSolvedStatus(msg.id)}
-                              className={`p-1.5 rounded-lg border shadow-sm transition-all text-[10px] uppercase tracking-wider font-semibold cursor-pointer ${
+                              className={`px-1.5 py-0.5 rounded border text-[9px] uppercase tracking-wider font-semibold cursor-pointer ${
                                 msg.isSolved
-                                  ? 'bg-rose-50 border-rose-100 text-rose-500 hover:bg-rose-100'
-                                  : 'bg-emerald-50 border-emerald-100 text-emerald-500 hover:bg-emerald-100'
+                                  ? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600 border-zinc-250'
+                                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-150'
                               }`}
                               title={msg.isSolved ? 'Reopen Question' : 'Mark as Solved'}
                             >
-                              <CheckCircle2 size={12} />
+                              {msg.isSolved ? '✓ Reopen' : '● Solve'}
                             </button>
                           )}
                         </div>
 
-                        {/* Reactions render layout bottom of the bubble */}
+                        {/* Reactions render layout */}
                         {hasReactions && (
                           <div className={`flex flex-wrap gap-1 mt-2.5 ${isMine ? 'justify-end' : 'justify-start'}`}>
-                            {Object.entries(msg.reactions || {}).map(([emoji, voters]) => {
+                            {Object.entries(messageReactions).map(([emoji, voters]) => {
                               const voterList = voters as string[];
                               const alreadyVoted = voterList.includes(currentUser.id);
                               return (
@@ -472,9 +646,9 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
                                   onClick={() => handleReaction(msg.id, emoji)}
                                   className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full transition-colors font-mono ${
                                     alreadyVoted
-                                      ? 'bg-amber-400 text-brand-black border border-amber-500/30'
+                                      ? 'bg-brand-yellow text-brand-black border border-brand-yellow/30'
                                       : isMine 
-                                        ? 'bg-zinc-900 hover:bg-zinc-800 text-zinc-400' 
+                                        ? 'bg-zinc-900 border border-zinc-850 hover:bg-zinc-800 text-zinc-450' 
                                         : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-500 border border-zinc-100'
                                   }`}
                                 >
@@ -495,6 +669,14 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
             )}
           </div>
 
+          {/* Typing users logs */}
+          {typingUsers.length > 0 && (
+            <div className="px-6 py-1.5 text-[10px] text-zinc-405 bg-zinc-50 border-t border-zinc-100 flex items-center gap-1.5 font-mono italic animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping mr-1"></span>
+              {typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
+            </div>
+          )}
+
           {/* Reply referencing Quote Preview Banner banner (WhatsApp reply state) */}
           {replyTo && (
             <div className="bg-amber-50/20 border-t border-brand-yellow/30 px-6 py-2.5 text-xs flex items-center justify-between gap-6">
@@ -508,6 +690,19 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
                 className="text-zinc-400 hover:text-black shrink-0 font-semibold"
                 title="Dismiss Reply Reference"
               >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
+          {/* Attachment upload preview */}
+          {attachment && (
+            <div className="bg-zinc-50 border-t border-zinc-100 px-6 py-2 flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2 text-zinc-700 truncate">
+                {attachment.type === 'image' ? <Image size={14} className="text-brand-yellow animate-bounce" /> : <Paperclip size={14} className="text-cyan-600 animate-bounce" />}
+                <span className="truncate font-mono text-[10.5px] font-medium">{attachment.name}</span>
+              </div>
+              <button onClick={() => setAttachment(null)} className="text-zinc-400 hover:text-black">
                 <X size={14} />
               </button>
             </div>
@@ -558,26 +753,44 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
               )}
             </div>
 
-            <div className="flex-1 flex gap-2">
+            <div className="flex-1 flex gap-2 items-center">
+              <input 
+                ref={fileInputRef}
+                type="file" 
+                className="hidden" 
+                onChange={handleFileChange}
+                accept="image/*,application/pdf,application/zip,text/*" 
+              />
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="p-3 bg-zinc-50 hover:bg-zinc-150 border border-zinc-100/80 rounded-xl h-11 transition-all cursor-pointer text-zinc-550 mr-1"
+                title="Upload Photo or Document"
+              >
+                <Paperclip size={13} />
+              </button>
+
               <input
                 id="hub-typed-msg"
                 value={typedMsg}
                 onChange={(e) => setTypedMsg(e.target.value)}
                 placeholder={
-                  selectedTag === 'question' 
+                  attachment 
+                    ? "Add caption to your attachment..."
+                    : selectedTag === 'question' 
                     ? "Ask a question for others to help solve..." 
                     : selectedTag === 'collab' 
                     ? "Explain what you want to collaborate on..." 
                     : "Post to the general guild hallway..."
                 }
-                className="flex-1 bg-brand-light border border-zinc-100 rounded-xl px-4 py-3 text-xs font-light focus:outline-hidden focus:border-brand-yellow transition-all"
-                required
+                className="flex-1 bg-brand-light border border-zinc-100 rounded-xl px-4 py-3 text-xs font-light h-11 focus:outline-hidden focus:border-brand-yellow transition-all"
               />
               
               <button
                 id="hub-submit-btn"
                 type="submit"
-                className="bg-brand-black hover:bg-zinc-900 text-white p-3 rounded-xl transition-all cursor-pointer flex items-center justify-center shrink-0 focus-ring"
+                className="bg-brand-black hover:bg-zinc-900 text-white p-3 rounded-xl transition-all h-11 w-11 cursor-pointer flex items-center justify-center shrink-0 focus-ring"
               >
                 <Send size={14} className="text-brand-yellow" />
               </button>
@@ -588,7 +801,7 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
         </div>
       </div>
 
-      {/* Community Dashboard Stats Grid: Moved to bottom of the viewport */}
+      {/* Community Dashboard Stats Grid */}
       <div id="hub-stats-panel" className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
         <div className="bg-white border border-zinc-100 p-4 rounded-2xl flex items-center justify-between shadow-xs">
           <div>
@@ -630,6 +843,26 @@ export default function SabicrestHub({ currentUser }: SabicrestHubProps) {
           </div>
         </div>
       </div>
+
+      {/* Lightbox zooms */}
+      {zoomedImage && (
+        <div 
+          onClick={() => setZoomedImage(null)}
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-6 cursor-zoom-out animate-in fade-in duration-200"
+        >
+          <button 
+            onClick={() => setZoomedImage(null)}
+            className="absolute top-6 right-6 text-white hover:text-zinc-300 p-2 rounded-full bg-zinc-900/60 transition-transform hover:scale-110"
+          >
+            <X size={20} />
+          </button>
+          <img 
+            src={zoomedImage} 
+            alt="zoomed attachment" 
+            className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200" 
+          />
+        </div>
+      )}
 
     </div>
   );

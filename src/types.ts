@@ -44,6 +44,13 @@ export interface Message {
   timestamp: string;
   isEncrypted: boolean;
   algorithm: string; // e.g. "AES-256-GCM / Appwrite Database Crypt"
+  replyToId?: string; // Quote reply support
+  replyToSender?: string;
+  replyToText?: string;
+  reactions?: { [emoji: string]: string[] }; // map of emoji to list of userIds who voted
+  attachmentUrl?: string; // base64 payload URL
+  attachmentName?: string;
+  attachmentType?: 'image' | 'file';
 }
 
 // Interactive Sabicrest General Community Hub message matching WhatsApp capabilities
@@ -60,6 +67,9 @@ export interface HubMessage {
   replyToSender?: string;
   replyToText?: string;
   reactions?: { [emoji: string]: string[] }; // map of emoji to list of userIds who voted
+  attachmentUrl?: string; // base64 payload URL
+  attachmentName?: string;
+  attachmentType?: 'image' | 'file';
 }
 
 // Scheduling system events

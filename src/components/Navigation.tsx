@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, NotificationAlert } from '../types';
 import { db } from '../db';
-import { Bell, LogOut, CheckCircle, Shield, Menu, X, Terminal, Sparkles, AlertTriangle } from 'lucide-react';
+import { Bell, LogOut, CheckCircle, Shield, Menu, X, Terminal, Sparkles, AlertTriangle, MessageSquare } from 'lucide-react';
 // @ts-ignore
 import sabicrestLogo from '../assets/images/sabicrest_logo_1780159096569.png';
 
@@ -23,6 +23,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [chatCount, setChatCount] = useState(0);
 
   // Load and refresh notifications list
   const loadNotifications = () => {
@@ -30,9 +31,22 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
     setNotifs(alerts);
   };
 
+  const loadChatCount = () => {
+    const total = db.getMessages().filter(m => 
+      !m.receiverId || 
+      m.receiverId === currentUser.id || 
+      m.senderId === currentUser.id
+    ).length;
+    setChatCount(total);
+  };
+
   useEffect(() => {
     loadNotifications();
-    const interval = setInterval(loadNotifications, 3000);
+    loadChatCount();
+    const interval = setInterval(() => {
+      loadNotifications();
+      loadChatCount();
+    }, 1000);
     return () => clearInterval(interval);
   }, [currentUser]);
 
@@ -97,6 +111,46 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
           {/* User Settings & Notifications Panel */}
           <div className="flex items-center gap-3">
             
+            {/* Realtime Chats Icon Badge */}
+            <button
+              id="header-chats-trigger"
+              onClick={() => setActiveTab('messaging')}
+              className={`p-2 text-zinc-400 hover:text-brand-black hover:bg-zinc-50 rounded-xl transition-all relative cursor-pointer ${
+                activeTab === 'messaging' ? 'text-black bg-zinc-100' : ''
+              }`}
+              title="Open Secure Chats"
+            >
+              <MessageSquare size={18} />
+              {chatCount > 0 && (
+                <span id="chat-count-counter" className="absolute top-1 right-1 w-4 h-4 bg-brand-yellow text-brand-black text-[9px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                  {chatCount}
+                </span>
+              )}
+            </button>
+
+            {/* Clickable Header Profile Icon (desktop/tablet/mobile) */}
+            <button
+              id="header-profile-icon"
+              onClick={() => setActiveTab('profile')}
+              className={`w-7 h-7 rounded-full overflow-hidden border transition-all cursor-pointer ${
+                activeTab === 'profile' ? 'border-brand-yellow ring-2 ring-brand-yellow/30' : 'border-zinc-200 hover:border-zinc-400'
+              }`}
+              title="Aesthetic Profile Settings"
+            >
+              {currentUser.avatar ? (
+                <img 
+                  src={currentUser.avatar} 
+                  alt="Current workspace user" 
+                  className="w-full h-full object-cover" 
+                  referrerPolicy="no-referrer" 
+                />
+              ) : (
+                <div className="w-full h-full bg-brand-black text-white flex items-center justify-center text-[10px] font-bold font-mono">
+                  {currentUser.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </button>
+
             {/* Realtime Notification Bell Icon dropdown */}
             <div className="relative">
               <button
@@ -194,7 +248,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
             <button
               id="logout-btn"
               onClick={() => setShowLogoutConfirm(true)}
-              className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50/40 rounded-xl transition-all cursor-pointer"
+              className="hidden md:flex p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50/40 rounded-xl transition-all cursor-pointer items-center justify-center"
               title="End Secure Session"
             >
               <LogOut size={16} />
@@ -235,6 +289,18 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
               </button>
             );
           })}
+
+          {/* Mobile & Tablet Logout Action Button Item */}
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false);
+              setShowLogoutConfirm(true);
+            }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide uppercase text-left transition-all text-red-500 hover:bg-red-50 bg-red-50/10 cursor-pointer"
+          >
+            <LogOut size={14} className="text-red-500" />
+            <span>Sign Out Session</span>
+          </button>
         </div>
       )}
 

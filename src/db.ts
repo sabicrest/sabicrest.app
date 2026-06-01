@@ -611,6 +611,70 @@ export class AppwriteDatabase {
     return newMsg;
   }
 
+  addMessageReaction(msgId: string, emoji: string, userId: string): void {
+    this.messages = this.messages.map(m => {
+      if (m.id === msgId) {
+        const reactions = m.reactions ? { ...m.reactions } : {};
+        const voters = reactions[emoji] ? [...reactions[emoji]] : [];
+        if (voters.includes(userId)) {
+          reactions[emoji] = voters.filter(id => id !== userId);
+          if (reactions[emoji].length === 0) {
+            delete reactions[emoji];
+          }
+        } else {
+          reactions[emoji] = [...voters, userId];
+        }
+        const updated = { ...m, reactions };
+        this.saveToAppwrite('messages', msgId, updated);
+        return updated;
+      }
+      return m;
+    });
+    this.saveToStorage();
+    this.logTransaction('TOGGLE_DM_REACTION', 'Messages', `msgId: ${msgId}, emoji: ${emoji}`);
+  }
+
+  // --- Real-time Typing Statuses ---
+  private typingUsers: { [chatId: string]: { [userId: string]: { name: string; timestamp: number } } } = {};
+
+  getTypingUsers(chatId: string): string[] {
+    try {
+      this.typingUsers = JSON.parse(localStorage.getItem('sc_typing_raw') || '{}');
+    } catch {
+      this.typingUsers = {};
+    }
+    const chatTyping = this.typingUsers[chatId] || {};
+    const now = Date.now();
+    const active: string[] = [];
+    Object.entries(chatTyping).forEach(([userId, info]) => {
+      // 4 seconds TTL
+      if (now - info.timestamp < 4000) {
+        active.push(info.name);
+      }
+    });
+    return active;
+  }
+
+  setTypingStatus(chatId: string, userId: string, userName: string, isTyping: boolean): void {
+    try {
+      this.typingUsers = JSON.parse(localStorage.getItem('sc_typing_raw') || '{}');
+    } catch {
+      this.typingUsers = {};
+    }
+    if (!this.typingUsers[chatId]) {
+      this.typingUsers[chatId] = {};
+    }
+    if (isTyping) {
+      this.typingUsers[chatId][userId] = {
+        name: userName,
+        timestamp: Date.now()
+      };
+    } else {
+      delete this.typingUsers[chatId][userId];
+    }
+    localStorage.setItem('sc_typing_raw', JSON.stringify(this.typingUsers));
+  }
+
   // --- Sabicrest Community Hub CRUD ---
   getHubMessages(): HubMessage[] {
     return this.hubMessages;

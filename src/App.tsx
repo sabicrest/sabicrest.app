@@ -39,6 +39,9 @@ export default function App() {
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem('sabicrest_current_user', JSON.stringify(currentUser));
+      if (currentUser.avatar) {
+        localStorage.setItem('sabicrest_last_user_avatar', currentUser.avatar);
+      }
     } else {
       localStorage.removeItem('sabicrest_current_user');
     }

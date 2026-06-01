@@ -32,6 +32,13 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [showAdminPassword, setShowAdminPassword] = useState(false);
 
+  const [lastAvatar, setLastAvatar] = useState<string>('');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('sabicrest_last_user_avatar') || '';
+    setLastAvatar(saved);
+  }, []);
+
   // Custom standard login
   const handleCustomSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -420,6 +427,11 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         
         {/* Brand Logo Alignment */}
         <div id="login-brand-heading" className="text-center mb-8 flex flex-col items-center">
+          {lastAvatar && (
+            <div className="w-16 h-16 rounded-full overflow-hidden border border-zinc-200 shadow-md mb-4 animate-in zoom-in-75 duration-200">
+              <img src={lastAvatar} alt="user avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            </div>
+          )}
           <h1 id="sabicrest-logo-text" className="text-3xl font-bold tracking-tight text-black">
             Sabicrest
           </h1>
