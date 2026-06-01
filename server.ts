@@ -1,6 +1,9 @@
+import dotenv from 'dotenv';
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
+
+dotenv.config();
 
 // CRUCIAL FOR VERCEL: Define the app instance globally so it can be exported at the bottom
 const app = express();
@@ -13,9 +16,20 @@ async function startServer() {
 
   // Appwrite configuration parameters
   const appwriteEndpoint = process.env.VITE_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
-  const appwriteProjectId = process.env.VITE_APPWRITE_PROJECT_ID || '6a19e810001156433516';
-  const appwriteDatabaseId = process.env.VITE_APPWRITE_DATABASE_ID || '6a1aeae3002f269f4946';
+  const appwriteProjectId = process.env.VITE_APPWRITE_PROJECT_ID || process.env.APPWRITE_PROJECT_ID || '';
+  const appwriteDatabaseId = process.env.VITE_APPWRITE_DATABASE_ID || process.env.APPWRITE_DATABASE_ID || '';
   const appwriteApiKey = process.env.APPWRITE_API_KEY || process.env.VITE_APPWRITE_API_KEY || process.env.APPWRITE_KEY || '';
+
+  if (process.env.NODE_ENV === 'production') {
+    if (!appwriteProjectId || !appwriteDatabaseId) {
+      console.error(
+        'Appwrite production configuration is missing. Set VITE_APPWRITE_PROJECT_ID and VITE_APPWRITE_DATABASE_ID in Vercel environment variables.'
+      );
+    }
+    if (!appwriteEndpoint) {
+      console.error('Appwrite production endpoint is missing. Set VITE_APPWRITE_ENDPOINT in Vercel environment variables.');
+    }
+  }
 
   // API Route to verify Admin Email has registered accounts both in Appwrite Auth list and Database users collection
   app.post('/api/admin/verify-admin-email', async (req, res) => {
