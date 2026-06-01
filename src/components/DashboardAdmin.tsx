@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Curriculum, CourseEnrollment } from '../types';
 import { db } from '../db';
-import { Shield, Sparkles, BookOpen, UserCheck, Settings, Server, CheckSquare, XCircle, ToggleLeft, ToggleRight, Radio, RefreshCw, KeyRound, Clock, AlertCircle } from 'lucide-react';
+import { Shield, Sparkles, BookOpen, UserCheck, Settings, Server, CheckSquare, XCircle, ToggleLeft, ToggleRight, Radio, RefreshCw, KeyRound, Clock, AlertCircle, X, Award, ClipboardCheck } from 'lucide-react';
 
 interface DashboardAdminProps {
   currentUser: User;
@@ -28,6 +28,9 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
   const [coldStartSpeed, setColdStartSpeed] = useState('11ms');
   const [secLevel, setSecLevel] = useState<'AES-256' | 'AES-GCM-512' | 'FIPS-140-3'>('AES-256');
   const [autoScaleLimit, setAutoScaleLimit] = useState(150);
+
+  const [showActiveProgramsModal, setShowActiveProgramsModal] = useState(false);
+  const [showSubmittedWorkModal, setShowSubmittedWorkModal] = useState(false);
 
   const reloadAdminData = () => {
     setUsers(db.getUsers());
@@ -251,7 +254,12 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
       {/* Admin Metrics panel row */}
       <div id="admin-metrics-row" className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         
-        <div className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs">
+        <div 
+          onClick={() => {
+            document.getElementById('admin-users-directory-container')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+        >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Registered Users</span>
             <UserCheck size={16} className="text-brand-yellow" />
@@ -262,7 +270,12 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
           </div>
         </div>
 
-        <div className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs">
+        <div 
+          onClick={() => {
+            document.getElementById('course-proposal-approval-queue-container')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+        >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Pending Approvals</span>
             <BookOpen size={16} className="text-brand-yellow font-normal" />
@@ -273,7 +286,10 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
           </div>
         </div>
 
-        <div className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs">
+        <div 
+          onClick={() => setShowActiveProgramsModal(true)}
+          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+        >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Active Programs</span>
             <Shield size={16} className="text-emerald-500" />
@@ -285,7 +301,10 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
           </div>
         </div>
 
-        <div className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs">
+        <div 
+          onClick={() => setShowSubmittedWorkModal(true)}
+          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+        >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Submitted Work</span>
             <Server size={16} className="text-brand-yellow" />
@@ -297,12 +316,151 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
 
       </div>
 
+      {/* Active Programs Modal */}
+      {showActiveProgramsModal && (
+        <div id="active-programs-modal" className="fixed inset-0 bg-brand-black/45 backdrop-blur-xs flex items-center justify-center p-4 z-55 animate-in fade-in duration-155">
+          <div className="bg-white border border-zinc-150 rounded-2xl p-6 shadow-xl max-w-2xl w-full text-left space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center pb-2 border-b border-zinc-100">
+              <h3 className="text-sm font-semibold text-brand-black flex items-center gap-2">
+                <Shield size={16} className="text-emerald-500" /> Active Platform Curricula Programs
+              </h3>
+              <button 
+                onClick={() => setShowActiveProgramsModal(false)}
+                className="text-zinc-400 hover:text-brand-black cursor-pointer bg-zinc-50 hover:bg-zinc-100 p-1.5 rounded-full transition-all"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 max-h-96 overflow-y-auto pr-1">
+              {curricula.filter(c => c.status === 'approved').length === 0 ? (
+                <div className="text-center py-12 text-zinc-400 font-light text-xs bg-zinc-50 rounded-xl">
+                  No active approved curricula on the platform yet.
+                </div>
+              ) : (
+                <div className="divide-y divide-zinc-100">
+                  {curricula.filter(c => c.status === 'approved').map(course => (
+                    <div key={course.id} className="py-3.5 space-y-2">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
+                        <div>
+                          <h4 className="text-xs font-semibold text-brand-black leading-tight">{course.title}</h4>
+                          <p className="text-[10px] text-zinc-400 font-light mt-0.5">
+                            Trainer/Coach: <strong className="text-zinc-650">{course.trainerName}</strong>
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0 mt-1 sm:mt-0">
+                          <span className="text-[9px] font-mono bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded">
+                            {course.category}
+                          </span>
+                          <span className="text-[9px] font-mono bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded">
+                            {course.durationWeeks} Weeks
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-zinc-550 font-light leading-relaxed">{course.description}</p>
+                      
+                      {/* Course Modules list */}
+                      {course.modules && course.modules.length > 0 && (
+                        <div className="bg-zinc-50/50 p-2 rounded-lg border border-zinc-50/80 space-y-1 mt-1">
+                          <p className="text-[8.5px] uppercase tracking-wide text-zinc-400 font-bold font-mono">Curriculum Syllabus Modules</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                            {course.modules.map((mod, index) => (
+                              <div key={index} className="text-[11px] text-zinc-600 flex items-center gap-1 font-light">
+                                <span className="text-brand-yellow font-bold text-[9px] font-mono">M{index+1}:</span>
+                                <span className="truncate">{mod}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setShowActiveProgramsModal(false)}
+                className="bg-brand-black hover:bg-zinc-850 text-white text-xs font-light tracking-wide uppercase px-4 py-2 rounded-xl transition-all cursor-pointer"
+              >
+                Close View
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Submitted Student Work Modal */}
+      {showSubmittedWorkModal && (
+        <div id="submitted-assignments-modal" className="fixed inset-0 bg-brand-black/45 backdrop-blur-xs flex items-center justify-center p-4 z-55 animate-in fade-in duration-155">
+          <div className="bg-white border border-zinc-150 rounded-2xl p-6 shadow-xl max-w-2xl w-full text-left space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center pb-2 border-b border-zinc-100">
+              <h3 className="text-sm font-semibold text-brand-black flex items-center gap-2">
+                <Server size={16} className="text-brand-yellow font-medium" /> All Student Deliverables & Homework
+              </h3>
+              <button 
+                onClick={() => setShowSubmittedWorkModal(false)}
+                className="text-zinc-400 hover:text-brand-black cursor-pointer bg-zinc-50 hover:bg-zinc-100 p-1.5 rounded-full transition-all"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 max-h-96 overflow-y-auto pr-1">
+              {db.getAssignments().length === 0 ? (
+                <div className="text-center py-12 text-zinc-400 font-light text-xs bg-zinc-50 rounded-xl">
+                  No active student homework submissions recorded on the database.
+                </div>
+              ) : (
+                <div className="divide-y divide-zinc-100">
+                  {db.getAssignments().map(ass => {
+                    const isPending = ass.status === 'pending_review';
+                    const isGraded = ass.status === 'graded';
+                    return (
+                      <div key={ass.id} className="py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div>
+                          <h4 className="text-xs font-semibold text-brand-black leading-tight">{ass.title}</h4>
+                          <p className="text-[10px] text-zinc-400 font-light mt-0.5">
+                            Student: <strong className="text-zinc-650">{ass.studentName}</strong> • Coach: <strong>{ass.trainerName}</strong>
+                          </p>
+                          <p className="text-[10px] text-zinc-550 truncate mt-1 max-w-md italic">
+                            Description: {ass.description}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0 mt-1 sm:mt-0">
+                          <span className={`text-[9px] font-mono font-semibold uppercase px-2 py-0.5 rounded ${
+                            isGraded ? 'bg-emerald-50 text-emerald-800' :
+                            isPending ? 'bg-amber-50 text-amber-800 animate-pulse' : 'bg-zinc-100 text-zinc-500'
+                          }`}>
+                            {ass.status}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setShowSubmittedWorkModal(false)}
+                className="bg-brand-black hover:bg-zinc-850 text-white text-xs font-light tracking-wide uppercase px-4 py-2 rounded-xl transition-all cursor-pointer"
+              >
+                Close Ledger
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div id="admin-main-grid" className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Curricula Moderation list - Left column Wide */}
         <div className="lg:col-span-2 space-y-6">
           
-          <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs">
+          <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs" id="course-proposal-approval-queue-container">
             <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase mb-4 flex items-center gap-1.5 font-light">
               <BookOpen size={13} className="text-brand-yellow" /> Course Proposal Approval Queue
             </h3>
@@ -445,7 +603,7 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
           </div>
 
           {/* Onboarded tenant Directory management list */}
-          <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs">
+          <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs" id="admin-users-directory-container">
             <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase mb-4 flex items-center gap-1.5 font-light">
               <UserCheck size={13} className="text-brand-yellow" /> Onboarded platform Users Directory
             </h3>

@@ -406,7 +406,15 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
       {/* Analytics Bento Grid Row */}
       <div id="student-bento-row" className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         
-        <div className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs">
+        <div 
+          onClick={() => {
+            setActiveSubTab('assignments');
+            setTimeout(() => {
+              document.getElementById('student-assignments-stream')?.scrollIntoView({ behavior: 'smooth' });
+            }, 50);
+          }}
+          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+        >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Assignment Progress</span>
             <FileText size={16} className="text-brand-yellow font-normal" />
@@ -420,7 +428,15 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
           </div>
         </div>
 
-        <div className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs">
+        <div 
+          onClick={() => {
+            setActiveSubTab('assignments');
+            setTimeout(() => {
+              document.getElementById('earned-certificates-section')?.scrollIntoView({ behavior: 'smooth' });
+            }, 50);
+          }}
+          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+        >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Earned Certificates</span>
             <Award size={16} className="text-brand-yellow" />
@@ -432,7 +448,15 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
           <p className="text-[10px] font-light text-brand-gray mt-2 leading-relaxed font-sans">Verified and stored securely.</p>
         </div>
 
-        <div className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs">
+        <div 
+          onClick={() => {
+            setActiveSubTab('register');
+            setTimeout(() => {
+              document.getElementById('course-offering-catalog')?.scrollIntoView({ behavior: 'smooth' });
+            }, 50);
+          }}
+          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+        >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Current Topic</span>
             <BookOpen size={16} className="text-brand-yellow" />
@@ -446,7 +470,15 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
         </div>
 
         {/* Custom micro sparkline SVG */}
-        <div className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs flex flex-col justify-between">
+        <div 
+          onClick={() => {
+            setActiveSubTab('assignments');
+            setTimeout(() => {
+              document.getElementById('student-assignments-stream')?.scrollIntoView({ behavior: 'smooth' });
+            }, 50);
+          }}
+          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs flex flex-col justify-between cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+        >
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Grade History</span>
             <span className="text-xs font-mono text-emerald-600 font-light">Performance Progress</span>
@@ -526,7 +558,7 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
         <div id="student-main-content-layout" className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-200">
           
           {/* Assignments stream - Left Wide col */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6" id="student-assignments-stream">
             <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs">
               <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase mb-4 flex items-center gap-1.5 font-light">
                 <FileCheck size={13} className="text-brand-yellow" /> Course Assignments & Grades
@@ -601,7 +633,7 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
           {/* Right side - Verified Certifications listing & Active Teams */}
           <div className="lg:col-span-1 space-y-6">
             
-            <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs">
+            <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs" id="earned-certificates-section">
               <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase mb-4 flex items-center gap-1.5 font-light">
                 <Award size={13} className="text-brand-yellow" /> Earned Certificates
               </h3>
@@ -656,7 +688,7 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
 
       {activeSubTab === 'register' && (
         <div id="student-register-courses-view" className="space-y-6 animate-in fade-in duration-200">
-          <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs">
+          <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs" id="course-offering-catalog">
             <h3 className="text-sm font-light tracking-tight text-brand-black mb-1">
               Join New Classes // <span className="font-semibold text-brand-yellow">Available Courses</span>
             </h3>

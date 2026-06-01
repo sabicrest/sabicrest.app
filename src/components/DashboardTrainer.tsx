@@ -8,7 +8,7 @@ import { User, Assignment, Curriculum } from '../types';
 import { db } from '../db';
 import { 
   BookOpen, FileText, CheckCircle2, Award, ClipboardCheck, Sparkles, Plus, AlertCircle, 
-  FileCheck, HelpCircle, Settings, Sliders, Bell, User as UserIcon, Mail, Phone, MapPin, Activity 
+  FileCheck, HelpCircle, Settings, Sliders, Bell, User as UserIcon, Mail, Phone, MapPin, Activity, X
 } from 'lucide-react';
 
 interface DashboardTrainerProps {
@@ -63,6 +63,8 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
 
   // Assign Assignment System States
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showGradedListModal, setShowGradedListModal] = useState(false);
+  const [showStudentsListModal, setShowStudentsListModal] = useState(false);
   const [assignStudentId, setAssignStudentId] = useState('');
   const [assignTitle, setAssignTitle] = useState('');
   const [assignDesc, setAssignDesc] = useState('');
@@ -332,7 +334,15 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
       {/* Analytics Bento Cards Row */}
       <div id="trainer-stats-row" className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         
-        <div className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs">
+        <div 
+          onClick={() => {
+            setActiveSubTab('work');
+            setTimeout(() => {
+              document.getElementById('trainer-main-grid')?.scrollIntoView({ behavior: 'smooth' });
+            }, 50);
+          }}
+          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+        >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Awaiting Evaluation</span>
             <ClipboardCheck size={16} className="text-brand-yellow" />
@@ -344,19 +354,25 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
           <p className="text-[10px] font-light text-brand-gray mt-2">Active student submissions currently waiting for review.</p>
         </div>
 
-        <div className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs">
+        <div 
+          onClick={() => setShowGradedListModal(true)}
+          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+        >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Assignments Graded</span>
             <CheckCircle2 size={16} className="text-brand-yellow" />
           </div>
-          <div className="text-3xl font-light text-brand-black tracking-tight">
+          <div className="text-3xl font-light text-brand-black tracking-tight cursor-pointer">
             <span>{gradedCount}</span>
             <span className="text-xs text-emerald-600 font-mono ml-2 font-light">Completed</span>
           </div>
           <p className="text-[10px] font-light text-brand-gray mt-2">Grading records are registered and saved securely.</p>
         </div>
 
-        <div className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs">
+        <div 
+          onClick={() => setShowStudentsListModal(true)}
+          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+        >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">My Students</span>
             <FileText size={16} className="text-brand-yellow" />
@@ -369,6 +385,149 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
         </div>
 
       </div>
+
+      {/* Graded Assignments List Modal */}
+      {showGradedListModal && (
+        <div id="graded-list-modal" className="fixed inset-0 bg-brand-black/45 backdrop-blur-xs flex items-center justify-center p-4 z-55 animate-in fade-in duration-155">
+          <div className="bg-white border border-zinc-150 rounded-2xl p-6 shadow-xl max-w-2xl w-full text-left space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center pb-2 border-b border-zinc-100">
+              <h3 className="text-sm font-semibold text-brand-black flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-emerald-500" /> Graded Submissions Ledger
+              </h3>
+              <button 
+                onClick={() => setShowGradedListModal(false)}
+                className="text-zinc-400 hover:text-brand-black cursor-pointer bg-zinc-50 hover:bg-zinc-100 p-1.5 rounded-full transition-all"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 max-h-96 overflow-y-auto pr-1">
+              {assignments.filter(a => a.status === 'graded').length === 0 ? (
+                <div className="text-center py-12 text-zinc-400 font-light text-xs bg-zinc-50 rounded-xl">
+                  No graded assignments yet. Submit feedback and grades for pending student homework below.
+                </div>
+              ) : (
+                <div className="divide-y divide-zinc-100">
+                  {assignments.filter(a => a.status === 'graded').map(ass => (
+                    <div key={ass.id} className="py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                      <div>
+                        <h4 className="text-xs font-semibold text-brand-black leading-tight">{ass.title}</h4>
+                        <p className="text-[10px] text-zinc-400 font-light mt-0.5">
+                          Student: <strong className="text-zinc-650">{ass.studentName}</strong> • Graded: {ass.gradedAt ? new Date(ass.gradedAt).toLocaleDateString() : 'N/A'}
+                        </p>
+                        {ass.feedback && (
+                          <p className="text-[10px] text-zinc-500 italic mt-1 bg-zinc-50 px-2 py-1 rounded w-fit">"{ass.feedback}"</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[9px] font-mono bg-emerald-50 text-emerald-800 border border-emerald-100 px-2 py-0.5 rounded font-bold">
+                          Grade {ass.grade}
+                        </span>
+                        <span className="text-[9px] font-mono bg-zinc-50 text-zinc-600 border border-zinc-100 px-2 py-0.5 rounded font-medium">
+                          {ass.points} pts
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setShowGradedListModal(false)}
+                className="bg-brand-black hover:bg-zinc-850 text-white text-xs font-light tracking-wide uppercase px-4 py-2 rounded-xl transition-all cursor-pointer"
+              >
+                Close Ledger
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Coached Students List Modal */}
+      {showStudentsListModal && (
+        <div id="coached-students-modal" className="fixed inset-0 bg-brand-black/45 backdrop-blur-xs flex items-center justify-center p-4 z-55 animate-in fade-in duration-155">
+          <div className="bg-white border border-zinc-150 rounded-2xl p-6 shadow-xl max-w-2xl w-full text-left space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center pb-2 border-b border-zinc-100">
+              <h3 className="text-sm font-semibold text-brand-black flex items-center gap-2">
+                <FileText size={16} className="text-brand-yellow" /> Coached Students Directory
+              </h3>
+              <button 
+                onClick={() => setShowStudentsListModal(false)}
+                className="text-zinc-400 hover:text-brand-black cursor-pointer bg-zinc-50 hover:bg-zinc-100 p-1.5 rounded-full transition-all"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 max-h-96 overflow-y-auto pr-1">
+              {(() => {
+                const uniqueStudentIds = Array.from(new Set(assignments.map(a => a.studentId)));
+                if (uniqueStudentIds.length === 0) {
+                  return (
+                    <div className="text-center py-12 text-zinc-400 font-light text-xs bg-zinc-50 rounded-xl">
+                      No active student assignments managed under your coaching profile yet.
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="divide-y divide-zinc-100">
+                    {uniqueStudentIds.map(studentId => {
+                      const studentObj = db.getUsers().find(u => u.id === studentId);
+                      const studentName = studentObj?.name || assignments.find(a => a.studentId === studentId)?.studentName || 'Student';
+                      const studentEmail = studentObj?.email || 'N/A';
+                      const studentAssignments = assignments.filter(a => a.studentId === studentId);
+                      const studentGraded = studentAssignments.filter(a => a.status === 'graded');
+                      const studentPending = studentAssignments.filter(a => a.status === 'pending_review');
+
+                      return (
+                        <div key={studentId} className="py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                          <div className="flex items-center gap-2.5">
+                            {studentObj?.avatar ? (
+                              <img src={studentObj.avatar} alt="avatar" className="w-8 h-8 rounded-full object-cover border border-zinc-100 referrerPolicy='no-referrer'" />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-brand-black text-white flex items-center justify-center text-[10px] font-bold">
+                                {studentName.charAt(0)}
+                              </div>
+                            )}
+                            <div>
+                              <h4 className="text-xs font-semibold text-brand-black leading-tight">{studentName}</h4>
+                              <p className="text-[10px] text-zinc-400 font-light mt-0.5">{studentEmail}</p>
+                              {studentObj?.slackHandle && (
+                                <span className="text-[9px] font-mono text-indigo-650 bg-indigo-50 px-1.5 py-0.25 rounded-md mt-1 inline-block">{studentObj.slackHandle}</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-[9px] font-mono bg-emerald-50 text-emerald-800 border border-emerald-100 px-2 py-0.5 rounded">
+                              {studentGraded.length} Graded
+                            </span>
+                            <span className="text-[9px] font-mono bg-amber-50 text-amber-800 border border-amber-100 px-2 py-0.5 rounded">
+                              {studentPending.length} Pending
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setShowStudentsListModal(false)}
+                className="bg-brand-black hover:bg-zinc-850 text-white text-xs font-light tracking-wide uppercase px-4 py-2 rounded-xl transition-all cursor-pointer"
+              >
+                Close Directory
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Centered Modal for Alerts & Confirmations */}
       {toastMessage && (
