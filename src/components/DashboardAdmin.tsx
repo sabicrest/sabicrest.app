@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Curriculum, CourseEnrollment, AdminActivity } from '../types';
 import { db } from '../db';
-import { Shield, Sparkles, BookOpen, UserCheck, Settings, Server, CheckSquare, XCircle, ToggleLeft, ToggleRight, Radio, RefreshCw, KeyRound, Clock, AlertCircle, X, Award, ClipboardCheck, Activity, Search } from 'lucide-react';
+import { Shield, Sparkles, BookOpen, UserCheck, Settings, Server, CheckSquare, XCircle, ToggleLeft, ToggleRight, Radio, RefreshCw, KeyRound, Clock, AlertCircle, X, Award, ClipboardCheck, Activity, Search, ArrowUpRight } from 'lucide-react';
 
 interface DashboardAdminProps {
   currentUser: User;
@@ -396,11 +396,14 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
           onClick={() => {
             document.getElementById('admin-users-directory-container')?.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
         >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Registered Users</span>
-            <UserCheck size={16} className="text-brand-yellow" />
+            <div className="flex items-center gap-1.5">
+              <UserCheck size={16} className="text-brand-yellow" />
+              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
+            </div>
           </div>
           <div className="text-2xl font-light text-brand-black tracking-tight flex items-baseline gap-1.5">
             <span>{onboardedUsers.length} Users</span>
@@ -412,11 +415,14 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
           onClick={() => {
             document.getElementById('course-proposal-approval-queue-container')?.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
         >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Pending Approvals</span>
-            <BookOpen size={16} className="text-brand-yellow font-normal" />
+            <div className="flex items-center gap-1.5">
+              <BookOpen size={16} className="text-brand-yellow font-normal" />
+              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
+            </div>
           </div>
           <div className="text-2xl font-light text-brand-black tracking-tight flex items-baseline gap-1.5">
             <span>{pendingCurricula.length} Proposals</span>
@@ -426,11 +432,14 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
 
         <div 
           onClick={() => setShowActiveProgramsModal(true)}
-          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
         >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Active Programs</span>
-            <Shield size={16} className="text-emerald-500" />
+            <div className="flex items-center gap-1.5">
+              <Shield size={16} className="text-emerald-500" />
+              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
+            </div>
           </div>
           <div className="text-2xl font-light text-brand-black tracking-tight">
             <span className="font-light text-emerald-600 text-lg">
@@ -441,11 +450,14 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
 
         <div 
           onClick={() => setShowSubmittedWorkModal(true)}
-          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
         >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Submitted Work</span>
-            <Server size={16} className="text-brand-yellow" />
+            <div className="flex items-center gap-1.5">
+              <Server size={16} className="text-brand-yellow" />
+              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
+            </div>
           </div>
           <div className="text-2xl font-light text-brand-black tracking-tight">
             <span>{db.getAssignments().length} Assignments</span>

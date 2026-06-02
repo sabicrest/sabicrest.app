@@ -9,7 +9,7 @@ import { db } from '../db';
 import { 
   Award, BookOpen, Clock, FileText, CheckCircle2, ChevronRight, Upload, Link, AlertCircle, 
   FileCheck, Printer, Settings, User as UserIcon, Mail, Phone, MapPin, Sliders, Bell, 
-  Compass, Radio, Heart, HelpCircle, Activity, CreditCard, Lock, X, ExternalLink, ShieldCheck, Coins, Search
+  Compass, Radio, Heart, HelpCircle, Activity, CreditCard, Lock, X, ExternalLink, ShieldCheck, Coins, Search, ArrowUpRight
 } from 'lucide-react';
 
 interface DashboardStudentProps {
@@ -456,11 +456,14 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
               document.getElementById('student-assignments-stream')?.scrollIntoView({ behavior: 'smooth' });
             }, 50);
           }}
-          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
         >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Assignment Progress</span>
-            <FileText size={16} className="text-brand-yellow font-normal" />
+            <div className="flex items-center gap-1.5">
+              <FileText size={16} className="text-brand-yellow font-normal" />
+              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
+            </div>
           </div>
           <div className="text-3xl font-light text-brand-black tracking-tight flex items-baseline gap-1.5">
             <span>{gradeRate}%</span>
@@ -478,11 +481,14 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
               document.getElementById('earned-certificates-section')?.scrollIntoView({ behavior: 'smooth' });
             }, 50);
           }}
-          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
         >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Earned Certificates</span>
-            <Award size={16} className="text-brand-yellow" />
+            <div className="flex items-center gap-1.5">
+              <Award size={16} className="text-brand-yellow" />
+              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
+            </div>
           </div>
           <div className="text-3xl font-light text-brand-black tracking-tight">
             <span>{certs.length}</span>
@@ -498,11 +504,14 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
               document.getElementById('course-offering-catalog')?.scrollIntoView({ behavior: 'smooth' });
             }, 50);
           }}
-          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
         >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Current Topic</span>
-            <BookOpen size={16} className="text-brand-yellow" />
+            <div className="flex items-center gap-1.5">
+              <BookOpen size={16} className="text-brand-yellow" />
+              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
+            </div>
           </div>
           <div className="text-lg font-light tracking-tight text-brand-black truncate">
             Spatial UI Typography
@@ -520,11 +529,14 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
               document.getElementById('student-assignments-stream')?.scrollIntoView({ behavior: 'smooth' });
             }, 50);
           }}
-          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs flex flex-col justify-between cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs flex flex-col justify-between cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Grade History</span>
-            <span className="text-xs font-mono text-emerald-600 font-light">Performance Progress</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-mono text-emerald-600 font-light">Performance Progress</span>
+              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
+            </div>
           </div>
           
           <div id="sparkline-container" className="h-10 w-full bg-zinc-50/50 rounded flex items-center justify-center">

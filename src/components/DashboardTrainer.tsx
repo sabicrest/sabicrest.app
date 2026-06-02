@@ -8,7 +8,7 @@ import { User, Assignment, Curriculum } from '../types';
 import { db } from '../db';
 import { 
   BookOpen, FileText, CheckCircle2, Award, ClipboardCheck, Sparkles, Plus, AlertCircle, 
-  FileCheck, HelpCircle, Settings, Sliders, Bell, User as UserIcon, Mail, Phone, MapPin, Activity, X, Search
+  FileCheck, HelpCircle, Settings, Sliders, Bell, User as UserIcon, Mail, Phone, MapPin, Activity, X, Search, ArrowUpRight
 } from 'lucide-react';
 
 interface DashboardTrainerProps {
@@ -376,11 +376,14 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
               document.getElementById('trainer-main-grid')?.scrollIntoView({ behavior: 'smooth' });
             }, 50);
           }}
-          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
         >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Awaiting Evaluation</span>
-            <ClipboardCheck size={16} className="text-brand-yellow" />
+            <div className="flex items-center gap-1.5">
+              <ClipboardCheck size={16} className="text-brand-yellow" />
+              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
+            </div>
           </div>
           <div className="text-3xl font-light text-brand-black tracking-tight flex items-baseline gap-1.5">
             <span>{pendingGradingCount}</span>
@@ -391,11 +394,14 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
 
         <div 
           onClick={() => setShowGradedListModal(true)}
-          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
         >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Assignments Graded</span>
-            <CheckCircle2 size={16} className="text-brand-yellow" />
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 size={16} className="text-brand-yellow" />
+              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
+            </div>
           </div>
           <div className="text-3xl font-light text-brand-black tracking-tight cursor-pointer">
             <span>{gradedCount}</span>
@@ -406,11 +412,14 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
 
         <div 
           onClick={() => setShowStudentsListModal(true)}
-          className="bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
         >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
             <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">My Students</span>
-            <FileText size={16} className="text-brand-yellow" />
+            <div className="flex items-center gap-1.5">
+              <FileText size={16} className="text-brand-yellow" />
+              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
+            </div>
           </div>
           <div className="text-3xl font-light text-brand-black tracking-tight">
             <span>{coachedStudentsCount}</span>

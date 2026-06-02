@@ -28,7 +28,8 @@ import {
   Edit3,
   Copy,
   Trash2,
-  Share2
+  Share2,
+  Search
 } from 'lucide-react';
 
 const ALL_CHANNELS = [
@@ -58,6 +59,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
     }
   });
   const [dmLimit, setDmLimit] = useState(10);
+  const [dmSearchQuery, setDmSearchQuery] = useState('');
 
   // Auto-unhide conversation when activeDmUser is programmatically selected (e.g. from directory)
   useEffect(() => {
@@ -383,6 +385,10 @@ export default function Messaging({ currentUser }: MessagingProps) {
     return (hasMessages && !isHidden) || isActive;
   });
 
+  const filteredDisplayDms = displayDms.filter(u =>
+    u.name.toLowerCase().includes(dmSearchQuery.toLowerCase())
+  );
+
   // Filter messages based on active context
   const filteredMessages = messages.filter(m => {
     if (activeDmUser) {
@@ -645,8 +651,29 @@ export default function Messaging({ currentUser }: MessagingProps) {
               
                {isDmsExpanded && (
                 <div className="space-y-1 text-xs font-light mt-2 animate-in fade-in duration-150">
+                  {/* Search input to quickly filter existing DM conversations */}
+                  <div className="relative mt-1 mb-2 pr-1">
+                    <Search size={12} className="absolute left-2.5 top-2.5 text-zinc-400" />
+                    <input
+                      type="text"
+                      placeholder="Filter conversations..."
+                      value={dmSearchQuery}
+                      onChange={(e) => setDmSearchQuery(e.target.value)}
+                      className="w-full bg-zinc-50 border border-zinc-200 focus:border-brand-black text-[11px] rounded-xl pl-8 pr-8 py-1.5 focus:outline-none transition-all placeholder:text-zinc-400 font-light"
+                    />
+                    {dmSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setDmSearchQuery('')}
+                        className="absolute right-2.5 top-2.5 text-zinc-400 hover:text-zinc-600 cursor-pointer"
+                      >
+                        <X size={12} />
+                      </button>
+                    )}
+                  </div>
+
                   <div className="space-y-1 max-h-56 overflow-y-auto">
-                    {displayDms.slice(0, dmLimit).map(u => {
+                    {filteredDisplayDms.slice(0, dmLimit).map(u => {
                       const isSelected = activeDmUser?.id === u.id;
                       const count = unreadCounts[u.id] || 0;
                       return (
@@ -702,12 +729,12 @@ export default function Messaging({ currentUser }: MessagingProps) {
                         </div>
                       );
                     })}
-                    {displayDms.length === 0 && (
-                      <p className="text-[10px] text-zinc-400 italic p-2 text-center">No platform members available.</p>
+                    {filteredDisplayDms.length === 0 && (
+                      <p className="text-[10px] text-zinc-400 italic p-2 text-center">No matching conversations found.</p>
                     )}
                   </div>
 
-                  {displayDms.length > dmLimit && (
+                  {filteredDisplayDms.length > dmLimit && (
                     <button
                       type="button"
                       onClick={() => setDmLimit(prev => prev + 10)}

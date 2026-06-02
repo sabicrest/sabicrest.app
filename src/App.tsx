@@ -14,9 +14,8 @@ import DashboardAdmin from './components/DashboardAdmin';
 import Messaging from './components/Messaging';
 import Scheduling from './components/Scheduling';
 import TeamCollaboration from './components/TeamCollaboration';
-import SabicrestHub from './components/SabicrestHub';
 import StudentSettings from './components/StudentSettings';
-import { LayoutDashboard, MessageSquare, CalendarDays, Users, ShieldAlert, Compass, Settings } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, CalendarDays, Users, ShieldAlert, Settings } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
@@ -164,7 +163,6 @@ export default function App() {
       case 'student':
         return [
           { id: 'dashboard', label: 'Space', icon: LayoutDashboard },
-          { id: 'hub', label: 'Hub', icon: Compass },
           { id: 'messaging', label: 'Chats', icon: MessageSquare },
           { id: 'scheduling', label: 'Schedules', icon: CalendarDays },
           { id: 'collaboration', label: 'Team', icon: Users },
@@ -173,7 +171,6 @@ export default function App() {
       case 'trainer':
         return [
           { id: 'dashboard', label: 'Space', icon: LayoutDashboard },
-          { id: 'hub', label: 'Hub', icon: Compass },
           { id: 'messaging', label: 'Chats', icon: MessageSquare },
           { id: 'scheduling', label: 'Schedules', icon: CalendarDays },
           { id: 'profile', label: 'Settings', icon: Settings }
@@ -181,7 +178,6 @@ export default function App() {
       case 'admin':
         return [
           { id: 'dashboard', label: 'Space', icon: LayoutDashboard },
-          { id: 'hub', label: 'Hub', icon: Compass },
           { id: 'messaging', label: 'Chats', icon: MessageSquare },
           { id: 'scheduling', label: 'Schedules', icon: CalendarDays },
           { id: 'profile', label: 'Settings', icon: Settings }
@@ -205,9 +201,6 @@ export default function App() {
           return <DashboardAdmin currentUser={currentUser} />;
         }
         return null;
-      
-      case 'hub':
-        return <SabicrestHub currentUser={currentUser} />;
 
       case 'messaging':
         return <Messaging currentUser={currentUser} />;

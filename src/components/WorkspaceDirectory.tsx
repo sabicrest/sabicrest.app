@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { ArrowLeft, MessageSquare, Sparkles, Search, ChevronDown, ChevronUp, MessageCircle } from 'lucide-react';
+import { motion } from 'motion/react';
 import { User } from '../types';
 
 const obfuscateEmail = (email: string) => {
@@ -224,9 +225,12 @@ export default function WorkspaceDirectory({
         {paginatedUsers.map(u => {
           const isExpanded = expandedUserId === u.id;
           return (
-            <div 
-              key={u.id} 
+            <motion.div 
+              key={`${u.id}-${searchQuery}-${selectedRole}-${joinedFilter}-${sortOrder}-${currentPage}`} 
               onClick={() => setExpandedUserId(isExpanded ? null : u.id)}
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
               className={`border rounded-3xl p-5 bg-white shadow-2xs hover:shadow-xs transition-all flex flex-col cursor-pointer border-zinc-150 hover:border-zinc-350 ${
                 isExpanded ? 'ring-2 ring-brand-yellow/30 border-zinc-250' : ''
               }`}
@@ -385,7 +389,7 @@ export default function WorkspaceDirectory({
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
           );
         })}
         {paginatedUsers.length === 0 && (
