@@ -801,10 +801,11 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                   <input
                     type="text"
                     value={profileName}
-                    onChange={(e) => setProfileName(e.target.value)}
-                    className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow"
+                    disabled
+                    className="w-full text-xs font-light bg-zinc-50 border border-zinc-100 rounded-xl px-3.5 py-2.5 text-zinc-400 cursor-not-allowed"
                     required
                   />
+                  <span className="text-[9px] text-zinc-450 italic mt-0.5 block">Display name is locked (managed by your administrator).</span>
                 </div>
 
                 <div>
