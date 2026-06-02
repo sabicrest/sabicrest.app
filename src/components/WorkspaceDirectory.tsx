@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { ArrowLeft, MessageSquare, Sparkles, Search, ChevronDown, ChevronUp, MessageCircle } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Sparkles, Search, ChevronDown, ChevronUp, MessageCircle, ExternalLink } from 'lucide-react';
 import { motion } from 'motion/react';
 import { User } from '../types';
 
@@ -272,6 +272,19 @@ export default function WorkspaceDirectory({
                           <span>WhatsApp</span>
                         </a>
                       )}
+                      {u.slackHandle && (u.slackHandle.startsWith('http') || u.slackHandle.includes('.')) && (
+                        <a
+                          href={u.slackHandle.startsWith('http') ? u.slackHandle : `https://${u.slackHandle}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          title="View Portfolio"
+                          className="bg-brand-black hover:bg-zinc-800 text-brand-yellow font-bold border border-zinc-200 px-2 py-0.5 rounded-full text-[8.5px] flex items-center gap-1 transition-all shrink-0 cursor-pointer"
+                        >
+                          <ExternalLink size={9.5} className="text-brand-yellow" />
+                          <span>Portfolio</span>
+                        </a>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -323,8 +336,22 @@ export default function WorkspaceDirectory({
                       )}
                       {u.slackHandle && (
                         <div>
-                          <span className="text-zinc-400 text-[9px] uppercase font-bold tracking-wider">Social Handle</span>
-                          <p className="text-[11px] text-zinc-600 font-mono truncate">{u.slackHandle}</p>
+                          <span className="text-zinc-400 text-[9px] uppercase font-bold tracking-wider">Portfolio / Business Link</span>
+                          <p className="text-[11px] text-zinc-605 font-mono truncate mt-0.5">
+                            {u.slackHandle.startsWith('http') || u.slackHandle.includes('.') ? (
+                              <a
+                                href={u.slackHandle.startsWith('http') ? u.slackHandle : `https://${u.slackHandle}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-brand-yellow hover:underline inline-flex items-center gap-1 font-semibold break-all"
+                              >
+                                {u.slackHandle.replace(/https?:\/\/(www\.)?/, '')}
+                              </a>
+                            ) : (
+                              u.slackHandle
+                            )}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -352,39 +379,54 @@ export default function WorkspaceDirectory({
                     </div>
                   )}
 
-                  <div className="flex gap-2 w-full">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSelectUser(u);
-                      }}
-                      className="flex-1 py-2 bg-brand-black hover:bg-zinc-900 text-white rounded-xl text-xs font-semibold tracking-wide transition-all uppercase cursor-pointer text-center flex items-center justify-center gap-1.5"
-                    >
-                      <MessageSquare size={13} className="text-brand-yellow" />
-                      <span>In-App Chat</span>
-                    </button>
-                    {u.phone ? (
+                  <div className="flex flex-col gap-2 w-full">
+                    <div className="flex gap-2 w-full">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectUser(u);
+                        }}
+                        className="flex-1 py-2 bg-brand-black hover:bg-zinc-900 text-white rounded-xl text-xs font-semibold tracking-wide transition-all uppercase cursor-pointer text-center flex items-center justify-center gap-1.5"
+                      >
+                        <MessageSquare size={13} className="text-brand-yellow" />
+                        <span>In-App Chat</span>
+                      </button>
+                      {u.phone ? (
+                        <a
+                          href={`https://wa.me/${u.phone.replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold tracking-wide transition-all uppercase text-center flex items-center justify-center gap-1.5 cursor-pointer no-underline"
+                          title="Chat on WhatsApp"
+                        >
+                          <MessageCircle size={13} className="fill-white/10 text-white" />
+                          <span>WhatsApp</span>
+                        </a>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled
+                          className="flex-1 py-2 bg-zinc-100 text-zinc-400 rounded-xl text-xs font-medium uppercase tracking-wide cursor-not-allowed text-center flex items-center justify-center gap-1.5"
+                          title="No WhatsApp number provided"
+                        >
+                          <MessageCircle size={13} className="text-zinc-300" />
+                          <span>No WhatsApp</span>
+                        </button>
+                      )}
+                    </div>
+                    {u.slackHandle && (u.slackHandle.startsWith('http') || u.slackHandle.includes('.')) && (
                       <a
-                        href={`https://wa.me/${u.phone.replace(/\D/g, '')}`}
+                        href={u.slackHandle.startsWith('http') ? u.slackHandle : `https://${u.slackHandle}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold tracking-wide transition-all uppercase text-center flex items-center justify-center gap-1.5 cursor-pointer no-underline"
-                        title="Chat on WhatsApp"
+                        className="w-full py-2 bg-zinc-50 hover:bg-zinc-100 text-brand-black border border-zinc-200 rounded-xl text-xs font-semibold tracking-wide transition-all uppercase text-center flex items-center justify-center gap-1.5 cursor-pointer no-underline"
+                        title="View Portfolio"
                       >
-                        <MessageCircle size={13} className="fill-white/10 text-white" />
-                        <span>WhatsApp</span>
+                        <ExternalLink size={13} className="text-brand-yellow font-bold" />
+                        <span>View Portfolio</span>
                       </a>
-                    ) : (
-                      <button
-                        type="button"
-                        disabled
-                        className="flex-1 py-2 bg-zinc-100 text-zinc-400 rounded-xl text-xs font-medium uppercase tracking-wide cursor-not-allowed text-center flex items-center justify-center gap-1.5"
-                        title="No WhatsApp number provided"
-                      >
-                        <MessageCircle size={13} className="text-zinc-300" />
-                        <span>No WhatsApp</span>
-                      </button>
                     )}
                   </div>
                 </div>

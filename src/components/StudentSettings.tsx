@@ -275,7 +275,7 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
             Account <span className="font-semibold text-brand-yellow">Settings & Profile</span>
           </h2>
           <p className="text-xs text-zinc-400 font-light leading-relaxed">
-            Manage your public Sabicrest design portfolio metadata, upload your photo, connect social identifiers (Slack and Mobile), and review cloud activity streams.
+            Manage your public Sabicrest design portfolio metadata, upload your photo, connect professional social links (Portfolio/Business website and Mobile), and review cloud activity streams.
           </p>
         </div>
       </div>
@@ -400,10 +400,10 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">Slack Handle</label>
+                <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">Portfolio or Business Link</label>
                 <input
                   type="text"
-                  placeholder="e.g. @alex_rivera"
+                  placeholder="e.g. portfolio.com or linkedin.com/in/username"
                   value={profileSlack}
                   onChange={(e) => setProfileSlack(e.target.value)}
                   className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-black transition-all"
@@ -489,8 +489,8 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
 
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[11px] font-medium text-brand-black block leading-none">Slack Webhook Sync</span>
-                  <span className="text-[9px] text-zinc-400 block">Publish assignment grades in workspace channels</span>
+                  <span className="text-[11px] font-medium text-brand-black block leading-none">Portfolio Webhook Sync</span>
+                  <span className="text-[9px] text-zinc-400 block">Publish portfolio and grade updates to professional streams</span>
                 </div>
                 <input
                   type="checkbox"

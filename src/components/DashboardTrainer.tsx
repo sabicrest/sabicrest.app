@@ -141,7 +141,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
       db.addNotification({
         userId: currentUser.id,
         title: 'Mentor Credentials Synchronized',
-        message: 'Your public mentoring specialty, slack hooks and visual bio data was replicated successfully.',
+        message: 'Your public mentoring specialty, portfolio links and visual bio data was replicated successfully.',
         type: 'curriculum'
       });
 
@@ -541,7 +541,21 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                               <h4 className="text-xs font-semibold text-brand-black leading-tight">{studentName}</h4>
                               <p className="text-[10px] text-zinc-400 font-light mt-0.5">{studentEmail}</p>
                               {studentObj?.slackHandle && (
-                                <span className="text-[9px] font-mono text-indigo-650 bg-indigo-50 px-1.5 py-0.25 rounded-md mt-1 inline-block">{studentObj.slackHandle}</span>
+                                <span className="text-[9px] font-mono text-zinc-650 bg-zinc-50 border border-zinc-150 px-1.5 py-0.25 rounded-md mt-1 inline-block">
+                                  {studentObj.slackHandle.startsWith('http') || studentObj.slackHandle.includes('.') ? (
+                                    <a
+                                      href={studentObj.slackHandle.startsWith('http') ? studentObj.slackHandle : `https://${studentObj.slackHandle}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="text-brand-yellow hover:underline"
+                                    >
+                                      Portfolio/Business Link
+                                    </a>
+                                  ) : (
+                                    studentObj.slackHandle
+                                  )}
+                                </span>
                               )}
                             </div>
                           </div>
@@ -829,10 +843,10 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                 </div>
 
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">Slack ID URL</label>
+                  <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">Portfolio or Business Link</label>
                   <input
                     type="text"
-                    placeholder="e.g. @sabicrest_coach"
+                    placeholder="e.g. portfolio.com or linkedin.com/in/username"
                     value={profileSlack}
                     onChange={(e) => setProfileSlack(e.target.value)}
                     className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow"
