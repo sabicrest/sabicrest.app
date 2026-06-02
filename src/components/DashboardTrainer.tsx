@@ -8,7 +8,8 @@ import { User, Assignment, Curriculum } from '../types';
 import { db } from '../db';
 import { 
   BookOpen, FileText, CheckCircle2, Award, ClipboardCheck, Sparkles, Plus, AlertCircle, 
-  FileCheck, HelpCircle, Settings, Sliders, Bell, User as UserIcon, Mail, Phone, MapPin, Activity, X, Search, ArrowUpRight
+  FileCheck, HelpCircle, Settings, Sliders, Bell, User as UserIcon, Mail, Phone, MapPin, Activity, X, Search, ArrowUpRight,
+  Lock, Unlock, Laptop, Tractor, Camera, Check, Play, Upload, Globe, Compass, Shield, MessageSquare, Video as VideoIcon, Hourglass
 } from 'lucide-react';
 
 interface DashboardTrainerProps {
@@ -74,6 +75,74 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
   const [assigningInProgress, setAssigningInProgress] = useState(false);
   const [dashboardSearchQuery, setDashboardSearchQuery] = useState('');
   const [coursesSearchQuery, setCoursesSearchQuery] = useState('');
+
+  // Interactive Trainer Verification Portal Step State
+  const [showVerificationPortal, setShowVerificationPortal] = useState(false);
+  const [verificationData, setVerificationData] = useState(() => {
+    const saved = localStorage.getItem(`sabicrest_verification_${currentUser.id}`);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        // fallback
+      }
+    }
+    return {
+      category: null, // 'digital' | 'creative' | 'agricultural'
+      step1Saved: false,
+      step1Data: {
+        links: '',
+        lookbookLink: '',
+        instagramLink: '',
+        metrics: '50',
+        farmPhotoUrl: ''
+      },
+      step2Saved: false,
+      step2Data: '',
+      step3Saved: false,
+      step3Data: {
+        videoUrl: '',
+        recorded: false,
+        durationSeconds: 0
+      },
+      status: currentUser.verified ? 'approved' : 'unstarted', // 'unstarted' | 'step1_complete'| 'step2_complete'| 'submitted' | 'approved'
+    };
+  });
+
+  const [simulatedMediaState, setSimulatedMediaState] = useState<'idle' | 'recording' | 'uploading' | 'completed'>('idle');
+  const [mediaProgress, setMediaProgress] = useState(0);
+
+  // Split text into sentences to perform real-time verification
+  const computeSentences = (text: string) => {
+    return text
+      .split(/[.!?]+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 5);
+  };
+
+  const warmToneWords = ["welcome", "simple", "easy", "let's", "together", "begin", "learn", "passion", "first", "hello", "basic", "step", "start", "understand", "friendly"];
+  const checkWarmTone = (text: string) => {
+    const norm = text.toLowerCase();
+    const matches = warmToneWords.filter(w => norm.includes(w));
+    return {
+      matches,
+      score: matches.length > 1 ? 'warm' : matches.length > 0 ? 'moderate' : 'formal'
+    };
+  };
+
+  // Persistence side-effect
+  useEffect(() => {
+    localStorage.setItem(`sabicrest_verification_${currentUser.id}`, JSON.stringify(verificationData));
+  }, [verificationData, currentUser.id]);
+
+  // Keep state matching the system role DB state
+  useEffect(() => {
+    if (currentUser.verified && verificationData.status !== 'approved') {
+      setVerificationData(prev => ({ ...prev, status: 'approved' }));
+    } else if (!currentUser.verified && verificationData.status === 'approved') {
+      setVerificationData(prev => ({ ...prev, status: 'unstarted' }));
+    }
+  }, [currentUser.verified]);
 
   const allStudents = db.getUsers().filter(u => u.role === 'student');
 
@@ -358,13 +427,110 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
 
           <button
             id="propose-curriculum-trigger"
-            onClick={() => setShowCurriculumModal(true)}
-            className="flex items-center gap-2 bg-brand-yellow hover:bg-amber-400 text-brand-black rounded-xl py-2.5 px-4 text-xs font-semibold tracking-wide uppercase transition-all cursor-pointer shadow-xs focus-ring"
+            onClick={() => {
+              if (!currentUser.verified) {
+                setShowVerificationPortal(true);
+                showToast("Verification Required! Complete the 3 interactive cards to unlock course proposals.");
+              } else {
+                setShowCurriculumModal(true);
+              }
+            }}
+            className={`flex items-center gap-2 rounded-xl py-2.5 px-4 text-xs font-semibold tracking-wide uppercase transition-all cursor-pointer shadow-xs focus-ring ${
+              currentUser.verified 
+                ? 'bg-brand-yellow hover:bg-amber-400 text-brand-black'
+                : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'
+            }`}
           >
-            <Plus size={14} className="text-brand-black font-semibold" /> Propose Curriculum
+            {currentUser.verified ? (
+              <>
+                <Plus size={14} className="text-brand-black font-semibold" /> Propose Curriculum
+              </>
+            ) : (
+              <>
+                <Lock size={14} className="text-brand-yellow font-semibold" /> Get Verified
+              </>
+            )}
           </button>
         </div>
       </div>
+
+      {/* Prominent Trainer Verification Journey Status Indicator */}
+      {currentUser.verified ? (
+        <div id="trainer-verified-compact-banner" className="bg-emerald-50 border border-emerald-100 rounded-3xl p-5 mb-8 flex flex-col sm:flex-row sm:items-center justify-between text-left gap-4 animate-in fade-in duration-250">
+          <div className="flex items-start gap-3.5">
+            <div className="bg-emerald-500 text-white p-2.5 rounded-2xl shadow-xs mt-0.5 shrink-0">
+              <Check className="w-4 h-4 font-extrabold text-white" />
+            </div>
+            <div>
+              <h4 className="text-xs font-semibold text-emerald-950 leading-tight">Verified Sabicrest Educator Identity</h4>
+              <p className="text-[11px] text-emerald-800/80 font-light mt-1 max-w-2xl leading-relaxed">
+                Your professional portfolio, communication concepts, and hands-on teaching style audition video have been fully verified by our administrators. Core curriculum creations and direct student enrollments are fully authorized!
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowVerificationPortal(true)}
+            className="bg-emerald-800 hover:bg-emerald-900 text-white font-medium text-[10px] uppercase tracking-wider px-3.5 py-2 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 shrink-0 self-start sm:self-center"
+          >
+            <Sparkles size={11} className="text-brand-yellow" /> View Portal Dossier
+          </button>
+        </div>
+      ) : (
+        <div id="trainer-verification-status-banner" className="bg-amber-50/70 border border-amber-200/60 rounded-3xl p-5 mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-5 text-left animate-in fade-in duration-250">
+          <div className="space-y-1.5 max-w-4xl">
+            <span className="text-[9px] uppercase font-mono tracking-widest bg-amber-100 text-amber-805 px-2.5 py-0.5 rounded-md border border-amber-200 inline-block font-semibold">
+              Verification Required
+            </span>
+            <h3 className="text-sm font-semibold text-zinc-900 tracking-tight flex items-center gap-1.5">
+              <Unlock size={14} className="text-amber-600" /> Unlock Creative Course Proposing Capabilities
+            </h3>
+            <p className="text-xs text-zinc-650 font-light leading-relaxed">
+              To guarantee outstanding instructional credentials and practical training metrics across Sabicrest, registered trainers are required to successfully bypass three interactive verification step cards. It takes less than 10 minutes.
+            </p>
+            
+            {/* Horizontal step indicators tracking progress */}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-2.5 border-t border-amber-200/35">
+              <div className="flex items-center gap-2 text-[10px] text-zinc-750">
+                {verificationData.step1Saved ? (
+                  <span className="bg-emerald-100 text-emerald-700 p-0.5 rounded-full"><Check size={10} className="stroke-[3]" /></span>
+                ) : (
+                  <div className="w-4 h-4 rounded-full border border-amber-300 flex items-center justify-center text-[9px] text-amber-600 font-semibold bg-amber-100/50">1</div>
+                )}
+                <span className={verificationData.step1Saved ? "line-through text-zinc-400 font-light" : "font-semibold text-zinc-700"}>Category Portfolio & Live Links</span>
+              </div>
+              
+              <div className="flex items-center gap-2 text-[10px] text-zinc-750">
+                {verificationData.step2Saved ? (
+                  <span className="bg-emerald-100 text-emerald-700 p-0.5 rounded-full"><Check size={10} className="stroke-[3]" /></span>
+                ) : (
+                  <div className="w-4 h-4 rounded-full border border-amber-300 flex items-center justify-center text-[9px] text-amber-600 font-semibold bg-amber-100/50">2</div>
+                )}
+                <span className={verificationData.step2Saved ? "line-through text-zinc-400 font-light" : "font-semibold text-zinc-700"}>"Sabi" Communication Concept</span>
+              </div>
+
+              <div className="flex items-center gap-2 text-[10px] text-zinc-750">
+                {verificationData.step3Saved ? (
+                  <span className="bg-emerald-100 text-emerald-700 p-0.5 rounded-full"><Check size={10} className="stroke-[3]" /></span>
+                ) : (
+                  <div className="w-4 h-4 rounded-full border border-amber-300 flex items-center justify-center text-[9px] text-amber-600 font-semibold bg-amber-100/50">3</div>
+                )}
+                <span className={verificationData.step3Saved ? "line-through text-zinc-400 font-light" : "font-semibold text-zinc-700"}>Teaching Audition Spot</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setShowVerificationPortal(true)}
+            className="bg-brand-black hover:bg-zinc-900 text-white font-semibold text-xs uppercase tracking-wider px-5 py-3 rounded-xl transition-all cursor-pointer shadow-xs inline-flex items-center justify-center gap-2 shrink-0 border border-brand-black hover:border-brand-yellow font-medium select-none"
+          >
+            <Sparkles size={13} className="text-brand-yellow" />
+            <span>
+              {verificationData.status === 'submitted' ? 'Track Assessment' : verificationData.status === 'unstarted' ? 'Get Verified' : 'Resume Verification'}
+            </span>
+            <ArrowUpRight size={13} />
+          </button>
+        </div>
+      )}
 
       {/* Analytics Bento Cards Row */}
       <div id="trainer-stats-row" className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -880,6 +1046,54 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
           {/* Preferences and settings indicators */}
           <div className="lg:col-span-1 space-y-6">
             
+            {/* Verification Status Settings Card */}
+            <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs space-y-4">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-brand-black border-b border-zinc-50 pb-2 flex items-center gap-1.5 font-light">
+                <Shield size={13} className="text-brand-yellow" /> Mentor Certification
+              </h4>
+
+              <div className="space-y-3.5 pt-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-mono text-zinc-400">Current Status</span>
+                  <span className={`text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded-md ${
+                    currentUser.verified 
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
+                      : 'bg-amber-50 text-amber-800 border border-amber-200 animate-pulse'
+                  }`}>
+                    {currentUser.verified ? '✓ Approved' : 'Action Required'}
+                  </span>
+                </div>
+
+                <p className="text-xs font-light text-zinc-550 leading-relaxed">
+                  {currentUser.verified 
+                    ? 'Congratulations! Your profile is verified. You have full permission to propose advanced curriculum modules and evaluate student submissions.'
+                    : 'To protect the educational rigor of Sabicrest courses, please submit your links, portfolio concepts, and a teaching audition stream.'
+                  }
+                </p>
+
+                {!currentUser.verified && (
+                  <button
+                    type="button"
+                    onClick={() => setShowVerificationPortal(true)}
+                    className="w-full text-center bg-brand-black hover:bg-zinc-900 border border-brand-black text-white py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all font-medium cursor-pointer inline-flex items-center justify-center gap-2"
+                  >
+                    <Sparkles size={11} className="text-brand-yellow" />
+                    <span>Get Verified</span>
+                  </button>
+                )}
+                
+                {currentUser.verified && (
+                  <button
+                    type="button"
+                    onClick={() => setShowVerificationPortal(true)}
+                    className="w-full text-center bg-zinc-50 hover:bg-zinc-100 text-zinc-650 py-2.5 rounded-xl text-xs transition-all font-light cursor-pointer inline-flex items-center justify-center gap-2 border border-zinc-100"
+                  >
+                    <span>View Portal Credentials</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs space-y-4">
               <h4 className="text-xs font-semibold uppercase tracking-wider text-brand-black border-b border-zinc-50 pb-2 flex items-center gap-1.5 font-light">
                 <Sliders size={13} className="text-brand-yellow" /> App Settings
@@ -1331,6 +1545,769 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
               </div>
 
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modern, Step-by-Step Trainer Verification Portal Modal */}
+      {showVerificationPortal && (
+        <div id="trainer-verification-portal" className="fixed inset-0 bg-zinc-950/65 backdrop-blur-md flex items-center justify-center p-4 z-55 animate-in fade-in duration-200">
+          <div className="bg-white border border-zinc-150 rounded-3xl w-full max-w-4xl p-6 md:p-8 shadow-2xl relative max-h-[92vh] overflow-y-auto text-left space-y-6 animate-in zoom-in-95 duration-200 divide-y divide-zinc-100 scrollbar-none">
+            
+            {/* Header Area */}
+            <div className="flex justify-between items-start pb-4 border-b border-zinc-150/50">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="bg-amber-100 text-amber-800 text-[9px] tracking-wider uppercase px-2.5 py-0.5 rounded-full font-mono font-bold">Coach Hub</span>
+                  <span className="text-zinc-300">//</span>
+                  <span className="text-[10px] text-zinc-400 font-mono">ID: {currentUser.id.substring(0, 8)}</span>
+                </div>
+                <h3 className="text-lg font-bold text-zinc-900 tracking-tight flex items-center gap-2">
+                  <Shield className="text-brand-yellow w-5 h-5 fill-amber-100" /> Educator Accreditation Terminal
+                </h3>
+                <p className="text-xs text-zinc-550 font-light max-w-2xl">
+                  Bypass the Sabi criteria below to authenticate your spatial design credentials, beginner-friendly communication style, and hands-on operational training speed.
+                </p>
+              </div>
+
+              <button 
+                id="close-verification-portal-btn"
+                onClick={() => {
+                  setShowVerificationPortal(false);
+                  setSimulatedMediaState('idle');
+                  setMediaProgress(0);
+                }}
+                className="text-zinc-400 hover:text-black cursor-pointer bg-zinc-100 hover:bg-zinc-200 p-2 rounded-full transition-all"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            {/* Portal Step Card Contents */}
+            <div className="pt-4 space-y-6">
+              
+              {/* Conditional Success Overlay */}
+              {verificationData.status === 'approved' && (
+                <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-2xl space-y-4 animate-in fade-in">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-emerald-500 text-white p-3 rounded-full shadow-md">
+                      <Check className="w-5 h-5 stroke-[3]" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-emerald-950 font-sans tracking-tight">Accreditation Verified Successfully!</h4>
+                      <p className="text-xs text-emerald-800 font-light mt-0.5 leading-relaxed">
+                        Excellent work, Coach {currentUser.name}! You have successfully passed our interactive vetting channels. Space design, modular curriculum development, student mentoring, and evaluations are fully unlocked.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/80 rounded-xl p-4 border border-emerald-100 text-xs font-light text-zinc-650 space-y-2">
+                    <div className="font-semibold text-emerald-900 uppercase tracking-wider text-[9px] font-mono">Accreditation Dossier Record</div>
+                    <div>• <strong>Verification Category:</strong> {verificationData.category ? verificationData.category.toUpperCase() : 'General design'}</div>
+                    {verificationData.step2Data && <div className="italic text-zinc-600 bg-zinc-50 p-2 rounded border border-zinc-100 mt-1 mt-1 font-mono">"{verificationData.step2Data}"</div>}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setShowVerificationPortal(false);
+                        setShowCurriculumModal(true);
+                      }}
+                      className="bg-emerald-800 hover:bg-emerald-900 text-white font-medium text-xs px-4 py-2 rounded-xl cursor-pointer shadow-xs transition-colors inline-flex items-center gap-1.5"
+                    >
+                      <Plus size={13} /> Propose New Course Now
+                    </button>
+                    <button
+                      onClick={() => {
+                        // Reset for testing
+                        if (confirm("Reset validation files for testing? (Developer mode)")) {
+                          setVerificationData({
+                            category: null,
+                            step1Saved: false,
+                            step1Data: { links: '', lookbookLink: '', instagramLink: '', metrics: '50', farmPhotoUrl: '' },
+                            step2Saved: false,
+                            step2Data: '',
+                            step3Saved: false,
+                            step3Data: { videoUrl: '', recorded: false, durationSeconds: 0 },
+                            status: 'unstarted'
+                          });
+                          db.updateUser({ ...currentUser, verified: false });
+                          showToast("✓ Accreditation credentials reset. You are now unverified.");
+                        }
+                      }}
+                      className="bg-zinc-100 hover:bg-zinc-200 text-zinc-600 font-light text-xs px-4 py-2 rounded-xl cursor-pointer transition-colors"
+                    >
+                      Reset Vetting Files (Test E2E Flow)
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {verificationData.status !== 'approved' && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                  {/* STEP 1: CATEGORY SELECTION & PROOF */}
+                  <div className={`p-5 rounded-2xl transition-all border ${
+                    verificationData.step1Saved 
+                      ? 'bg-zinc-50/50 border-emerald-150 hover:border-emerald-250 shadow-xs' 
+                      : 'bg-white border-zinc-150 hover:border-zinc-300'
+                  }`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[10px] text-zinc-400 font-mono tracking-wider font-semibold uppercase">Card 1 // Foundation</span>
+                      {verificationData.step1Saved ? (
+                        <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] px-2 py-0.5 rounded-md font-mono font-bold flex items-center gap-1">
+                          <Check size={10} className="stroke-[3]" /> Saved
+                        </span>
+                      ) : (
+                        <span className="bg-amber-50 text-amber-800 border border-amber-200 text-[9px] px-2 py-0.5 rounded-md font-mono font-bold">Active</span>
+                      )}
+                    </div>
+
+                    <h4 className="text-xs font-bold text-zinc-900 tracking-tight mb-2.5 flex items-center gap-1.5 uppercase">
+                      <Compass size={14} className="text-amber-500" /> 1. Category Selector & Proof
+                    </h4>
+                    
+                    <p className="text-[11px] text-zinc-550 font-light mb-4 leading-relaxed">
+                      Select your practical instruction medium. Let us capture corresponding proof of design experience.
+                    </p>
+
+                    {/* Selector Buttons */}
+                    {!verificationData.step1Saved ? (
+                      <div className="space-y-2 mb-4">
+                        <button
+                          type="button"
+                          onClick={() => setVerificationData(prev => ({ ...prev, category: 'digital' }))}
+                          className={`w-full text-left p-3 rounded-xl border text-xs transition-all cursor-pointer flex items-center gap-3 ${
+                            verificationData.category === 'digital' 
+                              ? 'bg-brand-light border-brand-yellow text-zinc-900 font-semibold' 
+                              : 'bg-zinc-50/50 border-zinc-150 leading-relaxed text-zinc-600 hover:bg-zinc-50'
+                          }`}
+                        >
+                          <Laptop size={16} className="text-indigo-600 shrink-0" />
+                          <div>
+                            <div className="leading-tight text-[11px] font-bold">Digital Trainer Direction</div>
+                            <div className="text-[9px] text-zinc-400 font-light mt-0.5">Live links: GitHub, Figma, Drive portfolios</div>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setVerificationData(prev => ({ ...prev, category: 'creative' }))}
+                          className={`w-full text-left p-3 rounded-xl border text-xs transition-all cursor-pointer flex items-center gap-3 ${
+                            verificationData.category === 'creative' 
+                              ? 'bg-brand-light border-brand-yellow text-zinc-900 font-semibold' 
+                              : 'bg-zinc-50/50 border-zinc-150 leading-relaxed text-zinc-600 hover:bg-zinc-50'
+                          }`}
+                        >
+                          <Camera size={16} className="text-rose-600 shrink-0" />
+                          <div>
+                            <div className="leading-tight text-[11px] font-bold">Creative & Styling Direction</div>
+                            <div className="text-[9px] text-zinc-400 font-light mt-0.5">Style Zone: Instagram/TikTok, design lookbooks</div>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setVerificationData(prev => ({ ...prev, category: 'agricultural' }))}
+                          className={`w-full text-left p-3 rounded-xl border text-xs transition-all cursor-pointer flex items-center gap-3 ${
+                            verificationData.category === 'agricultural' 
+                              ? 'bg-brand-light border-brand-yellow text-zinc-900 font-semibold' 
+                              : 'bg-zinc-50/50 border-zinc-150 leading-relaxed text-zinc-600 hover:bg-zinc-50'
+                          }`}
+                        >
+                          <Tractor size={16} className="text-emerald-600 shrink-0" />
+                          <div>
+                            <div className="leading-tight text-[11px] font-bold">Agricultural & Specialist Direction</div>
+                            <div className="text-[9px] text-zinc-400 font-light mt-0.5">Metrics: farm size, mechanical scale, shop photos</div>
+                          </div>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="bg-zinc-100/50 border border-zinc-150 p-2.5 rounded-xl text-[11px] text-zinc-700 space-y-1 mb-4 select-none">
+                        <div><strong>Selected:</strong> {verificationData.category === 'digital' ? '💻 Digital and Tech Specialty' : verificationData.category === 'creative' ? '🌸 Creative, Styling & Multimedia' : '🚜 Agricultural & Technical Specialist'}</div>
+                        <div className="text-[10px] text-zinc-400 font-mono block">Proof files successfully sealed. Change requires resetting application.</div>
+                      </div>
+                    )}
+
+                    {/* Specific Proof Fields based on selected category */}
+                    {verificationData.category && !verificationData.step1Saved && (
+                      <div className="mt-4 p-3.5 bg-zinc-50 border border-zinc-150 rounded-2xl space-y-3.5 animate-in fade-in duration-200">
+                        {verificationData.category === 'digital' && (
+                          <div className="space-y-2">
+                            <label className="block text-[9px] uppercase font-bold text-zinc-500">Live Portfolios & Shared Links</label>
+                            <textarea
+                              placeholder="Figma URL, GitHub folder link, or copywriting Drive folder path..."
+                              value={verificationData.step1Data.links}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setVerificationData(prev => ({
+                                  ...prev,
+                                  step1Data: { ...prev.step1Data, links: val }
+                                }));
+                              }}
+                              className="w-full text-[11px] bg-white border border-zinc-200 rounded-lg p-2 focus:outline-hidden focus:border-brand-yellow min-h-16"
+                              required
+                            />
+                            <p className="text-[9px] text-zinc-400 font-light">Provide live URLs representing web, layout, typography, or copy assets.</p>
+                          </div>
+                        )}
+
+                        {verificationData.category === 'creative' && (
+                          <div className="space-y-3">
+                            <div className="space-y-1">
+                              <label className="block text-[9px] uppercase font-bold text-zinc-500">Instagram/TikTok Profile Link</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. instagram.com/creative_handle"
+                                value={verificationData.step1Data.instagramLink}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setVerificationData(prev => ({
+                                    ...prev,
+                                    step1Data: { ...prev.step1Data, instagramLink: val }
+                                  }));
+                                }}
+                                className="w-full text-[11px] bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 focus:outline-hidden focus:border-brand-yellow"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="block text-[9px] uppercase font-bold text-zinc-500">Lookbook Drop / Video Clip URL</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. pin.it/lookbook or drive.google.com/styling"
+                                value={verificationData.step1Data.lookbookLink}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setVerificationData(prev => ({
+                                    ...prev,
+                                    step1Data: { ...prev.step1Data, lookbookLink: val }
+                                  }));
+                                }}
+                                className="w-full text-[11px] bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 focus:outline-hidden focus:border-brand-yellow"
+                              />
+                            </div>
+                            <div className="border border-dashed border-zinc-200 rounded-xl p-3 text-center bg-white cursor-pointer hover:bg-zinc-50 transition-all">
+                              <Upload size={14} className="text-zinc-450 mx-auto mb-1" />
+                              <span className="text-[10px] text-zinc-500 block">Lookbook Drag & Drop Zone</span>
+                              <span className="text-[8px] text-zinc-400 font-light block mt-0.5">Drop makeup photo clips, design boards, JPEG, PNG</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {verificationData.category === 'agricultural' && (
+                          <div className="space-y-3">
+                            <div className="space-y-1">
+                              <label className="block text-[9px] uppercase font-bold text-zinc-500">livestockManaged Counter / workshopSize metrics</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. 150 cattle managed, 450 sq.m engineering floor"
+                                value={verificationData.step1Data.metrics}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setVerificationData(prev => ({
+                                    ...prev,
+                                    step1Data: { ...prev.step1Data, metrics: val }
+                                  }));
+                                }}
+                                className="w-full text-[11px] bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 focus:outline-hidden focus:border-brand-yellow"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="block text-[9px] uppercase font-bold text-zinc-500">Farm / Workshop physical photo link</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. shared folder representing farm layouts, machinery boards"
+                                value={verificationData.step1Data.farmPhotoUrl}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setVerificationData(prev => ({
+                                    ...prev,
+                                    step1Data: { ...prev.step1Data, farmPhotoUrl: val }
+                                  }));
+                                }}
+                                className="w-full text-[11px] bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 focus:outline-hidden focus:border-brand-yellow"
+                              />
+                            </div>
+                            <div className="border border-dashed border-zinc-200 rounded-xl p-3 text-center bg-white cursor-pointer hover:bg-zinc-50 transition-all">
+                              <Camera size={14} className="text-zinc-450 mx-auto mb-1" />
+                              <span className="text-[10px] text-zinc-500 block">Drop Farm Environment Photo</span>
+                              <span className="text-[8px] text-zinc-400 font-light block mt-0.5">Simulate actual agricultural workspace camera capture</span>
+                            </div>
+                          </div>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setVerificationData(prev => ({
+                              ...prev,
+                              step1Saved: true,
+                              status: 'step1_complete'
+                            }));
+                            showToast("✓ Skill Foundation saved! Step 2 is now unlocked.");
+                          }}
+                          className="w-full bg-brand-black hover:bg-zinc-800 text-white py-2 rounded-xl text-[10px] uppercase tracking-wider font-semibold cursor-pointer transition-colors"
+                        >
+                          Save & Lock Foundation Proof
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+
+                  {/* STEP 2: SABI COMMUNICATION FILTER */}
+                  <div className={`p-5 rounded-2xl transition-all border ${
+                    !verificationData.step1Saved 
+                      ? 'bg-zinc-50/20 border-zinc-100 opacity-55 pointer-events-none' 
+                      : verificationData.step2Saved 
+                        ? 'bg-zinc-50/50 border-emerald-150 hover:border-emerald-250 shadow-xs'
+                        : 'bg-white border-zinc-155 hover:border-zinc-350'
+                  }`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[10px] text-zinc-400 font-mono tracking-wider font-semibold uppercase">Card 2 // Sabi Filter</span>
+                      {verificationData.step2Saved ? (
+                        <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] px-2 py-0.5 rounded-md font-mono font-bold flex items-center gap-1">
+                          <Check size={10} className="stroke-[3]" /> Passed
+                        </span>
+                      ) : !verificationData.step1Saved ? (
+                        <span className="bg-zinc-150 text-zinc-450 text-[9px] px-2 py-0.5 rounded-md font-mono">Locked</span>
+                      ) : (
+                        <span className="bg-amber-50 text-amber-800 border border-amber-200 text-[9px] px-2 py-0.5 rounded-md font-mono font-bold">Unlocked</span>
+                      )}
+                    </div>
+
+                    <h4 className="text-xs font-bold text-zinc-900 tracking-tight mb-2.5 flex items-center gap-1.5 uppercase">
+                      <MessageSquare size={14} className="text-indigo-500" /> 2. "Sabi" Communication Filter
+                    </h4>
+                    
+                    <p className="text-[11px] text-zinc-550 font-light mb-4 leading-relaxed">
+                      Sabi means explaining tough skills simply. Write the absolute first core concept of your craft to a complete beginner in **exactly three sentences**.
+                    </p>
+
+                    {/* Sabi Concept Text Input */}
+                    {!verificationData.step2Saved ? (
+                      <div className="space-y-3">
+                        <textarea
+                          placeholder="e.g., Welcome to spatial layouts where we organize modules in comfortable grids. The absolute first step is learning how spacing creates a natural hierarchy for our eyes. Once you understand margins, everything else falls into absolute visual balance easily."
+                          value={verificationData.step2Data}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setVerificationData(prev => ({ ...prev, step2Data: val }));
+                          }}
+                          className="w-full text-[11px] font-mono bg-zinc-50 border border-zinc-200 rounded-xl p-3 focus:outline-hidden focus:border-brand-yellow min-h-32 text-zinc-850 leading-relaxed font-light"
+                        />
+
+                        {/* Interactive Real-Time Tone and Grammatical Analyser Output */}
+                        {verificationData.step2Data.trim().length > 3 && (() => {
+                          const sents = computeSentences(verificationData.step2Data);
+                          const tone = checkWarmTone(verificationData.step2Data);
+                          const count = sents.length;
+                          const isExactlyThree = count === 3;
+                          
+                          return (
+                            <div className="bg-zinc-50 border border-zinc-150 rounded-xl p-3 space-y-1.5 text-[10px] animate-in slide-in-from-top-1">
+                              <div className="font-semibold text-zinc-700 uppercase tracking-widest text-[8px] font-mono flex items-center justify-between border-b border-zinc-150 pb-1">
+                                <span>Real-time Beginner-Friendliness Grid</span>
+                                <span className={isExactlyThree ? "text-emerald-600 font-bold" : "text-amber-500 font-bold"}>
+                                  {isExactlyThree ? "✓ Target Count Met" : "Awaiting counts"}
+                                </span>
+                              </div>
+                              
+                              <div className="flex justify-between">
+                                <span className="text-zinc-500">Detected Sentences:</span>
+                                <strong className={isExactlyThree ? "text-emerald-700" : "text-amber-600"}>{count} of 3 sentences</strong>
+                              </div>
+
+                              <div className="flex justify-between">
+                                <span className="text-zinc-500 font-light">Welcoming Index Level:</span>
+                                <strong className={tone.score === 'warm' ? "text-emerald-700" : tone.score === 'moderate' ? "text-blue-600" : "text-amber-600"}>
+                                  {tone.score === 'warm' ? '✨ Warm & inviting' : tone.score === 'moderate' ? '👍 Moderate / Neutral' : '⚠️ Technical / Formal'}
+                                </strong>
+                              </div>
+
+                              {tone.matches.length > 0 && (
+                                <div className="text-[9px] text-zinc-450 italic">
+                                  Supporting words: {tone.matches.join(", ")}
+                                </div>
+                              )}
+
+                              {/* Interactive Coaching Alerts */}
+                              <div className="pt-1.5 text-[9px] font-mono text-zinc-500 flex items-start gap-1">
+                                <span className="text-amber-500">💡</span>
+                                <span>
+                                  {count < 3 
+                                    ? `Share precisely three simple sentences. Currently detected ${count}.` 
+                                    : count > 3 
+                                      ? `Explanation is too dense. Please synthesize it. Currently detected ${count} statements.` 
+                                      : `Sentence metric: excellent! This explanation is beautifully digestible for standard beginners.`}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const sentencesNum = computeSentences(verificationData.step2Data).length;
+                            if (sentencesNum !== 3) {
+                              if (!confirm(`Your concept currently has ${sentencesNum} sentences. We recommend exactly 3 sentences to fulfill the Sabi Beginner Concept, but would you like to save it anyway?`)) {
+                                return;
+                              }
+                            }
+                            setVerificationData(prev => ({
+                              ...prev,
+                              step2Saved: true,
+                              status: 'step2_complete'
+                            }));
+                            showToast("✓ Sabi Communication metrics approved! Audition Hub unlocked.");
+                          }}
+                          disabled={!verificationData.step2Data.trim()}
+                          className={`w-full py-2 rounded-xl text-[10px] uppercase tracking-wider font-semibold cursor-pointer transition-colors ${
+                            verificationData.step2Data.trim() 
+                              ? 'bg-brand-black hover:bg-zinc-800 text-white' 
+                              : 'bg-zinc-100 text-zinc-400 cursor-not-allowed'
+                          }`}
+                        >
+                          Save Concept Verification
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="p-3 bg-zinc-100/50 rounded-xl text-[11px] font-mono border border-zinc-150 leading-relaxed italic text-zinc-650 font-light select-none">
+                          "{verificationData.step2Data}"
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setVerificationData(prev => ({
+                              ...prev,
+                              step2Saved: false,
+                              status: 'step1_complete'
+                            }));
+                          }}
+                          className="text-[10px] text-indigo-600 hover:underline cursor-pointer block font-semibold text-left"
+                        >
+                          Modify concept draft
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+
+                  {/* STEP 3: AUDITION HUB */}
+                  <div className={`p-5 rounded-2xl transition-all border ${
+                    !verificationData.step2Saved 
+                      ? 'bg-zinc-50/20 border-zinc-100 opacity-55 pointer-events-none' 
+                      : verificationData.step3Saved 
+                        ? 'bg-zinc-50/50 border-emerald-150 hover:border-emerald-250 shadow-xs'
+                        : 'bg-white border-zinc-155 hover:border-zinc-350'
+                  }`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[10px] text-zinc-400 font-mono tracking-wider font-semibold uppercase">Card 3 // Audition Spot</span>
+                      {verificationData.step3Saved ? (
+                        <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] px-2 py-0.5 rounded-md font-mono font-bold flex items-center gap-1">
+                          <Check size={10} className="stroke-[3]" /> Uploaded
+                        </span>
+                      ) : !verificationData.step2Saved ? (
+                        <span className="bg-zinc-150 text-zinc-450 text-[9px] px-2 py-0.5 rounded-md font-mono">Locked</span>
+                      ) : (
+                        <span className="bg-amber-50 text-amber-800 border border-amber-200 text-[9px] px-2 py-0.5 rounded-md font-mono font-bold animate-pulse">Pending Upload</span>
+                      )}
+                    </div>
+
+                    <h4 className="text-xs font-bold text-zinc-900 tracking-tight mb-2.5 flex items-center gap-1.5 uppercase">
+                      <Play size={14} className="text-rose-500" /> 3. Vetting Audition Hub
+                    </h4>
+                    
+                    <p className="text-[11px] text-zinc-550 font-light mb-4 leading-relaxed">
+                      Record or drag-in a prompt 5-minute teaching style video showing your direct physical or digital hands-on process.
+                    </p>
+
+                    {/* Step-specific directions */}
+                    {verificationData.step2Saved && !verificationData.step3Saved && (
+                      <div className="bg-zinc-50 border border-zinc-150 p-3 rounded-xl mb-4 text-[10px] text-zinc-600 font-mono leading-relaxed">
+                        <span className="font-bold text-rose-600 block uppercase tracking-wide text-[9px] mb-1">
+                          {verificationData.category === 'digital' ? '💻 DIGITAL WORKSPACE RECORD TARGET' : verificationData.category === 'creative' ? '🌸 HANDS-ON WORK LOOKBOOK CAPTURE' : '🚜 FIELD SAFETY WORK WALKTHROUGH'}
+                        </span>
+                        {verificationData.category === 'digital' ? 'Record your screen showing visual modules layout, grid structure setup, or typings configuration live.' : verificationData.category === 'creative' ? 'Show close-up clip of your hands molding, illustrating, color matching, or designing canvas details.' : 'Upload an explainer video clearly stating safe workshop tool usage, livestock formulation steps or farm layout measurements.'}
+                      </div>
+                    )}
+
+                    {/* Media Uploader / Recording Simulator */}
+                    {!verificationData.step3Saved ? (
+                      <div className="space-y-3">
+                        {simulatedMediaState === 'idle' ? (
+                          <div className="border border-dashed border-zinc-200 bg-zinc-50/50 rounded-2xl p-5 text-center space-y-3">
+                            <VideoIcon className="w-8 h-8 text-zinc-400 mx-auto" />
+                            <div>
+                              <span className="text-[11px] font-bold text-zinc-800 block">Record Stream or Choose File</span>
+                              <span className="text-[9px] text-zinc-400 font-light block mt-0.5">MP4, WEBM, QuickTime formats up to 100MB</span>
+                            </div>
+
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  // Simulate recording live
+                                  setSimulatedMediaState('recording');
+                                  let currentSecs = 0;
+                                  const recInt = setInterval(() => {
+                                    currentSecs++;
+                                    setMediaProgress(currentSecs);
+                                    if (currentSecs >= 3) {
+                                      clearInterval(recInt);
+                                      setSimulatedMediaState('uploading');
+                                      let uploadPercent = 0;
+                                      const upInt = setInterval(() => {
+                                        uploadPercent += 20;
+                                        setMediaProgress(uploadPercent);
+                                        if (uploadPercent >= 100) {
+                                          clearInterval(upInt);
+                                          setSimulatedMediaState('completed');
+                                          setVerificationData(p => ({
+                                            ...p,
+                                            step3Saved: true,
+                                            step3Data: {
+                                              ...p.step3Data,
+                                              videoUrl: `sabi_audition_stream_${currentUser.id}_draft.mp4`,
+                                              recorded: true,
+                                              durationSeconds: 180
+                                            },
+                                            status: 'submitted'
+                                          }));
+                                          showToast("✓ Audition stream captured and uploaded to DB!");
+                                        }
+                                      }, 300);
+                                    }
+                                  }, 1000);
+                                }}
+                                className="flex-1 bg-brand-black hover:bg-zinc-800 text-white py-1.5 rounded-lg text-[10px] uppercase font-bold cursor-pointer transition-colors inline-flex justify-center items-center gap-1.5"
+                              >
+                                <Camera size={11} className="text-red-500 animate-pulse" /> Live Record Screen
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSimulatedMediaState('uploading');
+                                  let percent = 0;
+                                  const loader = setInterval(() => {
+                                    percent += 10;
+                                    setMediaProgress(percent);
+                                    if (percent >= 100) {
+                                      clearInterval(loader);
+                                      setSimulatedMediaState('completed');
+                                      setVerificationData(p => ({
+                                        ...p,
+                                        step3Saved: true,
+                                        step3Data: {
+                                          ...p.step3Data,
+                                          videoUrl: `uploaded_file_${currentUser.name.replace(/\s+/g, '_').toLowerCase()}.mp4`,
+                                          recorded: false,
+                                          durationSeconds: 300
+                                        },
+                                        status: 'submitted'
+                                      }));
+                                      showToast("✓ Audition file successfully uploaded and locked!");
+                                    }
+                                  }, 150);
+                                }}
+                                className="flex-1 bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-700 py-1.5 rounded-lg text-[10px] uppercase font-bold cursor-pointer transition-colors inline-flex justify-center items-center gap-1.5"
+                              >
+                                <Upload size={11} /> Upload File
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="border border-zinc-150 bg-zinc-50 rounded-2xl p-5 text-center space-y-4 animate-in fade-in">
+                            {simulatedMediaState === 'recording' && (
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-center gap-2 text-xs font-semibold text-rose-600 font-mono animate-pulse">
+                                  <span className="w-2.5 h-2.5 bg-rose-600 rounded-full animate-ping" />
+                                  <span>LIVE SIMULATED CAPTURE STREAM</span>
+                                </div>
+                                <div className="text-3xl font-light font-mono text-zinc-800">
+                                  00:0{mediaProgress}
+                                </div>
+                                <p className="text-[10px] text-zinc-400">Capturing audio/video pipelines. Keep explaining your process...</p>
+                              </div>
+                            )}
+
+                            {simulatedMediaState === 'uploading' && (
+                              <div className="space-y-2">
+                                <span className="text-xs font-semibold text-zinc-800 font-mono block">UPLOADING AUDITION BUNDLE</span>
+                                <div className="w-full bg-zinc-200 rounded-full h-2 overflow-hidden">
+                                  <div className="bg-brand-yellow h-2 transition-all duration-150" style={{ width: `${mediaProgress}%` }}></div>
+                                </div>
+                                <div className="text-[10px] font-mono text-zinc-400">
+                                  Saving chunk index // {mediaProgress}% complete
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-3.5">
+                        <div className="bg-zinc-50 border border-zinc-150 rounded-2xl p-4 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Play className="text-emerald-500 w-4 h-4 fill-emerald-100" />
+                            <div>
+                              <span className="text-xs font-bold text-zinc-800 block">Sabi Audition File Sealed</span>
+                              <span className="text-[9px] text-zinc-400 font-mono block leading-none">{verificationData.step3Data.videoUrl || 'sabi_audition_stream.mp4'}</span>
+                            </div>
+                          </div>
+                          <span className="text-[9px] uppercase font-mono text-emerald-800 bg-emerald-50 border border-emerald-150 px-2 py-0.5 rounded font-bold">Secure</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSimulatedMediaState('idle');
+                            setMediaProgress(0);
+                            setVerificationData(prev => ({
+                              ...prev,
+                              step3Saved: false,
+                              status: 'step2_complete'
+                            }));
+                          }}
+                          className="text-[10px] text-rose-600 hover:underline cursor-pointer block font-semibold text-left"
+                        >
+                          Remove clip & re-upload
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              )}
+
+              {/* ACTION PACKET & EVALUATION FOR CLOSED SUBMISSION */}
+              {verificationData.status === 'submitted' && (
+                <div className="bg-zinc-50 border border-zinc-150 rounded-2xl p-5 md:p-6 space-y-4 animate-in fade-in duration-200">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-zinc-200/50">
+                    <div>
+                      <h4 className="text-sm font-bold text-zinc-900 tracking-tight">Vetting Application Under Review</h4>
+                      <p className="text-xs text-zinc-550 font-light mt-0.5 leading-relaxed">
+                        Fantastic! Your complete educator packet is currently queued in the accreditation ledger. Your qualifications will sync instantly once the admin approves.
+                      </p>
+                    </div>
+                    <span className="bg-amber-100 text-amber-900 border border-amber-200 text-[10px] uppercase font-mono px-3 py-1 rounded-xl font-bold self-start sm:self-center flex items-center gap-1 animate-pulse">
+                      <Hourglass size={11} /> Pending Approval
+                    </span>
+                  </div>
+
+                  {/* Summary grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs font-light">
+                    <div className="bg-white p-3 rounded-xl border border-zinc-150">
+                      <span className="text-[9px] uppercase font-bold text-zinc-450 block font-mono">1. Coach Profile</span>
+                      <strong className="text-zinc-800 block text-[11px] mt-0.5 truncate">{currentUser.name}</strong>
+                      <span className="text-[9px] text-zinc-400 block truncate">{currentUser.email}</span>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-xl border border-zinc-150">
+                      <span className="text-[9px] uppercase font-bold text-zinc-450 block font-mono">2. Vetting Category</span>
+                      <strong className="text-zinc-800 block text-[11px] mt-0.5 capitalize">{verificationData.category || 'Digital Tech'}</strong>
+                      <span className="text-[9px] text-emerald-600 block flex items-center gap-0.5"><Check size={10} /> Links Portfolio Saved</span>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-xl border border-zinc-150 font-mono">
+                      <span className="text-[9px] uppercase font-bold text-zinc-450 block font-mono">3. Sabi Concept</span>
+                      <strong className="text-emerald-700 block text-[10px] mt-0.5 leading-tight truncate">✓ Approved Concept</strong>
+                      <span className="text-[8px] text-zinc-400 block truncate">"{verificationData.step2Data.substring(0, 30)}..."</span>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-xl border border-zinc-150">
+                      <span className="text-[9px] uppercase font-bold text-zinc-450 block font-mono">4. Audition Stream</span>
+                      <strong className="text-emerald-700 block text-[11px] mt-0.5">✓ Upload Sealed</strong>
+                      <span className="text-[9px] text-zinc-400 block font-mono truncate">{verificationData.step3Data.videoUrl}</span>
+                    </div>
+                  </div>
+
+                  {/* HIGH VALUE DEVELOPER SIMULATION BOX */}
+                  <div className="bg-amber-50/50 border border-amber-250/50 rounded-2xl p-5 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Shield className="text-amber-600 w-4 h-4 fill-amber-100" />
+                      <h5 className="text-[11px] uppercase font-mono tracking-wider font-bold text-zinc-850">AI Studio Demonstration Override Panel</h5>
+                    </div>
+                    <p className="text-[11px] text-zinc-650 font-light">
+                      To help you immediately view, test, and approve the full end-to-end functionality (and see how curriculum proposer unlocks), you can act as the system administrator and instantly grant or reject applicant credentials here.
+                    </p>
+
+                    <div className="flex flex-wrap gap-2 pt-1 font-mono">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const updated: User = {
+                            ...currentUser,
+                            verified: true
+                          };
+                          // Save back to DB
+                          await db.updateUser(updated);
+                          
+                          setVerificationData(p => ({
+                            ...p,
+                            status: 'approved'
+                          }));
+
+                          db.addNotification({
+                            userId: currentUser.id,
+                            title: '✨ Coach Accreditation Confirmed!',
+                            message: 'Congratulations! Your trainer verification has been approved. You are now authorized to propose curricula, assign work, and build advanced courses.',
+                            type: 'curriculum'
+                          });
+
+                          showToast("✓ Accreditation verified! The curriculum wizard has been unlocked!");
+                        }}
+                        className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-[10px] uppercase tracking-wider px-4 py-2.5 rounded-xl cursor-pointer transition-colors inline-flex items-center gap-1.5"
+                      >
+                        <Check size={11} className="stroke-[3]" /> Approve Candidate Instantly
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVerificationData({
+                            category: null,
+                            step1Saved: false,
+                            step1Data: { links: '', lookbookLink: '', instagramLink: '', metrics: '50', farmPhotoUrl: '' },
+                            step2Saved: false,
+                            step2Data: '',
+                            step3Saved: false,
+                            step3Data: { videoUrl: '', recorded: false, durationSeconds: 0 },
+                            status: 'unstarted'
+                          });
+                          showToast("✓ Vetting credentials reset. Status updated to 'Unstarted'.");
+                        }}
+                        className="bg-zinc-150 hover:bg-zinc-200 text-zinc-650 font-medium text-[10px] uppercase px-3 py-2.5 rounded-xl cursor-pointer transition-colors"
+                      >
+                        Reset & Redraft Forms
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+            </div>
+
+            {/* Bottom Controls */}
+            <div className="pt-4 flex justify-between items-center bg-white">
+              <span className="text-[10px] text-zinc-400 font-mono">
+                {verificationData.status === 'approved' ? '✓ Registered Sabicrest Instructor' : 'Vetting state: ' + verificationData.status.toUpperCase()}
+              </span>
+
+              <button
+                onClick={() => {
+                  setShowVerificationPortal(false);
+                  setSimulatedMediaState('idle');
+                  setMediaProgress(0);
+                }}
+                className="bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border border-zinc-200 relative z-10 font-light text-xs uppercase tracking-wider px-4 py-2 rounded-xl cursor-pointer transition-colors"
+              >
+                Close Portal
+              </button>
+            </div>
+
           </div>
         </div>
       )}
