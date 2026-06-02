@@ -462,9 +462,9 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
               <Check className="w-4 h-4 font-extrabold text-white" />
             </div>
             <div>
-              <h4 className="text-xs font-semibold text-emerald-950 leading-tight">Verified Sabicrest Educator Identity</h4>
+              <h4 className="text-xs font-semibold text-emerald-950 leading-tight">Verified Sabicrest Teacher Profile</h4>
               <p className="text-[11px] text-emerald-800/80 font-light mt-1 max-w-2xl leading-relaxed">
-                Your professional portfolio, communication concepts, and hands-on teaching style audition video have been fully verified by our administrators. Core curriculum creations and direct student enrollments are fully authorized!
+                Your previous work, sample lessons, and quick teaching video have been verified by the Sabicrest team! You can now propose new classes, create courses, and enroll students.
               </p>
             </div>
           </div>
@@ -472,7 +472,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
             onClick={() => setShowVerificationPortal(true)}
             className="bg-emerald-800 hover:bg-emerald-900 text-white font-medium text-[10px] uppercase tracking-wider px-3.5 py-2 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 shrink-0 self-start sm:self-center"
           >
-            <Sparkles size={11} className="text-brand-yellow" /> View Portal Dossier
+            <Sparkles size={11} className="text-brand-yellow" /> View Verification Details
           </button>
         </div>
       ) : (
@@ -482,10 +482,10 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
               Verification Required
             </span>
             <h3 className="text-sm font-semibold text-zinc-900 tracking-tight flex items-center gap-1.5">
-              <Unlock size={14} className="text-amber-600" /> Unlock Creative Course Proposing Capabilities
+              <Unlock size={14} className="text-amber-600" /> Unlock Course Propose Capabilities
             </h3>
             <p className="text-xs text-zinc-650 font-light leading-relaxed">
-              To guarantee outstanding instructional credentials and practical training metrics across Sabicrest, registered trainers are required to successfully bypass three interactive verification step cards. It takes less than 10 minutes.
+              To make sure standard students receive awesome training across Sabicrest, all teachers are asked to complete three quick steps. It takes less than 10 minutes.
             </p>
             
             {/* Horizontal step indicators tracking progress */}
@@ -496,7 +496,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                 ) : (
                   <div className="w-4 h-4 rounded-full border border-amber-300 flex items-center justify-center text-[9px] text-amber-600 font-semibold bg-amber-100/50">1</div>
                 )}
-                <span className={verificationData.step1Saved ? "line-through text-zinc-400 font-light" : "font-semibold text-zinc-700"}>Category Portfolio & Live Links</span>
+                <span className={verificationData.step1Saved ? "line-through text-zinc-400 font-light" : "font-semibold text-zinc-700"}>Step 1: Topic and Previous Work</span>
               </div>
               
               <div className="flex items-center gap-2 text-[10px] text-zinc-750">
@@ -505,7 +505,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                 ) : (
                   <div className="w-4 h-4 rounded-full border border-amber-300 flex items-center justify-center text-[9px] text-amber-600 font-semibold bg-amber-100/50">2</div>
                 )}
-                <span className={verificationData.step2Saved ? "line-through text-zinc-400 font-light" : "font-semibold text-zinc-700"}>"Sabi" Communication Concept</span>
+                <span className={verificationData.step2Saved ? "line-through text-zinc-400 font-light" : "font-semibold text-zinc-700"}>Step 2: Sabicrest Explained Lesson</span>
               </div>
 
               <div className="flex items-center gap-2 text-[10px] text-zinc-750">
@@ -514,7 +514,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                 ) : (
                   <div className="w-4 h-4 rounded-full border border-amber-300 flex items-center justify-center text-[9px] text-amber-600 font-semibold bg-amber-100/50">3</div>
                 )}
-                <span className={verificationData.step3Saved ? "line-through text-zinc-400 font-light" : "font-semibold text-zinc-700"}>Teaching Audition Spot</span>
+                <span className={verificationData.step3Saved ? "line-through text-zinc-400 font-light" : "font-semibold text-zinc-700"}>Step 3: Quick Teaching Video</span>
               </div>
             </div>
           </div>
@@ -525,7 +525,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
           >
             <Sparkles size={13} className="text-brand-yellow" />
             <span>
-              {verificationData.status === 'submitted' ? 'Track Assessment' : verificationData.status === 'unstarted' ? 'Get Verified' : 'Resume Verification'}
+              {verificationData.status === 'submitted' ? 'Check My Status' : verificationData.status === 'unstarted' ? 'Get Verified' : 'Finish Verification'}
             </span>
             <ArrowUpRight size={13} />
           </button>
@@ -1049,7 +1049,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
             {/* Verification Status Settings Card */}
             <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs space-y-4">
               <h4 className="text-xs font-semibold uppercase tracking-wider text-brand-black border-b border-zinc-50 pb-2 flex items-center gap-1.5 font-light">
-                <Shield size={13} className="text-brand-yellow" /> Mentor Certification
+                <Shield size={13} className="text-brand-yellow" /> Teacher Verification Status
               </h4>
 
               <div className="space-y-3.5 pt-1">
@@ -1066,8 +1066,8 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
 
                 <p className="text-xs font-light text-zinc-550 leading-relaxed">
                   {currentUser.verified 
-                    ? 'Congratulations! Your profile is verified. You have full permission to propose advanced curriculum modules and evaluate student submissions.'
-                    : 'To protect the educational rigor of Sabicrest courses, please submit your links, portfolio concepts, and a teaching audition stream.'
+                    ? 'Excellent! Your profile is fully verified. You can now build courses and assign work to students.'
+                    : 'To verify your account, please complete the 3 steps to submit your social links, lesson examples, and teaching video.'
                   }
                 </p>
 
@@ -1088,7 +1088,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                     onClick={() => setShowVerificationPortal(true)}
                     className="w-full text-center bg-zinc-50 hover:bg-zinc-100 text-zinc-650 py-2.5 rounded-xl text-xs transition-all font-light cursor-pointer inline-flex items-center justify-center gap-2 border border-zinc-100"
                   >
-                    <span>View Portal Credentials</span>
+                    <span>View Verification details</span>
                   </button>
                 )}
               </div>
@@ -1558,15 +1558,15 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
             <div className="flex justify-between items-start pb-4 border-b border-zinc-150/50">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="bg-amber-100 text-amber-800 text-[9px] tracking-wider uppercase px-2.5 py-0.5 rounded-full font-mono font-bold">Coach Hub</span>
+                  <span className="bg-amber-100 text-amber-800 text-[9px] tracking-wider uppercase px-2.5 py-0.5 rounded-full font-mono font-bold">Teacher Hub</span>
                   <span className="text-zinc-300">//</span>
                   <span className="text-[10px] text-zinc-400 font-mono">ID: {currentUser.id.substring(0, 8)}</span>
                 </div>
                 <h3 className="text-lg font-bold text-zinc-900 tracking-tight flex items-center gap-2">
-                  <Shield className="text-brand-yellow w-5 h-5 fill-amber-100" /> Educator Accreditation Terminal
+                  <Shield className="text-brand-yellow w-5 h-5 fill-amber-100" /> Trainer Verification Portal
                 </h3>
                 <p className="text-xs text-zinc-550 font-light max-w-2xl">
-                  Bypass the Sabi criteria below to authenticate your spatial design credentials, beginner-friendly communication style, and hands-on operational training speed.
+                  Complete the 3 quick steps below to verify your account so you can start creating classes, sharing lessons, and teaching students.
                 </p>
               </div>
 
@@ -1594,16 +1594,16 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                       <Check className="w-5 h-5 stroke-[3]" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-semibold text-emerald-950 font-sans tracking-tight">Accreditation Verified Successfully!</h4>
+                      <h4 className="text-sm font-semibold text-emerald-950 font-sans tracking-tight">Your Account is Verified!</h4>
                       <p className="text-xs text-emerald-800 font-light mt-0.5 leading-relaxed">
-                        Excellent work, Coach {currentUser.name}! You have successfully passed our interactive vetting channels. Space design, modular curriculum development, student mentoring, and evaluations are fully unlocked.
+                        Excellent work, Coach {currentUser.name}! You are now fully verified to teach at Sabicrest. You can now create your own classes, propose course layouts, assign tasks, and give marks to students.
                       </p>
                     </div>
                   </div>
 
                   <div className="bg-white/80 rounded-xl p-4 border border-emerald-100 text-xs font-light text-zinc-650 space-y-2">
-                    <div className="font-semibold text-emerald-900 uppercase tracking-wider text-[9px] font-mono">Accreditation Dossier Record</div>
-                    <div>• <strong>Verification Category:</strong> {verificationData.category ? verificationData.category.toUpperCase() : 'General design'}</div>
+                    <div className="font-semibold text-emerald-900 uppercase tracking-wider text-[9px] font-mono">Your Registered Profile Details</div>
+                    <div>• <strong>Teaching Category:</strong> {verificationData.category ? verificationData.category.toUpperCase() : 'General design'}</div>
                     {verificationData.step2Data && <div className="italic text-zinc-600 bg-zinc-50 p-2 rounded border border-zinc-100 mt-1 mt-1 font-mono">"{verificationData.step2Data}"</div>}
                   </div>
 
@@ -1637,7 +1637,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                       }}
                       className="bg-zinc-100 hover:bg-zinc-200 text-zinc-600 font-light text-xs px-4 py-2 rounded-xl cursor-pointer transition-colors"
                     >
-                      Reset Vetting Files (Test E2E Flow)
+                      Reset Verification Form (For Testing)
                     </button>
                   </div>
                 </div>
@@ -1653,7 +1653,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                       : 'bg-white border-zinc-150 hover:border-zinc-300'
                   }`}>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] text-zinc-400 font-mono tracking-wider font-semibold uppercase">Card 1 // Foundation</span>
+                      <span className="text-[10px] text-zinc-400 font-mono tracking-wider font-semibold uppercase">Step 1 // Information</span>
                       {verificationData.step1Saved ? (
                         <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] px-2 py-0.5 rounded-md font-mono font-bold flex items-center gap-1">
                           <Check size={10} className="stroke-[3]" /> Saved
@@ -1664,11 +1664,11 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                     </div>
 
                     <h4 className="text-xs font-bold text-zinc-900 tracking-tight mb-2.5 flex items-center gap-1.5 uppercase">
-                      <Compass size={14} className="text-amber-500" /> 1. Category Selector & Proof
+                      <Compass size={14} className="text-amber-500" /> 1. Choose Your Subject & Add Proof
                     </h4>
                     
                     <p className="text-[11px] text-zinc-550 font-light mb-4 leading-relaxed">
-                      Select your practical instruction medium. Let us capture corresponding proof of design experience.
+                      Tell us what topic you teach. Then, add a link or photo to show us some previous work you have done.
                     </p>
 
                     {/* Selector Buttons */}
@@ -1685,8 +1685,8 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                         >
                           <Laptop size={16} className="text-indigo-600 shrink-0" />
                           <div>
-                            <div className="leading-tight text-[11px] font-bold">Digital Trainer Direction</div>
-                            <div className="text-[9px] text-zinc-400 font-light mt-0.5">Live links: GitHub, Figma, Drive portfolios</div>
+                            <div className="leading-tight text-[11px] font-bold">Computers, Coding, and Website Design</div>
+                            <div className="text-[9px] text-zinc-400 font-light mt-0.5">Share your websites, web projects, designs, or online documents.</div>
                           </div>
                         </button>
 
@@ -1701,8 +1701,8 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                         >
                           <Camera size={16} className="text-rose-600 shrink-0" />
                           <div>
-                            <div className="leading-tight text-[11px] font-bold">Creative & Styling Direction</div>
-                            <div className="text-[9px] text-zinc-400 font-light mt-0.5">Style Zone: Instagram/TikTok, design lookbooks</div>
+                            <div className="leading-tight text-[11px] font-bold">Art, Fashion, Makeup, and Music</div>
+                            <div className="text-[9px] text-zinc-400 font-light mt-0.5">Share your fashion portfolio, lookbooks, or social media pages (like Instagram or TikTok).</div>
                           </div>
                         </button>
 
@@ -1717,15 +1717,27 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                         >
                           <Tractor size={16} className="text-emerald-600 shrink-0" />
                           <div>
-                            <div className="leading-tight text-[11px] font-bold">Agricultural & Specialist Direction</div>
-                            <div className="text-[9px] text-zinc-400 font-light mt-0.5">Metrics: farm size, mechanical scale, shop photos</div>
+                            <div className="leading-tight text-[11px] font-bold">Farming, Welding, and Practical Handwork</div>
+                            <div className="text-[9px] text-zinc-400 font-light mt-0.5">Share details about your farm/workshop size, animal count, or physical work site.</div>
                           </div>
                         </button>
                       </div>
                     ) : (
-                      <div className="bg-zinc-100/50 border border-zinc-150 p-2.5 rounded-xl text-[11px] text-zinc-700 space-y-1 mb-4 select-none">
-                        <div><strong>Selected:</strong> {verificationData.category === 'digital' ? '💻 Digital and Tech Specialty' : verificationData.category === 'creative' ? '🌸 Creative, Styling & Multimedia' : '🚜 Agricultural & Technical Specialist'}</div>
-                        <div className="text-[10px] text-zinc-400 font-mono block">Proof files successfully sealed. Change requires resetting application.</div>
+                      <div className="bg-zinc-100/50 border border-zinc-150 p-3 rounded-xl text-[11px] text-zinc-700 space-y-1.5 mb-4">
+                        <div><strong>Your Topic:</strong> {verificationData.category === 'digital' ? '💻 Computers, Coding, and Website Design' : verificationData.category === 'creative' ? '🌸 Art, Fashion, Makeup, and Music' : '🚜 Farming, Welding, and Practical Handwork'}</div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setVerificationData(prev => ({
+                              ...prev,
+                              step1Saved: false,
+                              status: 'unstarted'
+                            }));
+                          }}
+                          className="text-[10px] text-indigo-600 hover:underline cursor-pointer block font-semibold text-left"
+                        >
+                          ✏️ Change choice or edit details
+                        </button>
                       </div>
                     )}
 
@@ -1734,9 +1746,9 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                       <div className="mt-4 p-3.5 bg-zinc-50 border border-zinc-150 rounded-2xl space-y-3.5 animate-in fade-in duration-200">
                         {verificationData.category === 'digital' && (
                           <div className="space-y-2">
-                            <label className="block text-[9px] uppercase font-bold text-zinc-500">Live Portfolios & Shared Links</label>
+                            <label className="block text-[9px] uppercase font-bold text-zinc-500">Paste web links or online portfolios below:</label>
                             <textarea
-                              placeholder="Figma URL, GitHub folder link, or copywriting Drive folder path..."
+                              placeholder="Type or paste links to your websites, Google Drive files, or project folders here..."
                               value={verificationData.step1Data.links}
                               onChange={(e) => {
                                 const val = e.target.value;
@@ -1748,14 +1760,14 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                               className="w-full text-[11px] bg-white border border-zinc-200 rounded-lg p-2 focus:outline-hidden focus:border-brand-yellow min-h-16"
                               required
                             />
-                            <p className="text-[9px] text-zinc-400 font-light">Provide live URLs representing web, layout, typography, or copy assets.</p>
+                            <p className="text-[9px] text-zinc-400 font-light">Please share at least one correct link so we can see your work.</p>
                           </div>
                         )}
 
                         {verificationData.category === 'creative' && (
                           <div className="space-y-3">
                             <div className="space-y-1">
-                              <label className="block text-[9px] uppercase font-bold text-zinc-500">Instagram/TikTok Profile Link</label>
+                              <label className="block text-[9px] uppercase font-bold text-zinc-500">Your Instagram or TikTok address (optional):</label>
                               <input
                                 type="text"
                                 placeholder="e.g. instagram.com/creative_handle"
@@ -1771,7 +1783,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                               />
                             </div>
                             <div className="space-y-1">
-                              <label className="block text-[9px] uppercase font-bold text-zinc-500">Lookbook Drop / Video Clip URL</label>
+                              <label className="block text-[9px] uppercase font-bold text-zinc-500">Your online lookbook or photo folder link:</label>
                               <input
                                 type="text"
                                 placeholder="e.g. pin.it/lookbook or drive.google.com/styling"
@@ -1788,8 +1800,8 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                             </div>
                             <div className="border border-dashed border-zinc-200 rounded-xl p-3 text-center bg-white cursor-pointer hover:bg-zinc-50 transition-all">
                               <Upload size={14} className="text-zinc-450 mx-auto mb-1" />
-                              <span className="text-[10px] text-zinc-500 block">Lookbook Drag & Drop Zone</span>
-                              <span className="text-[8px] text-zinc-400 font-light block mt-0.5">Drop makeup photo clips, design boards, JPEG, PNG</span>
+                              <span className="text-[10px] text-zinc-500 block">Upload pictures of your work</span>
+                              <span className="text-[8px] text-zinc-400 font-light block mt-0.5">Drag and drop your photos here (JPEG, JPG, PNG format)</span>
                             </div>
                           </div>
                         )}
@@ -1797,7 +1809,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                         {verificationData.category === 'agricultural' && (
                           <div className="space-y-3">
                             <div className="space-y-1">
-                              <label className="block text-[9px] uppercase font-bold text-zinc-500">livestockManaged Counter / workshopSize metrics</label>
+                              <label className="block text-[9px] uppercase font-bold text-zinc-500">What is your farm size, animal count, or workshop details?</label>
                               <input
                                 type="text"
                                 placeholder="e.g. 150 cattle managed, 450 sq.m engineering floor"
@@ -1813,7 +1825,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                               />
                             </div>
                             <div className="space-y-1">
-                              <label className="block text-[9px] uppercase font-bold text-zinc-500">Farm / Workshop physical photo link</label>
+                              <label className="block text-[9px] uppercase font-bold text-zinc-500">Link to photos of your farm or workshop (optional):</label>
                               <input
                                 type="text"
                                 placeholder="e.g. shared folder representing farm layouts, machinery boards"
@@ -1830,8 +1842,8 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                             </div>
                             <div className="border border-dashed border-zinc-200 rounded-xl p-3 text-center bg-white cursor-pointer hover:bg-zinc-50 transition-all">
                               <Camera size={14} className="text-zinc-450 mx-auto mb-1" />
-                              <span className="text-[10px] text-zinc-500 block">Drop Farm Environment Photo</span>
-                              <span className="text-[8px] text-zinc-400 font-light block mt-0.5">Simulate actual agricultural workspace camera capture</span>
+                              <span className="text-[10px] text-zinc-500 block">Upload photos of your workshop or farm</span>
+                              <span className="text-[8px] text-zinc-400 font-light block mt-0.5">Drag and drop your farm or workshop photos here (JPEG, JPG, PNG format)</span>
                             </div>
                           </div>
                         )}
@@ -1844,18 +1856,18 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                               step1Saved: true,
                               status: 'step1_complete'
                             }));
-                            showToast("✓ Skill Foundation saved! Step 2 is now unlocked.");
+                            showToast("✓ Step 1 saved! Now proceed to Step 2.");
                           }}
                           className="w-full bg-brand-black hover:bg-zinc-800 text-white py-2 rounded-xl text-[10px] uppercase tracking-wider font-semibold cursor-pointer transition-colors"
                         >
-                          Save & Lock Foundation Proof
+                          Save Step 1 & Proceed
                         </button>
                       </div>
                     )}
                   </div>
 
 
-                  {/* STEP 2: SABI COMMUNICATION FILTER */}
+                  {/* STEP 2: SABICREST COMMUNICATION FILTER */}
                   <div className={`p-5 rounded-2xl transition-all border ${
                     !verificationData.step1Saved 
                       ? 'bg-zinc-50/20 border-zinc-100 opacity-55 pointer-events-none' 
@@ -1864,7 +1876,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                         : 'bg-white border-zinc-155 hover:border-zinc-350'
                   }`}>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] text-zinc-400 font-mono tracking-wider font-semibold uppercase">Card 2 // Sabi Filter</span>
+                      <span className="text-[10px] text-zinc-400 font-mono tracking-wider font-semibold uppercase">Step 2 // Explanation</span>
                       {verificationData.step2Saved ? (
                         <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] px-2 py-0.5 rounded-md font-mono font-bold flex items-center gap-1">
                           <Check size={10} className="stroke-[3]" /> Passed
@@ -1877,18 +1889,18 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                     </div>
 
                     <h4 className="text-xs font-bold text-zinc-900 tracking-tight mb-2.5 flex items-center gap-1.5 uppercase">
-                      <MessageSquare size={14} className="text-indigo-500" /> 2. "Sabi" Communication Filter
+                      <MessageSquare size={14} className="text-indigo-500" /> 2. Sabicrest Simple Explanation
                     </h4>
                     
                     <p className="text-[11px] text-zinc-550 font-light mb-4 leading-relaxed">
-                      Sabi means explaining tough skills simply. Write the absolute first core concept of your craft to a complete beginner in **exactly three sentences**.
+                      Sabicrest means explaining difficult things in a simple way so that anyone can learn. Please write down the very first lesson of your craft for a complete beginner in **exactly three sentences**.
                     </p>
 
-                    {/* Sabi Concept Text Input */}
+                    {/* Sabicrest Concept Text Input */}
                     {!verificationData.step2Saved ? (
                       <div className="space-y-3">
                         <textarea
-                          placeholder="e.g., Welcome to spatial layouts where we organize modules in comfortable grids. The absolute first step is learning how spacing creates a natural hierarchy for our eyes. Once you understand margins, everything else falls into absolute visual balance easily."
+                          placeholder="e.g., Welcome to website building where we organize text and boxes on a screen. The very first step is learning how spacing keeps things looking neat and clean. Once you understand spacing, everything else will look perfectly balanced and beautiful to the user."
                           value={verificationData.step2Data}
                           onChange={(e) => {
                             const val = e.target.value;
@@ -1907,27 +1919,27 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                           return (
                             <div className="bg-zinc-50 border border-zinc-150 rounded-xl p-3 space-y-1.5 text-[10px] animate-in slide-in-from-top-1">
                               <div className="font-semibold text-zinc-700 uppercase tracking-widest text-[8px] font-mono flex items-center justify-between border-b border-zinc-150 pb-1">
-                                <span>Real-time Beginner-Friendliness Grid</span>
+                                <span>Helpful Sentence Checker</span>
                                 <span className={isExactlyThree ? "text-emerald-600 font-bold" : "text-amber-500 font-bold"}>
-                                  {isExactlyThree ? "✓ Target Count Met" : "Awaiting counts"}
+                                  {isExactlyThree ? "✓ Sentence Count Met" : "Checking your sentences..."}
                                 </span>
                               </div>
                               
                               <div className="flex justify-between">
-                                <span className="text-zinc-500">Detected Sentences:</span>
+                                <span className="text-zinc-500">How many sentences we found:</span>
                                 <strong className={isExactlyThree ? "text-emerald-700" : "text-amber-600"}>{count} of 3 sentences</strong>
                               </div>
 
                               <div className="flex justify-between">
-                                <span className="text-zinc-500 font-light">Welcoming Index Level:</span>
+                                <span className="text-zinc-500 font-light">Friendly Tone Level:</span>
                                 <strong className={tone.score === 'warm' ? "text-emerald-700" : tone.score === 'moderate' ? "text-blue-600" : "text-amber-600"}>
-                                  {tone.score === 'warm' ? '✨ Warm & inviting' : tone.score === 'moderate' ? '👍 Moderate / Neutral' : '⚠️ Technical / Formal'}
+                                  {tone.score === 'warm' ? '✨ Warm & friendly' : tone.score === 'moderate' ? '👍 Good / Neutral' : '⚠️ Too complex / Formal'}
                                 </strong>
                               </div>
 
                               {tone.matches.length > 0 && (
                                 <div className="text-[9px] text-zinc-450 italic">
-                                  Supporting words: {tone.matches.join(", ")}
+                                  Friendly words found: {tone.matches.join(", ")}
                                 </div>
                               )}
 
@@ -1936,10 +1948,10 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                                 <span className="text-amber-500">💡</span>
                                 <span>
                                   {count < 3 
-                                    ? `Share precisely three simple sentences. Currently detected ${count}.` 
+                                    ? `Please write exactly three simple sentences. You have written ${count} so far.` 
                                     : count > 3 
-                                      ? `Explanation is too dense. Please synthesize it. Currently detected ${count} statements.` 
-                                      : `Sentence metric: excellent! This explanation is beautifully digestible for standard beginners.`}
+                                      ? `Explanation is too long. Please make it shorter. You have written ${count} sentences.` 
+                                      : `Sentence count: Excellent! This text is very easy for a beginner to understand.`}
                                 </span>
                               </div>
                             </div>
@@ -1951,8 +1963,8 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                           onClick={() => {
                             const sentencesNum = computeSentences(verificationData.step2Data).length;
                             if (sentencesNum !== 3) {
-                              if (!confirm(`Your concept currently has ${sentencesNum} sentences. We recommend exactly 3 sentences to fulfill the Sabi Beginner Concept, but would you like to save it anyway?`)) {
-                                return;
+                              if (!confirm(`Your lesson currently has ${sentencesNum} sentences. We recommend exactly 3 sentences to fulfill the Sabicrest Beginner Lesson, but would you like to save it anyway?`)) {
+                                    return;
                               }
                             }
                             setVerificationData(prev => ({
@@ -1960,7 +1972,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                               step2Saved: true,
                               status: 'step2_complete'
                             }));
-                            showToast("✓ Sabi Communication metrics approved! Audition Hub unlocked.");
+                            showToast("✓ Sabicrest Communication style approved! Step 3 is now unlocked.");
                           }}
                           disabled={!verificationData.step2Data.trim()}
                           className={`w-full py-2 rounded-xl text-[10px] uppercase tracking-wider font-semibold cursor-pointer transition-colors ${
@@ -1969,7 +1981,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                               : 'bg-zinc-100 text-zinc-400 cursor-not-allowed'
                           }`}
                         >
-                          Save Concept Verification
+                          Save Step 2 & Proceed
                         </button>
                       </div>
                     ) : (
@@ -1988,14 +2000,14 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                           }}
                           className="text-[10px] text-indigo-600 hover:underline cursor-pointer block font-semibold text-left"
                         >
-                          Modify concept draft
+                          ✏️ Change explanation or edit text
                         </button>
                       </div>
                     )}
                   </div>
 
 
-                  {/* STEP 3: AUDITION HUB */}
+                  {/* STEP 3: LESSON VIDEO */}
                   <div className={`p-5 rounded-2xl transition-all border ${
                     !verificationData.step2Saved 
                       ? 'bg-zinc-50/20 border-zinc-100 opacity-55 pointer-events-none' 
@@ -2004,7 +2016,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                         : 'bg-white border-zinc-155 hover:border-zinc-350'
                   }`}>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] text-zinc-400 font-mono tracking-wider font-semibold uppercase">Card 3 // Audition Spot</span>
+                      <span className="text-[10px] text-zinc-400 font-mono tracking-wider font-semibold uppercase">Step 3 // Lesson Video</span>
                       {verificationData.step3Saved ? (
                         <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] px-2 py-0.5 rounded-md font-mono font-bold flex items-center gap-1">
                           <Check size={10} className="stroke-[3]" /> Uploaded
@@ -2012,25 +2024,25 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                       ) : !verificationData.step2Saved ? (
                         <span className="bg-zinc-150 text-zinc-450 text-[9px] px-2 py-0.5 rounded-md font-mono">Locked</span>
                       ) : (
-                        <span className="bg-amber-50 text-amber-800 border border-amber-200 text-[9px] px-2 py-0.5 rounded-md font-mono font-bold animate-pulse">Pending Upload</span>
+                        <span className="bg-amber-50 text-amber-800 border border-amber-200 text-[9px] px-2 py-0.5 rounded-md font-mono font-bold animate-pulse">Waiting for Video</span>
                       )}
                     </div>
 
                     <h4 className="text-xs font-bold text-zinc-900 tracking-tight mb-2.5 flex items-center gap-1.5 uppercase">
-                      <Play size={14} className="text-rose-500" /> 3. Vetting Audition Hub
+                      <Play size={14} className="text-rose-500" /> 3. Short Lesson Video
                     </h4>
                     
                     <p className="text-[11px] text-zinc-550 font-light mb-4 leading-relaxed">
-                      Record or drag-in a prompt 5-minute teaching style video showing your direct physical or digital hands-on process.
+                      Record or send us a short 5-minute video of you teaching. Show us how you write code, style designs, or work on the farm.
                     </p>
 
                     {/* Step-specific directions */}
                     {verificationData.step2Saved && !verificationData.step3Saved && (
                       <div className="bg-zinc-50 border border-zinc-150 p-3 rounded-xl mb-4 text-[10px] text-zinc-600 font-mono leading-relaxed">
                         <span className="font-bold text-rose-600 block uppercase tracking-wide text-[9px] mb-1">
-                          {verificationData.category === 'digital' ? '💻 DIGITAL WORKSPACE RECORD TARGET' : verificationData.category === 'creative' ? '🌸 HANDS-ON WORK LOOKBOOK CAPTURE' : '🚜 FIELD SAFETY WORK WALKTHROUGH'}
+                          {verificationData.category === 'digital' ? '💻 COMPUTER TEACHING VIDEO GOAL' : verificationData.category === 'creative' ? '🌸 HANDS-ON ART & STYLE VIDEO GOAL' : '🚜 FARM & WORKSHOP VIDEO GOAL'}
                         </span>
-                        {verificationData.category === 'digital' ? 'Record your screen showing visual modules layout, grid structure setup, or typings configuration live.' : verificationData.category === 'creative' ? 'Show close-up clip of your hands molding, illustrating, color matching, or designing canvas details.' : 'Upload an explainer video clearly stating safe workshop tool usage, livestock formulation steps or farm layout measurements.'}
+                        {verificationData.category === 'digital' ? 'Record your screen showing how you build web projects or configure code.' : verificationData.category === 'creative' ? 'Show a video of you drawing, makeup styling, doing hair, or matching colors.' : 'Record a video explaining how to use shop tools safely, or showing your animals and farm machines.'}
                       </div>
                     )}
 
@@ -2041,8 +2053,8 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                           <div className="border border-dashed border-zinc-200 bg-zinc-50/50 rounded-2xl p-5 text-center space-y-3">
                             <VideoIcon className="w-8 h-8 text-zinc-400 mx-auto" />
                             <div>
-                              <span className="text-[11px] font-bold text-zinc-800 block">Record Stream or Choose File</span>
-                              <span className="text-[9px] text-zinc-400 font-light block mt-0.5">MP4, WEBM, QuickTime formats up to 100MB</span>
+                              <span className="text-[11px] font-bold text-zinc-800 block">Record Video or Choose File</span>
+                              <span className="text-[9px] text-zinc-400 font-light block mt-0.5">We accept MP4, WEBM, and MOV video files</span>
                             </div>
 
                             <div className="flex gap-2">
@@ -2070,13 +2082,13 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                                             step3Saved: true,
                                             step3Data: {
                                               ...p.step3Data,
-                                              videoUrl: `sabi_audition_stream_${currentUser.id}_draft.mp4`,
+                                              videoUrl: `sabicrest_audition_video_${currentUser.id}_draft.mp4`,
                                               recorded: true,
                                               durationSeconds: 180
                                             },
                                             status: 'submitted'
                                           }));
-                                          showToast("✓ Audition stream captured and uploaded to DB!");
+                                          showToast("✓ Video lesson recorded and saved!");
                                         }
                                       }, 300);
                                     }
@@ -2102,19 +2114,19 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                                         step3Saved: true,
                                         step3Data: {
                                           ...p.step3Data,
-                                          videoUrl: `uploaded_file_${currentUser.name.replace(/\s+/g, '_').toLowerCase()}.mp4`,
+                                          videoUrl: `uploaded_video_${currentUser.name.replace(/\s+/g, '_').toLowerCase()}.mp4`,
                                           recorded: false,
                                           durationSeconds: 300
                                         },
                                         status: 'submitted'
                                       }));
-                                      showToast("✓ Audition file successfully uploaded and locked!");
+                                      showToast("✓ Video lesson successfully uploaded!");
                                     }
                                   }, 150);
                                 }}
                                 className="flex-1 bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-700 py-1.5 rounded-lg text-[10px] uppercase font-bold cursor-pointer transition-colors inline-flex justify-center items-center gap-1.5"
                               >
-                                <Upload size={11} /> Upload File
+                                <Upload size={11} /> Upload Video File
                               </button>
                             </div>
                           </div>
@@ -2124,23 +2136,23 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                               <div className="space-y-2">
                                 <div className="flex items-center justify-center gap-2 text-xs font-semibold text-rose-600 font-mono animate-pulse">
                                   <span className="w-2.5 h-2.5 bg-rose-600 rounded-full animate-ping" />
-                                  <span>LIVE SIMULATED CAPTURE STREAM</span>
+                                  <span>RECORDING YOUR SCREEN NOW (SIMULATED)</span>
                                 </div>
                                 <div className="text-3xl font-light font-mono text-zinc-800">
                                   00:0{mediaProgress}
                                 </div>
-                                <p className="text-[10px] text-zinc-400">Capturing audio/video pipelines. Keep explaining your process...</p>
+                                <p className="text-[10px] text-zinc-400">Recording your voice and actions. Explain your topic simply and clearly...</p>
                               </div>
                             )}
 
                             {simulatedMediaState === 'uploading' && (
                               <div className="space-y-2">
-                                <span className="text-xs font-semibold text-zinc-800 font-mono block">UPLOADING AUDITION BUNDLE</span>
+                                <span className="text-xs font-semibold text-zinc-800 font-mono block">UPLOADING YOUR VIDEO FILE</span>
                                 <div className="w-full bg-zinc-200 rounded-full h-2 overflow-hidden">
                                   <div className="bg-brand-yellow h-2 transition-all duration-150" style={{ width: `${mediaProgress}%` }}></div>
                                 </div>
-                                <div className="text-[10px] font-mono text-zinc-400">
-                                  Saving chunk index // {mediaProgress}% complete
+                                <div className="text-[10px] font-mono text-zinc-450">
+                                  Saving video chunks // {mediaProgress}% loaded
                                 </div>
                               </div>
                             )}
@@ -2153,8 +2165,8 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                           <div className="flex items-center gap-2">
                             <Play className="text-emerald-500 w-4 h-4 fill-emerald-100" />
                             <div>
-                              <span className="text-xs font-bold text-zinc-800 block">Sabi Audition File Sealed</span>
-                              <span className="text-[9px] text-zinc-400 font-mono block leading-none">{verificationData.step3Data.videoUrl || 'sabi_audition_stream.mp4'}</span>
+                              <span className="text-xs font-bold text-zinc-800 block">Sabicrest Lesson Video Saved</span>
+                              <span className="text-[9px] text-zinc-400 font-mono block leading-none">{verificationData.step3Data.videoUrl || 'sabicrest_upload.mp4'}</span>
                             </div>
                           </div>
                           <span className="text-[9px] uppercase font-mono text-emerald-800 bg-emerald-50 border border-emerald-150 px-2 py-0.5 rounded font-bold">Secure</span>
@@ -2172,7 +2184,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                           }}
                           className="text-[10px] text-rose-600 hover:underline cursor-pointer block font-semibold text-left"
                         >
-                          Remove clip & re-upload
+                          ✏️ Remove video & choose another
                         </button>
                       </div>
                     )}
@@ -2186,51 +2198,69 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                 <div className="bg-zinc-50 border border-zinc-150 rounded-2xl p-5 md:p-6 space-y-4 animate-in fade-in duration-200">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-zinc-200/50">
                     <div>
-                      <h4 className="text-sm font-bold text-zinc-900 tracking-tight">Vetting Application Under Review</h4>
+                      <h4 className="text-sm font-bold text-zinc-900 tracking-tight">Your Application is Being Checked</h4>
                       <p className="text-xs text-zinc-550 font-light mt-0.5 leading-relaxed">
-                        Fantastic! Your complete educator packet is currently queued in the accreditation ledger. Your qualifications will sync instantly once the admin approves.
+                        Great job! We have received your answers and our team is checking them now. Your status will update as soon as we review your details.
                       </p>
                     </div>
                     <span className="bg-amber-100 text-amber-900 border border-amber-200 text-[10px] uppercase font-mono px-3 py-1 rounded-xl font-bold self-start sm:self-center flex items-center gap-1 animate-pulse">
-                      <Hourglass size={11} /> Pending Approval
+                      <Hourglass size={11} /> Pending Review
                     </span>
                   </div>
 
                   {/* Summary grid */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs font-light">
                     <div className="bg-white p-3 rounded-xl border border-zinc-150">
-                      <span className="text-[9px] uppercase font-bold text-zinc-450 block font-mono">1. Coach Profile</span>
+                      <span className="text-[9px] uppercase font-bold text-zinc-450 block font-mono">1. Teacher Name</span>
                       <strong className="text-zinc-800 block text-[11px] mt-0.5 truncate">{currentUser.name}</strong>
                       <span className="text-[9px] text-zinc-400 block truncate">{currentUser.email}</span>
                     </div>
 
                     <div className="bg-white p-3 rounded-xl border border-zinc-150">
-                      <span className="text-[9px] uppercase font-bold text-zinc-450 block font-mono">2. Vetting Category</span>
+                      <span className="text-[9px] uppercase font-bold text-zinc-450 block font-mono">2. Selected Topic</span>
                       <strong className="text-zinc-800 block text-[11px] mt-0.5 capitalize">{verificationData.category || 'Digital Tech'}</strong>
-                      <span className="text-[9px] text-emerald-600 block flex items-center gap-0.5"><Check size={10} /> Links Portfolio Saved</span>
+                      <span className="text-[9px] text-emerald-600 block flex items-center gap-0.5"><Check size={10} /> Saved successfully</span>
                     </div>
 
                     <div className="bg-white p-3 rounded-xl border border-zinc-150 font-mono">
-                      <span className="text-[9px] uppercase font-bold text-zinc-450 block font-mono">3. Sabi Concept</span>
-                      <strong className="text-emerald-700 block text-[10px] mt-0.5 leading-tight truncate">✓ Approved Concept</strong>
+                      <span className="text-[9px] uppercase font-bold text-zinc-450 block font-mono">3. Lesson explanation</span>
+                      <strong className="text-emerald-700 block text-[10px] mt-0.5 leading-tight truncate">✓ Saved</strong>
                       <span className="text-[8px] text-zinc-400 block truncate">"{verificationData.step2Data.substring(0, 30)}..."</span>
                     </div>
 
                     <div className="bg-white p-3 rounded-xl border border-zinc-150">
-                      <span className="text-[9px] uppercase font-bold text-zinc-450 block font-mono">4. Audition Stream</span>
-                      <strong className="text-emerald-700 block text-[11px] mt-0.5">✓ Upload Sealed</strong>
+                      <span className="text-[9px] uppercase font-bold text-zinc-450 block font-mono">4. Lesson Video</span>
+                      <strong className="text-emerald-700 block text-[11px] mt-0.5">✓ Video Saved</strong>
                       <span className="text-[9px] text-zinc-400 block font-mono truncate">{verificationData.step3Data.videoUrl}</span>
                     </div>
+                  </div>
+
+                  {/* Edit submitted details or start again */}
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setVerificationData(prev => ({
+                          ...prev,
+                          status: 'step2_complete',
+                          step3Saved: false
+                        }));
+                        showToast("Unlocked! You can now change or edit your answers.");
+                      }}
+                      className="text-xs text-indigo-650 hover:text-indigo-800 font-semibold flex items-center gap-1 bg-white border border-zinc-200 px-3.5 py-2.5 rounded-xl shadow-xs cursor-pointer hover:bg-zinc-50 transition-colors"
+                    >
+                      ✏️ Edit My Answers / Start Over
+                    </button>
                   </div>
 
                   {/* HIGH VALUE DEVELOPER SIMULATION BOX */}
                   <div className="bg-amber-50/50 border border-amber-250/50 rounded-2xl p-5 space-y-3">
                     <div className="flex items-center gap-2">
                       <Shield className="text-amber-600 w-4 h-4 fill-amber-100" />
-                      <h5 className="text-[11px] uppercase font-mono tracking-wider font-bold text-zinc-850">AI Studio Demonstration Override Panel</h5>
+                      <h5 className="text-[11px] uppercase font-mono tracking-wider font-bold text-zinc-850">Teacher Verification Override Panel (For Testing)</h5>
                     </div>
                     <p className="text-[11px] text-zinc-650 font-light">
-                      To help you immediately view, test, and approve the full end-to-end functionality (and see how curriculum proposer unlocks), you can act as the system administrator and instantly grant or reject applicant credentials here.
+                      To help you quickly test this application from start to finish, you can click the button below to instantly approve this account as a verified teacher!
                     </p>
 
                     <div className="flex flex-wrap gap-2 pt-1 font-mono">
@@ -2256,11 +2286,11 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                             type: 'curriculum'
                           });
 
-                          showToast("✓ Accreditation verified! The curriculum wizard has been unlocked!");
+                          showToast("✓ Account approved! You can now create courses.");
                         }}
                         className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-[10px] uppercase tracking-wider px-4 py-2.5 rounded-xl cursor-pointer transition-colors inline-flex items-center gap-1.5"
                       >
-                        <Check size={11} className="stroke-[3]" /> Approve Candidate Instantly
+                        <Check size={11} className="stroke-[3]" /> Approve Teacher Instantly
                       </button>
 
                       <button
@@ -2276,11 +2306,11 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                             step3Data: { videoUrl: '', recorded: false, durationSeconds: 0 },
                             status: 'unstarted'
                           });
-                          showToast("✓ Vetting credentials reset. Status updated to 'Unstarted'.");
+                          showToast("✓ Form cleared! Status updated to 'Unstarted'.");
                         }}
                         className="bg-zinc-150 hover:bg-zinc-200 text-zinc-650 font-medium text-[10px] uppercase px-3 py-2.5 rounded-xl cursor-pointer transition-colors"
                       >
-                        Reset & Redraft Forms
+                        Clear Form & Start Over
                       </button>
                     </div>
                   </div>
