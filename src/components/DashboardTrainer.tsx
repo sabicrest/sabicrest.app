@@ -103,6 +103,15 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
     return () => clearInterval(interval);
   }, [currentUser.id]);
 
+  useEffect(() => {
+    const handleSearch = (e: any) => {
+      setDashboardSearchQuery(e.detail || '');
+      setCoursesSearchQuery(e.detail || '');
+    };
+    window.addEventListener('sabicrest-search', handleSearch);
+    return () => window.removeEventListener('sabicrest-search', handleSearch);
+  }, []);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
@@ -800,10 +809,10 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                 </div>
 
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">Contact Phone</label>
+                  <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">WhatsApp Number with Country Code</label>
                   <input
                     type="text"
-                    placeholder="e.g. +1 (555) 019-2831"
+                    placeholder="e.g. 2348012345678 (numbers only)"
                     value={profilePhone}
                     onChange={(e) => setProfilePhone(e.target.value)}
                     className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow"
@@ -920,23 +929,6 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                   ))
                 )}
               </div>
-            </div>
-
-            {/* Clear Database logs */}
-            <div className="bg-red-50/20 border border-red-150 rounded-2xl p-5 space-y-3">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-red-800 block">Mentor Clean Reset</span>
-                <span className="text-[9px] text-red-700/80 block leading-normal mt-0.5">
-                  Clear active layout changes and coach notifications.
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={handleResetTrainerWorkspace}
-                className="w-full bg-red-600 hover:bg-red-700 text-white rounded-xl py-2 px-3 text-[10px] font-light uppercase tracking-wide transition-colors cursor-pointer"
-              >
-                Restore Coach defaults
-              </button>
             </div>
 
           </div>

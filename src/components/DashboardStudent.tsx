@@ -99,6 +99,15 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
     return () => clearInterval(interval);
   }, [currentUser.id]);
 
+  useEffect(() => {
+    const handleSearch = (e: any) => {
+      setDashboardSearchQuery(e.detail || '');
+      setCoursesSearchQuery(e.detail || '');
+    };
+    window.addEventListener('sabicrest-search', handleSearch);
+    return () => window.removeEventListener('sabicrest-search', handleSearch);
+  }, []);
+
   const handleOpenSubmission = (ass: Assignment) => {
     setActiveSubmittingAss(ass);
     setSubmitText(ass.submissionContent || '');

@@ -62,10 +62,11 @@ export default function TeamCollaboration({ currentUser }: TeamCollaborationProp
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
 
+    const assignedName = taskAssignee || currentUser.name;
     const newTask: TeamTask = {
       id: `task-${Date.now()}`,
       title: newTaskTitle,
-      assignedTo: taskAssignee || currentUser.name,
+      assignedTo: assignedName,
       status: 'todo'
     };
 
@@ -84,6 +85,30 @@ export default function TeamCollaboration({ currentUser }: TeamCollaborationProp
       title: 'New Team Task Created',
       message: `${currentUser.name} added a collaborative task: "${newTaskTitle}".`,
       type: 'message'
+    });
+
+    // Targeted assignee notification
+    const assigneeUser = db.getUsers().find(u => u.name === assignedName);
+    if (assigneeUser && assigneeUser.id !== currentUser.id) {
+      db.addNotification({
+        userId: assigneeUser.id,
+        title: 'New Task Assigned to You',
+        message: `${currentUser.name} assigned the task "${newTaskTitle}" to you in team "${team.name}".`,
+        type: 'schedule'
+      });
+    }
+
+    // Support text-based mentions tagging e.g. @Chief Admin in titles
+    db.getUsers().forEach(u => {
+      const tagStr = `@${u.name}`;
+      if (newTaskTitle.toLowerCase().includes(tagStr.toLowerCase()) && u.id !== currentUser.id && u.id !== assigneeUser?.id) {
+        db.addNotification({
+          userId: u.id,
+          title: 'Tagged in a Workspace Task',
+          message: `${currentUser.name} tagged you in a team task: "${newTaskTitle}"`,
+          type: 'schedule'
+        });
+      }
     });
   };
 

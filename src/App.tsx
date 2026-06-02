@@ -47,10 +47,36 @@ export default function App() {
     }
   }, [currentUser]);
 
-  // Keep saved active tab synchronized with store
+  // Keep saved active tab synchronized with store and history state
   useEffect(() => {
     localStorage.setItem('sabicrest_active_tab', activeTab);
+    const currentHistoryState = window.history.state;
+    if (!currentHistoryState || currentHistoryState.tab !== activeTab) {
+      window.history.pushState({ tab: activeTab }, '', `#${activeTab}`);
+    }
   }, [activeTab]);
+
+  // Listen to popstate events to handle back button navigation
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state && event.state.tab) {
+        setActiveTab(event.state.tab);
+      } else {
+        // Fallback or default
+        setActiveTab('dashboard');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+
+    // Replace the initial state with the default tab to initialize the stream
+    if (!window.history.state) {
+      window.history.replaceState({ tab: activeTab }, '', `#${activeTab}`);
+    }
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
 
   // Scroll to the very top of the page when the active tab/page mounts or changes
   useEffect(() => {

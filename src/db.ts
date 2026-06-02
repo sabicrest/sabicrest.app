@@ -611,6 +611,35 @@ export class AppwriteDatabase {
     return newMsg;
   }
 
+  updateMessage(msgId: string, content: string): Message | null {
+    const encrypted = encryptPayload(content);
+    let updated: Message | null = null;
+    this.messages = this.messages.map(m => {
+      if (m.id === msgId) {
+        updated = {
+          ...m,
+          content,
+          encryptedContent: encrypted
+        };
+        this.saveToAppwrite('messages', msgId, updated);
+        return updated;
+      }
+      return m;
+    });
+    this.saveToStorage();
+    if (updated) {
+      this.logTransaction('UPDATE_SECURE_MESSAGE', 'Messages', JSON.stringify(updated));
+    }
+    return updated;
+  }
+
+  deleteMessage(msgId: string): void {
+    this.messages = this.messages.filter(m => m.id !== msgId);
+    this.saveToStorage();
+    this.logTransaction('DELETE_SECURE_MESSAGE', 'Messages', msgId);
+    this.saveToAppwrite('messages', msgId, null, true);
+  }
+
   addMessageReaction(msgId: string, emoji: string, userId: string): void {
     this.messages = this.messages.map(m => {
       if (m.id === msgId) {

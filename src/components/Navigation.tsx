@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, NotificationAlert } from '../types';
 import { db } from '../db';
-import { Bell, LogOut, CheckCircle, Shield, Menu, X, Terminal, Sparkles, AlertTriangle, MessageSquare } from 'lucide-react';
+import { Bell, LogOut, CheckCircle, Shield, Menu, X, Terminal, Sparkles, AlertTriangle, MessageSquare, Search } from 'lucide-react';
 // @ts-ignore
 import sabicrestLogo from '../assets/images/sabicrest_logo_1780159096569.png';
 
@@ -24,6 +24,14 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [chatCount, setChatCount] = useState(0);
+  const [navSearchQuery, setNavSearchQuery] = useState('');
+  const [showSearchInput, setShowSearchInput] = useState(false);
+
+  useEffect(() => {
+    setNavSearchQuery('');
+    setShowSearchInput(false);
+    window.dispatchEvent(new CustomEvent('sabicrest-search', { detail: '' }));
+  }, [activeTab]);
 
   // Load and refresh notifications list
   const loadNotifications = () => {
@@ -111,6 +119,45 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
           {/* User Settings & Notifications Panel */}
           <div className="flex items-center gap-3">
             
+            {/* Functional Search Icon & Expandable Input Bar */}
+            <div className="relative flex items-center">
+              {showSearchInput ? (
+                <div className="flex items-center gap-1.5 animate-in slide-in-from-right-3 duration-150">
+                  <input
+                    type="text"
+                    id="nav-search-bar-input"
+                    placeholder="Search current view..."
+                    value={navSearchQuery}
+                    onChange={(e) => {
+                      setNavSearchQuery(e.target.value);
+                      window.dispatchEvent(new CustomEvent('sabicrest-search', { detail: e.target.value }));
+                    }}
+                    className="bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-1.5 text-xs text-brand-black placeholder-zinc-400 focus:outline-hidden focus:border-brand-yellow font-light w-36 sm:w-48"
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => {
+                      setNavSearchQuery('');
+                      setShowSearchInput(false);
+                      window.dispatchEvent(new CustomEvent('sabicrest-search', { detail: '' }));
+                    }}
+                    className="text-zinc-400 hover:text-black p-1 cursor-pointer shrink-0"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  id="nav-search-trigger-btn"
+                  onClick={() => setShowSearchInput(true)}
+                  className="p-2 text-zinc-400 hover:text-brand-black hover:bg-zinc-50 rounded-xl transition-all cursor-pointer"
+                  title="Search Current View"
+                >
+                  <Search size={18} />
+                </button>
+              )}
+            </div>
+
             {/* Realtime Chats Icon Badge */}
             <button
               id="header-chats-trigger"

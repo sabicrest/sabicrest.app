@@ -354,35 +354,9 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
                     </span>
                   </div>
 
-                  {/* Visual Preset Alternatives */}
-                  <div className="space-y-1.5">
-                    <span className="text-[9px] font-mono uppercase tracking-wider text-zinc-400 block">
-                      Or select generic preselected portrait aesthetic:
-                    </span>
-                    <div className="flex gap-2">
-                      {[
-                        { title: 'Aesthetic 1', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150' },
-                        { title: 'Aesthetic 2', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150' },
-                        { title: 'Aesthetic 3', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' },
-                        { title: 'Aesthetic 4', url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150' },
-                        { title: 'Aesthetic 5', url: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150' }
-                      ].map((preset, pi) => (
-                        <button
-                          key={pi}
-                          type="button"
-                          onClick={() => {
-                            setProfileAvatar(preset.url);
-                            showToast(`✓ Preset portrait selected.`);
-                          }}
-                          className={`w-8 h-8 rounded-full overflow-hidden border transition-all hover:scale-105 cursor-pointer ${
-                            profileAvatar === preset.url ? 'border-brand-yellow ring-1 ring-brand-yellow' : 'border-zinc-200'
-                          }`}
-                        >
-                          <img src={preset.url} alt="preset link" className="w-full h-full object-cover" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <span className="text-[10px] text-zinc-500 font-sans italic block mt-1.5">
+                    Your uploaded image is saved inside the Appwrite database partition and immediately made visible to all users across the Sabicrest platform.
+                  </span>
                 </div>
 
               </div>
@@ -415,10 +389,10 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">Phone Number</label>
+                <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">WhatsApp Number with Country Code</label>
                 <input
                   type="text"
-                  placeholder="e.g. +1 (555) 019-2831"
+                  placeholder="e.g. 2348012345678 (numbers only)"
                   value={profilePhone}
                   onChange={(e) => setProfilePhone(e.target.value)}
                   className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-black transition-all"
@@ -569,135 +543,9 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
             </div>
           </div>
 
-          {/* Profile Reset Deletion Request Requisition Panel */}
-          <div className="bg-red-50/20 border border-red-100 rounded-2xl p-5 space-y-3">
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-red-800 block">Profile reset</span>
-              <span className="text-[9px] text-red-700/80 block leading-normal mt-0.5">
-                Initiate a stressful audit sequence and forward an irreversible erasure request to all Administrators.
-              </span>
-            </div>
-            <button
-              type="button"
-              id="initiate-deletion-btn"
-              onClick={() => {
-                setShowDeleteModal(true);
-                setDeleteCountdown(5);
-                setDeleteVerifyText('');
-                setDeleteCheckbox(false);
-              }}
-              className="w-full bg-red-650 hover:bg-red-700 text-white rounded-xl py-2 px-3 text-[10px] font-medium uppercase tracking-wide transition-colors cursor-pointer"
-            >
-              Request Account Deletion
-            </button>
-          </div>
-
         </div>
 
       </div>
-
-      {/* Stressful Account Deletion Requisition Modal Overlay */}
-      {showDeleteModal && (
-        <div id="delete-request-modal-overlay" className="fixed inset-0 bg-red-950/80 backdrop-blur-md flex items-center justify-center p-4 z-55 animate-in fade-in duration-200">
-          <div id="delete-request-card" className="bg-white border-2 border-red-200 rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 space-y-5">
-            
-            {/* Stressful Visual Accent Warning Bars */}
-            <div className="absolute top-0 inset-x-0 h-1.5 bg-repeating-linear bg-amber-500 text-brand-black flex animate-pulse" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #f59e0b 0px, #f59e0b 10px, #000 10px, #000 20px)' }} />
-
-            <div className="flex items-start gap-3.5 pt-2">
-              <div className="p-3 bg-red-100 text-red-700 rounded-2xl shrink-0">
-                <ShieldAlert size={28} className="animate-bounce" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-md font-bold tracking-tight text-red-950 uppercase">
-                  ⚠ DANGER ZONE: ACCOUNT ERASURE REQUISITION ⚠
-                </h4>
-                <p className="text-[10px] font-mono tracking-wide text-zinc-400">
-                  REF_AUDIT_CLASS: SECURE_DELETE_REQUEST
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-3 bg-red-50/50 rounded-2xl p-4 border border-red-100 text-zinc-800 text-xs">
-              <p className="font-semibold uppercase tracking-tight text-red-900 text-[11px]">
-                Audited System Notice
-              </p>
-              <p className="font-light leading-relaxed text-zinc-700 text-[11px]">
-                You are setting in motion a formal deletion requisition. Once authorized, this actions is wholly irreversible. All associated transcripts, submissions, chats, credential profiles, and records from Sabicrest Appwrite registers will be targeted for destruction.
-              </p>
-            </div>
-
-            <div className="space-y-4 pt-1">
-              {/* Verification String Input Block */}
-              <div className="space-y-2">
-                <label className="block text-[10px] uppercase font-mono tracking-wider font-semibold text-zinc-500">
-                  Please type the following word-for-word to authenticate:
-                </label>
-                <div className="bg-zinc-50 p-2.5 rounded-xl border border-zinc-205 select-all font-mono text-[10.5px] text-zinc-700 text-center font-bold tracking-wide">
-                  CONFIRM DELETION OF {currentUser.email.toUpperCase()}
-                </div>
-                <input
-                  type="text"
-                  placeholder="Type the verification phrase exactly..."
-                  value={deleteVerifyText}
-                  onChange={(e) => setDeleteVerifyText(e.target.value)}
-                  className="w-full text-xs font-mono font-bold bg-zinc-50 border border-zinc-200 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-red-500 focus:bg-white transition-all text-center placeholder:font-light"
-                />
-              </div>
-
-              {/* Stressful Acknowledgment Checkbox */}
-              <label className="flex items-start gap-2.5 cursor-pointer p-1">
-                <input
-                  type="checkbox"
-                  checked={deleteCheckbox}
-                  onChange={(e) => setDeleteCheckbox(e.target.checked)}
-                  className="mt-0.5 accent-red-600 focus:outline-hidden w-4 h-4 cursor-pointer shrink-0"
-                />
-                <span className="text-[10px] text-zinc-600 leading-normal font-light">
-                  I solemnly swear that I intend to permanently erase my trace from this node and request my profile deletion from the Administrator board.
-                </span>
-              </label>
-            </div>
-
-            {/* Action Buttons Row with Countdown block */}
-            <div className="flex flex-col sm:flex-row gap-2.5 pt-3">
-              <button
-                type="button"
-                onClick={() => setShowDeleteModal(false)}
-                className="w-full sm:w-1/3 py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl text-xs font-semibold cursor-pointer transition-colors text-center"
-              >
-                Abort Action
-              </button>
-              
-              <button
-                type="button"
-                disabled={
-                  deleteCountdown > 0 || 
-                  !deleteCheckbox || 
-                  deleteVerifyText.trim().toUpperCase() !== `CONFIRM DELETION OF ${currentUser.email.toUpperCase()}`
-                }
-                onClick={handleSubmitDeletionRequest}
-                className={`w-full sm:w-2/3 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1.5 transition-all ${
-                  deleteCountdown > 0 || !deleteCheckbox || deleteVerifyText.trim().toUpperCase() !== `CONFIRM DELETION OF ${currentUser.email.toUpperCase()}`
-                    ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed opacity-55'
-                    : 'bg-red-600 hover:bg-red-700 text-white shadow-md active:scale-98 cursor-pointer'
-                }`}
-              >
-                <Trash2 size={14} />
-                {deleteCountdown > 0 
-                  ? `Hazzard audit... (${deleteCountdown}s)` 
-                  : 'Submit Deletion Requisition'
-                }
-              </button>
-            </div>
-
-            <p className="text-[9px] text-center text-zinc-400 font-mono">
-              Note: This requisition will be securely cataloged and forwarded to all active platform Administrators under audit procedures. No direct deletion occurs here.
-            </p>
-
-          </div>
-        </div>
-      )}
 
     </div>
   );

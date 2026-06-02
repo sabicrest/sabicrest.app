@@ -4,8 +4,18 @@
  */
 
 import React, { useState } from 'react';
-import { ArrowLeft, MessageSquare, Sparkles, Search, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Sparkles, Search, ChevronDown, ChevronUp, MessageCircle } from 'lucide-react';
 import { User } from '../types';
+
+const obfuscateEmail = (email: string) => {
+  if (!email) return '';
+  const [local, domain] = email.split('@');
+  if (!domain) return local;
+  if (local.length <= 2) {
+    return `${local[0]}***@${domain}`;
+  }
+  return `${local[0]}***${local[local.length - 1]}@${domain}`;
+};
 
 interface WorkspaceDirectoryProps {
   currentUser: User;
@@ -235,7 +245,7 @@ export default function WorkspaceDirectory({
                   </div>
                   <div className="space-y-1 overflow-hidden">
                     <h4 className="font-semibold text-brand-black text-sm truncate">{u.name}</h4>
-                    <div className="flex flex-wrap items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5 font-light">
                       <span className={`text-[8.5px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                         u.role === 'admin' 
                           ? 'bg-red-50 text-red-650' 
@@ -245,6 +255,19 @@ export default function WorkspaceDirectory({
                       }`}>
                         {u.role}
                       </span>
+                      {u.phone && (
+                        <a
+                          href={`https://wa.me/${u.phone.replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          title="Chat on WhatsApp"
+                          className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full text-[8.5px] font-semibold flex items-center gap-1 transition-all shrink-0 cursor-pointer"
+                        >
+                          <MessageCircle size={9.5} className="fill-emerald-500/20 text-emerald-650" />
+                          <span>WhatsApp</span>
+                        </a>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -259,7 +282,9 @@ export default function WorkspaceDirectory({
                 <div className="mt-4 pt-4 border-t border-zinc-150 space-y-4 animate-in fade-in slide-in-from-top-1 duration-150">
                   <div className="space-y-0.5">
                     <span className="text-zinc-400 text-[9px] uppercase font-bold tracking-wider">Email Address</span>
-                    <p className="text-xs text-brand-black font-mono truncate">{u.email}</p>
+                    <p className="text-xs text-brand-black font-mono truncate">
+                      {currentUser.role === 'trainer' || currentUser.role === 'admin' ? u.email : obfuscateEmail(u.email)}
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 text-xs">
@@ -277,8 +302,19 @@ export default function WorkspaceDirectory({
                     <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-zinc-100/50">
                       {u.phone && (
                         <div>
-                          <span className="text-zinc-400 text-[9px] uppercase font-bold tracking-wider">Phone</span>
-                          <p className="text-[11px] text-zinc-600 font-mono truncate">{u.phone}</p>
+                          <span className="text-zinc-400 text-[9px] uppercase font-bold tracking-wider">WhatsApp</span>
+                          <p className="text-[11px] text-zinc-600 font-mono truncate mt-0.5">
+                            <a
+                              href={`https://wa.me/${u.phone.replace(/\D/g, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-emerald-600 hover:underline inline-flex items-center gap-1 font-semibold"
+                            >
+                              <MessageCircle size={11} className="fill-emerald-500/20 text-emerald-600 shrink-0" />
+                              <span>{u.phone}</span>
+                            </a>
+                          </p>
                         </div>
                       )}
                       {u.slackHandle && (
@@ -312,16 +348,41 @@ export default function WorkspaceDirectory({
                     </div>
                   )}
 
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectUser(u);
-                    }}
-                    className="w-full py-2 bg-brand-black hover:bg-zinc-900 text-white rounded-xl text-xs font-semibold tracking-wide transition-all uppercase cursor-pointer text-center flex items-center justify-center gap-1.5"
-                  >
-                    <MessageSquare size={13} className="text-brand-yellow" />
-                    <span>Start Direct Message</span>
-                  </button>
+                  <div className="flex gap-2 w-full">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectUser(u);
+                      }}
+                      className="flex-1 py-2 bg-brand-black hover:bg-zinc-900 text-white rounded-xl text-xs font-semibold tracking-wide transition-all uppercase cursor-pointer text-center flex items-center justify-center gap-1.5"
+                    >
+                      <MessageSquare size={13} className="text-brand-yellow" />
+                      <span>In-App Chat</span>
+                    </button>
+                    {u.phone ? (
+                      <a
+                        href={`https://wa.me/${u.phone.replace(/\D/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold tracking-wide transition-all uppercase text-center flex items-center justify-center gap-1.5 cursor-pointer no-underline"
+                        title="Chat on WhatsApp"
+                      >
+                        <MessageCircle size={13} className="fill-white/10 text-white" />
+                        <span>WhatsApp</span>
+                      </a>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled
+                        className="flex-1 py-2 bg-zinc-100 text-zinc-400 rounded-xl text-xs font-medium uppercase tracking-wide cursor-not-allowed text-center flex items-center justify-center gap-1.5"
+                        title="No WhatsApp number provided"
+                      >
+                        <MessageCircle size={13} className="text-zinc-300" />
+                        <span>No WhatsApp</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

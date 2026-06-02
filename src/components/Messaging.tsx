@@ -24,7 +24,11 @@ import {
   ArrowLeft,
   ChevronDown,
   ChevronUp,
-  Sparkles
+  Sparkles,
+  Edit3,
+  Copy,
+  Trash2,
+  Share2
 } from 'lucide-react';
 
 const ALL_CHANNELS = [
@@ -43,12 +47,67 @@ export default function Messaging({ currentUser }: MessagingProps) {
   const [activeChannelId, setActiveChannelId] = useState<string>('team-general');
   const [activeDmUser, setActiveDmUser] = useState<User | null>(null);
   const [typedMsg, setTypedMsg] = useState('');
+
+  // States to hide precise DMs and handle DM pagination list size
+  const [hiddenDmUserIds, setHiddenDmUserIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('sabicrest_hidden_dms');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [dmLimit, setDmLimit] = useState(10);
+
+  // Auto-unhide conversation when activeDmUser is programmatically selected (e.g. from directory)
+  useEffect(() => {
+    if (activeDmUser && hiddenDmUserIds.includes(activeDmUser.id)) {
+      setHiddenDmUserIds(prev => {
+        const next = prev.filter(id => id !== activeDmUser.id);
+        localStorage.setItem('sabicrest_hidden_dms', JSON.stringify(next));
+        return next;
+      });
+    }
+  }, [activeDmUser]);
+
+  const handleHideDm = (userId: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (window.confirm("Are you sure you want to hide this professional DM conversation? You can bring it back by messaging them from the users directory.")) {
+      setHiddenDmUserIds(prev => {
+        const next = prev.includes(userId) ? prev : [...prev, userId];
+        localStorage.setItem('sabicrest_hidden_dms', JSON.stringify(next));
+        return next;
+      });
+      if (activeDmUser?.id === userId) {
+        setActiveDmUser(null);
+      }
+    }
+  };
   
   // Advanced Messaging states
   const [replyTo, setReplyTo] = useState<{ id: string; senderName: string; content: string } | null>(null);
   const [activeEmojiPickerId, setActiveEmojiPickerId] = useState<string | null>(null);
   const [attachment, setAttachment] = useState<{ url: string; name: string; type: 'image' | 'file' } | null>(null);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+
+  // Active states for editing, copy notifications, forwarding, scrolling & read-view position
+  const [editingMsgId, setEditingMsgId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState('');
+  const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
+  const [forwardingMsg, setForwardingMsg] = useState<Message | null>(null);
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  const [hasScrolledForSession, setHasScrolledForSession] = useState<string | null>(null);
+
+  const chatKey = activeDmUser ? `dm-${activeDmUser.id}` : `channel-${activeChannelId}`;
+
+  const [lastReadMessageMap, setLastReadMessageMap] = useState<{ [key: string]: string }>(() => {
+    try {
+      const saved = localStorage.getItem('sabicrest_last_read_map');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
   
   // Real-time typing indicators
   const chatStatusId = activeDmUser ? `dm-${activeDmUser.id}` : `channel-${activeChannelId}`;
@@ -158,11 +217,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
     }
   }, [typedMsg, chatStatusId, currentUser.id, currentUser.name]);
 
-  useEffect(() => {
-    if (chatStreamRef.current) {
-      chatStreamRef.current.scrollTop = chatStreamRef.current.scrollHeight;
-    }
-  }, [messages, activeChannelId, activeDmUser, typingUsers]);
+
 
   // Touch & Mouse Drag to swipe-to-reply handling
   const handleTouchStart = (msgId: string, clientX: number) => {
@@ -263,11 +318,25 @@ export default function Messaging({ currentUser }: MessagingProps) {
     }
 
     db.addMessage(messagePayload);
+    const sentMsgText = typedMsg; // Preserve for notifications
     setTypedMsg('');
     setAttachment(null);
     setReplyTo(null);
     db.setTypingStatus(chatStatusId, currentUser.id, currentUser.name, false);
     loadMessages();
+
+    // Support text-based mentions tagging e.g. @Chief Admin inside chat messages
+    db.getUsers().forEach(u => {
+      const tagStr = `@${u.name}`;
+      if (sentMsgText.toLowerCase().includes(tagStr.toLowerCase()) && u.id !== currentUser.id) {
+        db.addNotification({
+          userId: u.id,
+          title: 'Tagged in Discussion',
+          message: `${currentUser.name} tagged you in #${activeChannelId || 'chat'}: "${sentMsgText}"`,
+          type: 'message'
+        });
+      }
+    });
 
     // Trigger instant notifications
     if (activeDmUser) {
@@ -300,7 +369,19 @@ export default function Messaging({ currentUser }: MessagingProps) {
   const usersList = db.getUsers().filter(u => u.id !== currentUser.id);
   const trainers = usersList.filter(u => u.role === 'trainer');
   const students = usersList.filter(u => u.role === 'student');
-  const displayDms = usersList;
+  
+  // Professional DMs filter: only list conversations where messages actually exist with current user,
+  // or if u is activeDmUser (so they can initiate a new conversation upon select from directory/search).
+  // Also omit conversations hidden by the user, unless active.
+  const displayDms = usersList.filter(u => {
+    const hasMessages = messages.some(m => 
+      (m.senderId === currentUser.id && m.receiverId === u.id) ||
+      (m.senderId === u.id && m.receiverId === currentUser.id)
+    );
+    const isActive = activeDmUser?.id === u.id;
+    const isHidden = hiddenDmUserIds.includes(u.id);
+    return (hasMessages && !isHidden) || isActive;
+  });
 
   // Filter messages based on active context
   const filteredMessages = messages.filter(m => {
@@ -311,6 +392,101 @@ export default function Messaging({ currentUser }: MessagingProps) {
       return m.channelId === activeChannelId;
     }
   });
+
+  // Check if a message can be modified (sent by current user, under 10 minutes old)
+  const canModifyMessage = (msg: Message) => {
+    if (msg.senderId !== currentUser.id) return false;
+    const msgTime = new Date(msg.timestamp).getTime();
+    const tenMinutes = 10 * 60 * 1000;
+    return (Date.now() - msgTime) < tenMinutes;
+  };
+
+  const handleSaveEdit = (msgId: string) => {
+    if (!editingText.trim()) return;
+    db.updateMessage(msgId, editingText);
+    setEditingMsgId(null);
+    loadMessages();
+  };
+
+  const handleCopyMessage = (msg: Message) => {
+    navigator.clipboard.writeText(msg.content);
+    setCopiedMsgId(msg.id);
+    setTimeout(() => setCopiedMsgId(null), 2000);
+  };
+
+  const handleDeleteMessage = (msgId: string) => {
+    if (window.confirm("Are you sure you want to delete this secure message? This operation is irreversible and audited.")) {
+      db.deleteMessage(msgId);
+      loadMessages();
+    }
+  };
+
+  // Mark all as read helper
+  const markAllAsRead = () => {
+    if (filteredMessages.length > 0) {
+      const latestMsg = filteredMessages[filteredMessages.length - 1];
+      setLastReadMessageMap(prev => {
+        const next = { ...prev, [chatKey]: latestMsg.id };
+        localStorage.setItem('sabicrest_last_read_map', JSON.stringify(next));
+        return next;
+      });
+    }
+  };
+
+  // Scroll detection handler
+  const handleScroll = () => {
+    if (!chatStreamRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = chatStreamRef.current;
+    const closeToBottom = scrollHeight - scrollTop - clientHeight <= 60;
+    setIsNearBottom(closeToBottom);
+    if (closeToBottom) {
+      markAllAsRead();
+    }
+  };
+
+  // Calculate position of last read to compute "next chats down" count
+  const lastReadId = lastReadMessageMap[chatKey];
+  const lastReadMsgIndex = lastReadId ? filteredMessages.findIndex(m => m.id === lastReadId) : -1;
+  const nextChatsCount = lastReadMsgIndex !== -1 
+    ? filteredMessages.slice(lastReadMsgIndex + 1).length 
+    : 0;
+
+  // Track chat selection changes to reset scroll session
+  useEffect(() => {
+    setHasScrolledForSession(null);
+  }, [activeChannelId, activeDmUser]);
+
+  // Initial and reactive scrolling to center position
+  useEffect(() => {
+    if (filteredMessages.length === 0 || !chatStreamRef.current) return;
+    
+    // We only perform the restoration on initial load of active chat context
+    if (hasScrolledForSession === chatKey) {
+      if (isNearBottom) {
+        chatStreamRef.current.scrollTop = chatStreamRef.current.scrollHeight;
+      }
+      return;
+    }
+
+    const lastId = lastReadMessageMap[chatKey];
+    if (lastId) {
+      const idx = filteredMessages.findIndex(m => m.id === lastId);
+      if (idx !== -1) {
+        const el = document.getElementById(`dm-msg-${lastId}`);
+        if (el) {
+          el.scrollIntoView({ block: 'center' });
+        } else {
+          chatStreamRef.current.scrollTop = chatStreamRef.current.scrollHeight;
+        }
+      } else {
+        chatStreamRef.current.scrollTop = chatStreamRef.current.scrollHeight;
+      }
+    } else {
+      chatStreamRef.current.scrollTop = chatStreamRef.current.scrollHeight;
+      markAllAsRead();
+    }
+    setHasScrolledForSession(chatKey);
+  }, [filteredMessages, chatKey, hasScrolledForSession]);
 
   // Scroll to targeted replied message
   const handleScrollToMessage = (id: string) => {
@@ -375,7 +551,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
         {/* Left Sidebar Pane */}
         <div 
           id="messaging-sidebar" 
-          className={`col-span-1 md:col-span-1 border-r border-zinc-150 flex-col justify-between bg-zinc-50/40 p-4 shrink-0 ${
+          className={`col-span-1 md:col-span-1 border-b md:border-b-0 md:border-r border-brand-yellow/30 md:border-zinc-150 flex-col justify-between bg-zinc-50/40 p-4 shrink-0 ${
             mobileActiveView !== 'sidebar' ? 'hidden md:flex' : 'flex'
           }`}
         >
@@ -470,27 +646,30 @@ export default function Messaging({ currentUser }: MessagingProps) {
                {isDmsExpanded && (
                 <div className="space-y-1 text-xs font-light mt-2 animate-in fade-in duration-150">
                   <div className="space-y-1 max-h-56 overflow-y-auto">
-                    {displayDms.slice(0, 3).map(u => {
+                    {displayDms.slice(0, dmLimit).map(u => {
                       const isSelected = activeDmUser?.id === u.id;
                       const count = unreadCounts[u.id] || 0;
                       return (
-                        <button
+                        <div
                           key={u.id}
-                          onClick={() => {
-                            setActiveDmUser(u);
-                            setReplyTo(null);
-                            setAttachment(null);
-                            if (window.innerWidth < 768) {
-                              setMobileActiveView('chat');
-                            }
-                          }}
-                          className={`w-full text-left p-2 rounded-xl transition-all flex items-center justify-between gap-2 ${
+                          className={`group w-full p-2 rounded-xl transition-all flex items-center justify-between gap-2 ${
                             isSelected
                               ? 'bg-brand-black text-white font-medium shadow-xs'
                               : 'text-zinc-600 hover:bg-zinc-100/60'
                           }`}
                         >
-                          <div className="flex items-center gap-2 overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveDmUser(u);
+                              setReplyTo(null);
+                              setAttachment(null);
+                              if (window.innerWidth < 768) {
+                                setMobileActiveView('chat');
+                              }
+                            }}
+                            className="flex-1 flex items-center gap-2 overflow-hidden text-left cursor-pointer"
+                          >
                             <div className="w-5 h-5 rounded-full bg-zinc-200 font-bold overflow-hidden shadow-2xs shrink-0 bg-white">
                               {u.avatar ? (
                                 <img src={u.avatar} alt="avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -500,27 +679,50 @@ export default function Messaging({ currentUser }: MessagingProps) {
                                 </div>
                               )}
                             </div>
-                            <span className="truncate">{u.name}</span>
+                            <span className="truncate text-xs font-light">{u.name}</span>
+                          </button>
+                          
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {count > 0 && (
+                              <span className="bg-brand-yellow text-brand-black text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-4 text-center shrink-0 shadow-3xs">
+                                {count}
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => handleHideDm(u.id, e)}
+                              className={`opacity-0 group-hover:opacity-100 p-0.5 rounded-md transition-all hover:scale-110 cursor-pointer ${
+                                isSelected ? 'text-zinc-400 hover:text-white' : 'text-zinc-400 hover:text-red-500'
+                              }`}
+                              title="Hide conversation"
+                            >
+                              <X size={12} />
+                            </button>
                           </div>
-                          {count > 0 && (
-                            <span className="bg-brand-yellow text-brand-black text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-4 text-center shrink-0 shadow-3xs">
-                              {count}
-                            </span>
-                          )}
-                        </button>
+                        </div>
                       );
                     })}
                     {displayDms.length === 0 && (
                       <p className="text-[10px] text-zinc-400 italic p-2 text-center">No platform members available.</p>
                     )}
                   </div>
+
+                  {displayDms.length > dmLimit && (
+                    <button
+                      type="button"
+                      onClick={() => setDmLimit(prev => prev + 10)}
+                      className="text-[10px] text-brand-yellow hover:text-brand-black font-semibold cursor-pointer underline hover:no-underline transition-all block py-1.5 text-center w-full bg-brand-black/5 hover:bg-brand-yellow/15 rounded-lg mt-1"
+                    >
+                      Show More DMs (+10)
+                    </button>
+                  )}
  
                    <button
                     type="button"
                     onClick={() => setMessagingSubView('directory')}
                     className="text-[10px] text-zinc-500 hover:text-brand-black font-semibold cursor-pointer underline hover:no-underline transition-all block mt-2 text-center w-full"
                   >
-                    View More Directory
+                    View Sabicrest Users
                   </button>
                 </div>
               )}
@@ -532,13 +734,13 @@ export default function Messaging({ currentUser }: MessagingProps) {
         {/* Dynamic Chat Main Pane */}
         <div 
           id="messaging-main-chat" 
-          className={`col-span-1 md:col-span-3 flex-col justify-between ${
+          className={`col-span-1 md:col-span-3 flex-col justify-between relative ${
             mobileActiveView !== 'chat' ? 'hidden md:flex' : 'flex'
           }`}
         >
           
           {/* Active Banner Name */}
-          <div id="chat-header-bar" className="border-b border-zinc-150 px-6 py-4 bg-white flex items-center justify-between">
+          <div id="chat-header-bar" className="border-b border-brand-yellow/30 md:border-zinc-150 px-6 py-4 bg-white flex items-center justify-between">
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -548,13 +750,12 @@ export default function Messaging({ currentUser }: MessagingProps) {
               >
                 <ArrowLeft size={16} />
               </button>
-              <MessageSquare size={16} className="text-brand-yellow" />
               <h3 className="text-sm font-light tracking-tight text-brand-black">
-                Active Hub: <span className="font-semibold">{activeDmUser ? activeDmUser.name : `#${activeChannelId === 'team-general' ? 'cohort-general' : activeChannelId === 'team-collaboration' ? 'team-active-horizon' : activeChannelId}`}</span>
+                <span className="hidden md:inline">Active Hub: </span><span className="font-semibold">{activeDmUser ? activeDmUser.name : `#${activeChannelId === 'team-general' ? 'cohort-general' : activeChannelId === 'team-collaboration' ? 'team-active-horizon' : activeChannelId}`}</span>
               </h3>
             </div>
             <span className="text-[10px] text-emerald-500 font-sans flex items-center gap-1 bg-emerald-50/60 px-2 py-0.5 rounded">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> secure connection
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> online
             </span>
           </div>
 
@@ -562,6 +763,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
           <div 
             ref={chatStreamRef} 
             id="chat-stream-panel" 
+            onScroll={handleScroll}
             className="flex-1 p-6 space-y-4 overflow-y-auto max-h-[380px] bg-zinc-50/20"
             onMouseMove={(e) => handleTouchMove(e.clientX)}
             onMouseUp={() => { if (draggedMessageId) setDraggedMessageId(null); }}
@@ -658,7 +860,39 @@ export default function Messaging({ currentUser }: MessagingProps) {
                           </div>
                         )}
 
-                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                        {editingMsgId === msg.id ? (
+                          <div className="space-y-2 py-1">
+                            <textarea
+                              value={editingText}
+                              onChange={(e) => setEditingText(e.target.value)}
+                              className={`w-full text-xs p-2 rounded-xl border font-light focus:outline-hidden ${
+                                isMine 
+                                  ? 'bg-zinc-900 border-zinc-700 text-white focus:border-brand-yellow' 
+                                  : 'bg-zinc-50 border-zinc-250 text-black focus:border-brand-yellow'
+                              }`}
+                              rows={2}
+                              autoFocus
+                            />
+                            <div className="flex gap-1.5 justify-end">
+                              <button
+                                type="button"
+                                onClick={() => setEditingMsgId(null)}
+                                className="px-2.5 py-1 text-[10px] bg-zinc-300/40 text-zinc-500 rounded-lg hover:bg-zinc-300 hover:text-black transition-colors"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleSaveEdit(msg.id)}
+                                className="px-2.5 py-1 text-[10px] bg-brand-yellow text-brand-black rounded-lg hover:scale-105 transition-transform font-semibold font-sans cursor-pointer"
+                              >
+                                Save
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="whitespace-pre-wrap">{msg.content}</p>
+                        )}
 
                         {/* Attachment displays */}
                         {msg.attachmentUrl && (
@@ -716,7 +950,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
                         )}
 
                         {/* Message Action Options row placed UNDER the message bubble contents (never overflows) */}
-                        <div className={`flex items-center gap-3 mt-2.5 pt-2 border-t text-[10px] select-none ${
+                        <div className={`flex flex-wrap items-center gap-3 mt-2.5 pt-2 border-t text-[10px] select-none ${
                           isMine 
                             ? 'border-white/10 text-zinc-300 justify-end' 
                             : 'border-zinc-100 text-zinc-400 justify-start'
@@ -762,6 +996,57 @@ export default function Messaging({ currentUser }: MessagingProps) {
                               </div>
                             )}
                           </div>
+
+                          {/* Quick Message Actions: Copy & Forward */}
+                          <button
+                            type="button"
+                            onClick={() => handleCopyMessage(msg)}
+                            className={`flex items-center gap-1 hover:text-amber-400 transition-colors cursor-pointer ${
+                              isMine ? 'hover:text-white' : 'hover:text-black'
+                            }`}
+                            title="Copy to Clipboard"
+                          >
+                            <Copy size={11} /> <span>{copiedMsgId === msg.id ? 'Copied' : 'Copy'}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setForwardingMsg(msg)}
+                            className={`flex items-center gap-1 hover:text-amber-400 transition-colors cursor-pointer ${
+                              isMine ? 'hover:text-white' : 'hover:text-black'
+                            }`}
+                            title="Forward Message"
+                          >
+                            <Share2 size={11} /> <span>Forward</span>
+                          </button>
+
+                          {/* Conditional inline edit and delete based on authorship and 10min threshold */}
+                          {canModifyMessage(msg) && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingMsgId(msg.id);
+                                  setEditingText(msg.content);
+                                }}
+                                className={`flex items-center gap-1 hover:text-amber-400 transition-colors cursor-pointer ${
+                                  isMine ? 'hover:text-white' : 'hover:text-black'
+                                }`}
+                                title="Edit message"
+                              >
+                                <Edit3 size={11} /> <span>Edit</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteMessage(msg.id)}
+                                className="flex items-center gap-1 hover:text-red-500 text-red-400/80 transition-colors cursor-pointer"
+                                title="Delete message"
+                              >
+                                <Trash2 size={11} /> <span>Delete</span>
+                              </button>
+                            </>
+                          )}
                         </div>
 
                       </div>
@@ -811,8 +1096,28 @@ export default function Messaging({ currentUser }: MessagingProps) {
             </div>
           )}
 
+          {/* Floating next chats down unread countdown badge */}
+          {nextChatsCount > 0 && !isNearBottom && (
+            <div className="absolute right-6 bottom-20 z-20">
+              <button
+                type="button"
+                onClick={() => {
+                  if (chatStreamRef.current) {
+                    chatStreamRef.current.scrollTop = chatStreamRef.current.scrollHeight;
+                    markAllAsRead();
+                    setIsNearBottom(true);
+                  }
+                }}
+                className="bg-brand-yellow hover:bg-brand-black text-brand-black hover:text-white px-4 py-2.5 rounded-full text-[11px] font-bold shadow-xl hover:shadow-2xl flex items-center gap-1.5 cursor-pointer transition-all border border-brand-yellow hover:border-black animate-bounce shrink-0"
+              >
+                <span>{nextChatsCount} unread chats below</span>
+                <ChevronDown size={14} className="animate-pulse" />
+              </button>
+            </div>
+          )}
+
           {/* Secure text submission box */}
-          <form id="secure-input-form" onSubmit={handleSend} className="p-4 border-t border-zinc-100 bg-white flex gap-2 items-center">
+          <form id="secure-input-form" onSubmit={handleSend} className="p-4 border-t border-brand-yellow/30 md:border-zinc-100 bg-white flex gap-2 items-center">
             
             {/* hidden upload input */}
             <input 
@@ -852,7 +1157,6 @@ export default function Messaging({ currentUser }: MessagingProps) {
 
         </div>
       </div>
-    </div>
 
       {/* Lightbox zoomed-in Image Preview modal */}
       {zoomedImage && (
@@ -873,6 +1177,94 @@ export default function Messaging({ currentUser }: MessagingProps) {
           />
         </div>
       )}
+
+      {/* Forward Message modal Dialog */}
+      {forwardingMsg && (
+        <div id="forward-modal" className="fixed inset-0 bg-brand-black/65 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl border border-zinc-150 p-6 max-w-sm w-full mx-4 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-brand-black flex items-center gap-1.5 uppercase tracking-wide">
+                <Share2 size={13} className="text-brand-yellow" /> Forward Message
+              </h3>
+              <button 
+                onClick={() => setForwardingMsg(null)}
+                className="text-zinc-400 hover:text-black p-1"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="bg-zinc-50 border border-zinc-100 p-3 rounded-2xl text-[10.5px] text-zinc-500 font-mono line-clamp-3 italic">
+              "{forwardingMsg.content}"
+            </div>
+
+            <div className="space-y-3">
+              <span className="text-[9.5px] uppercase font-bold tracking-wider text-zinc-400 block">Choose Destination:</span>
+              
+              <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                <div className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest px-2 py-1">Channels</div>
+                {ALL_CHANNELS.map(chan => (
+                  <button
+                    key={chan.id}
+                    onClick={() => {
+                      const payload = {
+                        senderId: currentUser.id,
+                        senderName: currentUser.name,
+                        senderAvatar: currentUser.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+                        content: `[Forwarded]: ${forwardingMsg.content}`,
+                        timestamp: new Date().toISOString(),
+                        channelId: chan.id
+                      };
+                      db.addMessage(payload as any);
+                      setForwardingMsg(null);
+                      setActiveChannelId(chan.id);
+                      setActiveDmUser(null);
+                      loadMessages();
+                    }}
+                    className="w-full text-left px-2.5 py-2 hover:bg-brand-yellow/10 rounded-xl text-xs transition-colors flex items-center gap-1.5"
+                  >
+                    <span className="text-brand-yellow font-bold text-xs">#</span>
+                    <span>{chan.label}</span>
+                  </button>
+                ))}
+
+                <div className="text-[10px] font-semibold text-zinc-450 uppercase tracking-widest px-2 py-1 mt-2">Workspace DMs</div>
+                {usersList.map(u => (
+                  <button
+                    key={u.id}
+                    onClick={() => {
+                      const payload = {
+                        senderId: currentUser.id,
+                        senderName: currentUser.name,
+                        senderAvatar: currentUser.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+                        content: `[Forwarded]: ${forwardingMsg.content}`,
+                        timestamp: new Date().toISOString(),
+                        receiverId: u.id
+                      };
+                      db.addMessage(payload as any);
+                      setForwardingMsg(null);
+                      setActiveDmUser(u);
+                      setActiveChannelId('');
+                      loadMessages();
+                    }}
+                    className="w-full text-left px-2.5 py-2 hover:bg-brand-yellow/10 rounded-xl text-xs transition-colors flex items-center gap-2"
+                  >
+                    <div className="w-4 h-4 rounded-full overflow-hidden bg-zinc-150 border shrink-0">
+                      {u.avatar ? (
+                        <img src={u.avatar} alt="avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="text-[8px] bg-brand-black text-white flex items-center justify-center h-full w-full font-bold">{u.name.charAt(0)}</div>
+                      )}
+                    </div>
+                    <span>{u.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  </div>
   );
 }

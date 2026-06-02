@@ -58,8 +58,35 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
     return () => clearInterval(interval);
   }, []);
 
-  const pendingCurricula = curricula.filter(c => c.status === 'pending');
-  const onboardedUsers = users.filter(u => u.id !== currentUser.id);
+  useEffect(() => {
+    const handleSearch = (e: any) => {
+      setDashboardSearchQuery(e.detail || '');
+      setCoursesSearchQuery(e.detail || '');
+    };
+    window.addEventListener('sabicrest-search', handleSearch);
+    return () => window.removeEventListener('sabicrest-search', handleSearch);
+  }, []);
+
+  const pendingCurricula = curricula
+    .filter(c => c.status === 'pending')
+    .filter(c => 
+      !coursesSearchQuery ? true : (
+        c.title.toLowerCase().includes(coursesSearchQuery.toLowerCase()) ||
+        c.trainerName.toLowerCase().includes(coursesSearchQuery.toLowerCase()) ||
+        c.description.toLowerCase().includes(coursesSearchQuery.toLowerCase()) ||
+        c.category.toLowerCase().includes(coursesSearchQuery.toLowerCase())
+      )
+    );
+
+  const onboardedUsers = users
+    .filter(u => u.id !== currentUser.id)
+    .filter(u => 
+      !dashboardSearchQuery ? true : (
+        u.name.toLowerCase().includes(dashboardSearchQuery.toLowerCase()) ||
+        u.email.toLowerCase().includes(dashboardSearchQuery.toLowerCase()) ||
+        u.role.toLowerCase().includes(dashboardSearchQuery.toLowerCase())
+      )
+    );
 
   const handleApproveCurriculum = (currId: string) => {
     const target = curricula.find(c => c.id === currId);
@@ -450,7 +477,17 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
                 </div>
               ) : (
                 <div className="divide-y divide-zinc-100">
-                  {curricula.filter(c => c.status === 'approved').map(course => (
+                  {curricula
+                    .filter(c => c.status === 'approved')
+                    .filter(course =>
+                      !coursesSearchQuery ? true : (
+                        course.title.toLowerCase().includes(coursesSearchQuery.toLowerCase()) ||
+                        course.description.toLowerCase().includes(coursesSearchQuery.toLowerCase()) ||
+                        course.trainerName.toLowerCase().includes(coursesSearchQuery.toLowerCase()) ||
+                        course.category.toLowerCase().includes(coursesSearchQuery.toLowerCase())
+                      )
+                    )
+                    .map(course => (
                     <div key={course.id} className="py-3.5 space-y-2">
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
                         <div>
@@ -575,6 +612,28 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
             <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase mb-4 flex items-center gap-1.5 font-light">
               <BookOpen size={13} className="text-brand-yellow" /> Course Proposal Approval Queue
             </h3>
+
+            {/* Curriculum Search */}
+            <div className="relative w-full max-w-md mb-4">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+                <Search size={12} />
+              </span>
+              <input
+                type="text"
+                placeholder="Search proposals by title, category, trainer..."
+                value={coursesSearchQuery}
+                onChange={(e) => setCoursesSearchQuery(e.target.value)}
+                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl pl-8 pr-4 py-2 text-xs text-brand-black placeholder-zinc-400 focus:outline-hidden focus:border-brand-yellow font-light"
+              />
+              {coursesSearchQuery && (
+                <button 
+                  onClick={() => setCoursesSearchQuery('')} 
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black cursor-pointer"
+                >
+                  <X size={10} />
+                </button>
+              )}
+            </div>
 
             {pendingCurricula.length === 0 ? (
               <div className="text-center p-12 text-zinc-400 font-light text-xs bg-zinc-50/50 rounded-2xl border border-dashed border-zinc-100 flex flex-col items-center gap-1">
