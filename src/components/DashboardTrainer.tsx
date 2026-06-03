@@ -370,6 +370,25 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
     setShowCurriculumModal(true);
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast("Only image files are allowed!");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setCurrImageUrl(event.target.result as string);
+        showToast("Cover image loaded successfully!");
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleCreateCurriculum = (e: React.FormEvent) => {
     e.preventDefault();
     if (!currTitle || !currDesc || moduleList.length === 0) return;
@@ -1546,18 +1565,68 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Course Cover Image (Optional URL)</label>
-                <input
-                  id="cur-input-image"
-                  type="url"
-                  placeholder="e.g. https://images.unsplash.com/photo-..."
-                  value={currImageUrl}
-                  onChange={(e) => setCurrImageUrl(e.target.value)}
-                  className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow"
-                />
-                <p className="text-[9px] text-zinc-400 mt-1 font-light">
-                  Optionally paste any cover image web link. Leave empty to let us auto-assign a themed aesthetic artwork.
-                </p>
+                <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1.5 flex items-center gap-1.5">
+                  <Camera size={12} className="text-brand-yellow" />
+                  Course Cover Image
+                </label>
+                
+                <div className="space-y-3">
+                  {/* Visual Dropzone/File Selector */}
+                  <div className="flex items-center gap-4">
+                    {currImageUrl ? (
+                      <div className="relative w-24 h-16 rounded-xl overflow-hidden border border-zinc-200 bg-zinc-50 shrink-0 shadow-2xs">
+                        <img 
+                          src={currImageUrl} 
+                          alt="Cover preview" 
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          id="clear-cover-image-btn"
+                          onClick={() => setCurrImageUrl('')}
+                          className="absolute inset-0 bg-brand-black/40 hover:bg-brand-black/60 flex items-center justify-center text-white transition-colors cursor-pointer"
+                          title="Remove cover image"
+                        >
+                          <X size={14} className="stroke-[2.5]" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-24 h-16 rounded-xl border-2 border-dashed border-zinc-200 flex items-center justify-center text-zinc-400 shrink-0 bg-zinc-100/50">
+                        <Camera size={14} className="text-zinc-450" />
+                      </div>
+                    )}
+
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center">
+                        <label className="bg-brand-black hover:bg-zinc-900 text-brand-yellow text-[10px] font-semibold uppercase tracking-wider px-3.5 py-2 rounded-xl cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs">
+                          <Upload size={11} />
+                          Upload Image File
+                          <input 
+                            id="cur-input-file-image"
+                            type="file" 
+                            accept="image/*" 
+                            onChange={handleImageUpload}
+                            className="hidden" 
+                          />
+                        </label>
+                        {currImageUrl && (
+                          <button
+                            type="button"
+                            id="remove-image-file-btn"
+                            onClick={() => setCurrImageUrl('')}
+                            className="ml-2 text-[10px] text-zinc-400 hover:text-red-500 font-medium cursor-pointer py-1 px-2 hover:bg-zinc-100 rounded-lg transition-colors"
+                          >
+                            Remove Image
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-[9px] text-zinc-400 font-light leading-snug">
+                        Recommended size: 800x450 (16:9). Select JPEG/PNG image. If left empty, an aesthetic category backdrop will be auto-assigned.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Modules list addition */}

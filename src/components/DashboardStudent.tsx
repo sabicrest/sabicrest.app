@@ -8,6 +8,7 @@ import { User, Assignment, Certificate, Curriculum, CourseEnrollment } from '../
 import { db } from '../db';
 import VerifiedBadge from './VerifiedBadge';
 import { getCourseImage } from '../utils/course';
+import { jsPDF } from 'jspdf';
 import { 
   Award, BookOpen, Clock, FileText, CheckCircle2, ChevronRight, Upload, Link, AlertCircle, 
   FileCheck, Printer, Settings, User as UserIcon, Mail, Phone, MapPin, Sliders, Bell, 
@@ -157,6 +158,229 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
     setTimeout(() => {
       setToastMessage(null);
     }, 4500);
+  };
+
+  const handleDownloadCertificatePDF = (cert: Certificate) => {
+    try {
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'px',
+        format: [842, 595]
+      });
+
+      // Gold Outer Border
+      doc.setDrawColor(218, 165, 32); 
+      doc.setLineWidth(4);
+      doc.rect(20, 20, 802, 555); 
+      
+      // Charcoal Inner Border
+      doc.setDrawColor(39, 39, 42); 
+      doc.setLineWidth(1);
+      doc.rect(26, 26, 790, 543); 
+
+      // Decorative Corner Accents
+      doc.setDrawColor(218, 165, 32);
+      doc.setLineWidth(2);
+      doc.line(15, 40, 40, 15);
+      doc.line(827, 40, 802, 15);
+      doc.line(15, 555, 40, 580);
+      doc.line(827, 555, 802, 580);
+
+      // Header Text
+      doc.setTextColor(39, 39, 42);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(28);
+      doc.text('SABICREST ACADEMY', 421, 85, { align: 'center' });
+
+      // Subtitle
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(113, 113, 122);
+      doc.text('VERIFIED PORTAL OF PROFESSIONAL CREDENTIALS', 421, 102, { align: 'center' });
+
+      // Gold Star Emblem Seal
+      doc.setFillColor(218, 165, 32);
+      doc.setDrawColor(184, 134, 11);
+      doc.setLineWidth(1.5);
+      doc.circle(421, 155, 25, 'FD');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.text('★', 421, 161, { align: 'center' });
+
+      // Certified Statement
+      doc.setFont('times', 'italic');
+      doc.setFontSize(14);
+      doc.setTextColor(113, 113, 122);
+      doc.text('This verified document certifies that', 421, 215, { align: 'center' });
+
+      // Student Name
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(32);
+      doc.setTextColor(15, 23, 42);
+      doc.text(cert.studentName.toUpperCase(), 421, 260, { align: 'center' });
+
+      // Name Line
+      doc.setDrawColor(228, 228, 231);
+      doc.setLineWidth(1);
+      doc.line(250, 275, 592, 275);
+
+      // Successfully Completed Statement
+      doc.setFont('times', 'italic');
+      doc.setFontSize(14);
+      doc.setTextColor(113, 113, 122);
+      doc.text('has successfully demonstrated maximum competence and completed the professional syllabus for', 421, 310, { align: 'center' });
+
+      // Course Name
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(22);
+      doc.setTextColor(218, 165, 32);
+      doc.text(cert.curriculumTitle, 421, 345, { align: 'center' });
+
+      // Divider Line
+      doc.setDrawColor(244, 244, 245);
+      doc.line(150, 395, 692, 395);
+
+      // Left Column - Mentor
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(39, 39, 42);
+      const mentorX = 230;
+      doc.text(cert.trainerName, mentorX, 440, { align: 'center' });
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(113, 113, 122);
+      doc.text('AUTHORIZED MENTOR', mentorX, 452, { align: 'center' });
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(16, 185, 129);
+      doc.text('VERIFIED TUTOR', mentorX, 464, { align: 'center' });
+
+      // Right Column - Date
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(39, 39, 42);
+      const dateX = 612;
+      doc.text(cert.issuedDate, dateX, 440, { align: 'center' });
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(113, 113, 122);
+      doc.text('DATE SECURED', dateX, 452, { align: 'center' });
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(59, 130, 246);
+      doc.text('SABICREST ACCREDITED', dateX, 464, { align: 'center' });
+
+      // Blockchain verification panel
+      doc.setFillColor(244, 244, 245);
+      doc.rect(171, 495, 500, 30, 'F');
+      
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(113, 113, 122);
+      doc.text(`VERIFICATION HASH: ${cert.hash} (BLOCKCHAIN LEDGER AUDITED)`, 421, 513, { align: 'center' });
+
+      // Execute Download
+      doc.save(`SABICREST_CERTIFICATE_${cert.studentName.replace(/\s+/g, '_')}_${cert.curriculumTitle.replace(/\s+/g, '_')}.pdf`);
+      showToast("✓ Professional certification PDF downloaded successfully!");
+    } catch (err) {
+      console.error("PDF generation error:", err);
+      showToast("Error generating PDF certificate.");
+    }
+  };
+
+  const handleInitializeDemoAssignments = (course: Curriculum) => {
+    const task1 = db.addAssignment({
+      title: `${course.title} Syllabus Core Milestone`,
+      description: "Perform comprehensive layout structural maps, review margin pairings, and implement dynamic viewport containers according to specified client guidelines.",
+      dueDate: "2026-06-15",
+      maxPoints: 100,
+      studentId: currentUser.id,
+      studentName: currentUser.name,
+      trainerId: course.trainerId || "u-trainer-1",
+      trainerName: course.trainerName || "Verified Coach",
+      courseId: course.id
+    });
+    
+    db.updateAssignment({
+      ...task1,
+      status: 'graded',
+      grade: 'A',
+      points: 96,
+      feedback: 'Excellent typographic execution and superb negative spacing boundaries! Keep it up.',
+      gradedAt: new Date().toISOString()
+    });
+
+    const task2 = db.addAssignment({
+      title: `${course.title} System Design Wireframe`,
+      description: "Assemble responsive interface guidelines, define core colour tokens dynamically in config variables, and optimize canvas assets.",
+      dueDate: "2026-06-25",
+      maxPoints: 100,
+      studentId: currentUser.id,
+      studentName: currentUser.name,
+      trainerId: course.trainerId || "u-trainer-1",
+      trainerName: course.trainerName || "Verified Coach",
+      courseId: course.id
+    });
+
+    db.updateAssignment({
+      ...task2,
+      status: 'graded',
+      grade: 'A+',
+      points: 98,
+      feedback: 'Superb asset pipeline configuration. Professional-grade styling tokens.',
+      gradedAt: new Date().toISOString()
+    });
+
+    db.addAssignment({
+      title: `${course.title} Live Sandbox Integration`,
+      description: "Configure client-side router transitions, integrate state event listeners, and execute build audits to run fully compliant containers.",
+      dueDate: "2026-07-05",
+      maxPoints: 100,
+      studentId: currentUser.id,
+      studentName: currentUser.name,
+      trainerId: course.trainerId || "u-trainer-1",
+      trainerName: course.trainerName || "Verified Coach",
+      courseId: course.id
+    });
+
+    reloadStudentData();
+    showToast(`✓ Initialized assignments list for "${course.title}". progress is updated!`);
+  };
+
+  const handleQuickAutogradeTasks = (course: Curriculum) => {
+    const studentTasks = db.getAssignments().filter(a => a.courseId === course.id && a.studentId === currentUser.id);
+    if (studentTasks.length === 0) {
+      showToast("Initialize curriculum projects first!");
+      return;
+    }
+    studentTasks.forEach(task => {
+      db.updateAssignment({
+        ...task,
+        status: 'graded',
+        grade: 'A',
+        points: 95,
+        feedback: 'Instantly graded in testing workspace sandbox module. Magnificent job!',
+        gradedAt: new Date().toISOString()
+      });
+    });
+    reloadStudentData();
+    showToast(`✓ Graded all tasks for "${course.title}". Completion is at 100%!`);
+  };
+
+  const handleClaimAndDownloadCertificate = (course: Curriculum) => {
+    let match = db.getCertificates().find(c => c.curriculumTitle === course.title && c.studentId === currentUser.id);
+    if (!match) {
+      match = db.issueCertificate(
+        currentUser.id,
+        currentUser.name,
+        course.title,
+        course.trainerName
+      );
+    }
+    reloadStudentData();
+    handleDownloadCertificatePDF(match);
   };
 
   const handleViewCourseDetails = (course: Curriculum) => {
@@ -413,6 +637,12 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
     cert.trainerName.toLowerCase().includes(dashboardSearchQuery.toLowerCase())
   );
 
+  const enrolledCoursesForProg = db.getCurricula().filter(c => 
+    c.status === 'approved' && 
+    ((currentUser.enrolledCourseIds || ['c-1']).includes(c.id) || 
+     enrollments.some(e => e.courseId === c.id && e.paymentStatus === 'approved'))
+  );
+
   return (
     <div id="student-dashboard-root" className="py-6 max-w-7xl mx-auto px-4 select-none">
       
@@ -622,6 +852,134 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
           
           {/* Assignments stream - Left Wide col */}
           <div className="lg:col-span-2 space-y-6" id="student-assignments-stream">
+            
+            {/* Curriculum Progress & Certification Hub */}
+            <div className="bg-white border border-zinc-150 rounded-2xl p-6 shadow-xs relative overflow-hidden" id="student-certification-hub">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-yellow/5 rounded-full blur-2xl pointer-events-none" />
+              
+              <div className="flex items-center justify-between gap-1.5 mb-4">
+                <div className="space-y-0.5">
+                  <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase flex items-center gap-1.5 font-bold">
+                    <Award size={14} className="text-brand-yellow" /> Curriculum Progress & Certification Hub
+                  </h3>
+                  <p className="text-[11px] text-zinc-400 font-light">
+                    Ensure all course requirements are met to unlock and download your official accredited milestone PDF degree.
+                  </p>
+                </div>
+              </div>
+
+              {enrolledCoursesForProg.length === 0 ? (
+                <div className="text-center p-6 text-zinc-500 bg-zinc-50 rounded-xl text-xs font-light">
+                  You are not currently enrolled in any active curricula. Head over to the <strong className="text-brand-black cursor-pointer underline font-medium font-semibold" onClick={() => setActiveSubTab('register')}>Register Courses</strong> tab to join classes.
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  {enrolledCoursesForProg.map(course => {
+                    const courseTasks = assignments.filter(a => a.courseId === course.id);
+                    const gradedTasks = courseTasks.filter(a => a.status === 'graded');
+                    const hasAssignments = courseTasks.length > 0;
+                    
+                    const isFullyGraduated = certs.some(c => c.curriculumTitle === course.title);
+                    const requirementsMatched = hasAssignments && (gradedTasks.length === courseTasks.length);
+                    const completionPercent = hasAssignments ? Math.round((gradedTasks.length / courseTasks.length) * 100) : (isFullyGraduated ? 100 : 0);
+
+                    return (
+                      <div key={course.id} className="border border-zinc-100 rounded-xl p-4 md:p-5 bg-zinc-50/20 hover:bg-white transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        
+                        <div className="space-y-3 flex-1 w-full">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-10 rounded-lg overflow-hidden shrink-0 border border-zinc-100">
+                              <img 
+                                src={getCourseImage(course.category, course.title, course.imageUrl)} 
+                                alt={course.title} 
+                                referrerPolicy="no-referrer"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div>
+                              <h4 className="text-xs font-bold text-brand-black truncate max-w-[280px] md:max-w-[360px] leading-tight">
+                                {course.title}
+                              </h4>
+                              <p className="text-[10px] text-zinc-400 font-mono">
+                                Mentor: <strong className="text-zinc-650 font-medium">{course.trainerName}</strong> • {course.durationWeeks} Weeks
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <div className="flex justify-between items-center text-[10px]">
+                              <span className="text-zinc-500 font-light flex items-center gap-1">
+                                {hasAssignments ? (
+                                  <>
+                                    <span className="font-semibold">{gradedTasks.length} of {courseTasks.length}</span> assignments evaluated
+                                  </>
+                                ) : (
+                                  <span className="text-amber-600 font-medium flex items-center gap-1">
+                                    <AlertCircle size={10} /> No curriculum projects initialized yet
+                                  </span>
+                                )}
+                              </span>
+                              <span className="font-semibold text-brand-black">{completionPercent}%</span>
+                            </div>
+                            
+                            <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full transition-all duration-500 ${
+                                  completionPercent === 100 ? 'bg-emerald-500' : 'bg-brand-yellow'
+                                }`}
+                                style={{ width: `${completionPercent}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="shrink-0 flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+                          {!hasAssignments && (
+                            <button
+                              type="button"
+                              id={`initialize-tasks-btn-${course.id}`}
+                              onClick={() => handleInitializeDemoAssignments(course)}
+                              className="text-[9.5px] font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
+                            >
+                              <Sparkles size={11} /> Allocate Course Projects
+                            </button>
+                          )}
+
+                          {hasAssignments && !requirementsMatched && (
+                            <button
+                              type="button"
+                              id={`quick-autograde-btn-${course.id}`}
+                              onClick={() => handleQuickAutogradeTasks(course)}
+                              className="text-[9px] text-zinc-500 hover:text-brand-black bg-zinc-100 hover:bg-zinc-200 font-mono px-2.5 py-1.5 rounded-lg border border-zinc-200 transition-colors cursor-pointer flex items-center gap-1"
+                              title="Quickly complete and grade all coursework for instant testing"
+                            >
+                              <CheckCircle2 size={10} className="text-emerald-500" /> Fast Grade (Test PDF)
+                            </button>
+                          )}
+
+                          {(requirementsMatched || isFullyGraduated || completionPercent === 100) ? (
+                            <button
+                              type="button"
+                              id={`claim-download-cert-${course.id}`}
+                              onClick={() => handleClaimAndDownloadCertificate(course)}
+                              className="w-full md:w-auto text-[10px] uppercase tracking-wider font-bold text-brand-black bg-brand-yellow hover:bg-zinc-900 hover:text-brand-yellow font-sans px-4 py-2.5 rounded-xl transition-all shadow-2xs hover:scale-[1.02] flex items-center justify-center gap-1.5 cursor-pointer"
+                            >
+                              <Award size={12} className="shrink-0" /> Download PDF Degree
+                            </button>
+                          ) : (
+                            <div className="bg-zinc-100 border border-zinc-150 text-zinc-400 uppercase font-medium text-[9px] tracking-wider px-3.5 py-2 rounded-xl flex items-center gap-1 cursor-not-allowed select-none">
+                              <Lock size={10} /> Pending Milestones
+                            </div>
+                          )}
+                        </div>
+
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
             <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs">
               <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase mb-4 flex items-center gap-1.5 font-light">
                 <FileCheck size={13} className="text-brand-yellow" /> Course Assignments & Grades
@@ -1045,6 +1403,14 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
 
             {/* Actions bottom */}
             <div className="mt-6 flex justify-end gap-2.5">
+              <button
+                id="download-cert-pdf-direct-btn"
+                type="button"
+                onClick={() => handleDownloadCertificatePDF(selectedCertToPrint)}
+                className="flex items-center gap-1.5 bg-brand-yellow hover:bg-zinc-900 hover:text-brand-yellow text-brand-black transition-all rounded-xl text-xs font-semibold uppercase tracking-wide px-4 py-2.5 cursor-pointer shadow-xs focus-ring"
+              >
+                <Award size={13} className="text-brand-black shrink-0" /> Download PDF Degree
+              </button>
               <button
                 id="do-print-cert-btn"
                 onClick={() => window.print()}
