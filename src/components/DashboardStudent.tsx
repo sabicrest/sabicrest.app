@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Assignment, Certificate, Curriculum, CourseEnrollment } from '../types';
 import { db } from '../db';
+import VerifiedBadge from './VerifiedBadge';
 import { 
   Award, BookOpen, Clock, FileText, CheckCircle2, ChevronRight, Upload, Link, AlertCircle, 
   FileCheck, Printer, Settings, User as UserIcon, Mail, Phone, MapPin, Sliders, Bell, 
@@ -24,6 +25,11 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
   const [certs, setCerts] = useState<Certificate[]>(
     db.getCertificates().filter(c => c.studentId === currentUser.id)
   );
+
+  const isTrainerVerified = (trainerName: string) => {
+    const trainer = db.getUsers().find(u => u.name?.trim().toLowerCase() === trainerName?.trim().toLowerCase() && u.role === 'trainer');
+    return trainer ? trainer.verified : false;
+  };
 
   // Sub Tab states
   const [activeSubTab, setActiveSubTab] = useState<'assignments' | 'register'>('assignments');
@@ -710,7 +716,7 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
                       </div>
 
                       <h4 className="text-xs font-semibold text-brand-black pr-4 leading-tight">{cert.curriculumTitle}</h4>
-                      <p className="text-[10px] text-brand-gray font-light mt-1">Certified by: <strong>{cert.trainerName}</strong></p>
+                      <p className="text-[10px] text-brand-gray font-light mt-1 flex items-center flex-wrap gap-1">Certified by: <strong>{cert.trainerName}</strong>{isTrainerVerified(cert.trainerName) && <VerifiedBadge />}</p>
                       
                       <span className="text-[8px] font-mono text-zinc-300 block mt-2 pt-2 border-t border-zinc-50 truncate">
                         Certificate ID: {cert.hash}
@@ -748,7 +754,7 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
               Join New Classes // <span className="font-semibold text-brand-yellow">Available Courses</span>
             </h3>
             <p className="text-xs text-brand-gray font-light mb-4">
-              Sign up for our classes below. When you join, we will give you beginner projects, and your teacher will help check your work and keep track of your progress here.
+              Sign up for our classes below. When you join, we will give you beginner projects, and your Trainer will help check your work and keep track of your progress here.
             </p>
 
             {/* Courses/Catalog Search Input */}
@@ -758,7 +764,7 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
               </span>
               <input
                 type="text"
-                placeholder="Type course name, teacher or syllabus category to search..."
+                placeholder="Type course name, Trainer or syllabus category to search..."
                 value={coursesSearchQuery}
                 onChange={(e) => setCoursesSearchQuery(e.target.value)}
                 className="w-full bg-zinc-50 border border-zinc-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-brand-black placeholder-zinc-400 focus:outline-hidden focus:border-brand-yellow font-light"
@@ -824,8 +830,9 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
 
                     <div className="pt-3 border-t border-zinc-50 flex items-center justify-between gap-1">
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-zinc-400 font-light truncate">
+                        <span className="text-[10px] text-zinc-400 font-light truncate flex items-center gap-1.5 flex-wrap">
                           Trainer: <strong className="text-zinc-700">{course.trainerName}</strong>
+                          {isTrainerVerified(course.trainerName) && <VerifiedBadge />}
                         </span>
                         <span className="text-[11px] font-semibold text-zinc-900 font-mono mt-0.5">
                           ₦{(course.price || 35000).toLocaleString()}
@@ -990,7 +997,7 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
               <div className="grid grid-cols-2 gap-4 mt-8 pt-6 border-t border-zinc-100 text-left text-xs font-light max-w-lg mx-auto">
                 <div>
                   <span className="text-[9px] uppercase font-semibold text-brand-gray block">Certified Trainer</span>
-                  <span className="text-brand-black">{selectedCertToPrint.trainerName}</span>
+                  <span className="text-brand-black flex items-center gap-1">{selectedCertToPrint.trainerName}{isTrainerVerified(selectedCertToPrint.trainerName) && <VerifiedBadge />}</span>
                 </div>
                 <div>
                   <span className="text-[9px] uppercase font-semibold text-brand-gray block">Issue Date</span>
@@ -1068,7 +1075,7 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
                   <strong className="text-brand-black text-sm text-[13px] font-mono font-bold">₦{(selectedCourse.price || 35000).toLocaleString()}</strong>
                 </div>
                 <div className="md:col-span-3 pt-2 mt-2 border-t border-zinc-100 flex items-center justify-between text-zinc-500">
-                  <span>Trainer: <strong className="text-brand-black font-medium">{selectedCourse.trainerName}</strong></span>
+                  <span className="flex items-center gap-1.5 flex-wrap">Trainer: <strong className="text-brand-black font-medium">{selectedCourse.trainerName}</strong>{isTrainerVerified(selectedCourse.trainerName) && <VerifiedBadge />}</span>
                   <span className="bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded text-[10px] font-mono">{selectedCourse.category}</span>
                 </div>
               </div>

@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Assignment, Curriculum } from '../types';
 import { db } from '../db';
+import VerifiedBadge from './VerifiedBadge';
 import { 
   BookOpen, FileText, CheckCircle2, Award, ClipboardCheck, Sparkles, Plus, AlertCircle, 
   FileCheck, HelpCircle, Settings, Sliders, Bell, User as UserIcon, Mail, Phone, MapPin, Activity, X, Search, ArrowUpRight,
@@ -387,8 +388,9 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
           <span className="text-[10px] uppercase font-mono tracking-widest bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full border border-zinc-700">
             Welcome back
           </span>
-          <h2 className="text-2xl md:text-3xl font-light tracking-tight">
+          <h2 className="text-2xl md:text-3xl font-light tracking-tight flex items-center gap-1.5 flex-wrap">
             Trainer dashboard // <span className="font-semibold text-brand-yellow">{currentUser.name}</span>
+            {currentUser.verified && <VerifiedBadge />}
           </h2>
           <p className="text-xs text-zinc-400 font-light leading-relaxed">
             Propose core courses, review student submissions, and grade completed works.
@@ -455,27 +457,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
       </div>
 
       {/* Prominent Trainer Verification Journey Status Indicator */}
-      {currentUser.verified ? (
-        <div id="trainer-verified-compact-banner" className="bg-emerald-50 border border-emerald-100 rounded-3xl p-5 mb-8 flex flex-col sm:flex-row sm:items-center justify-between text-left gap-4 animate-in fade-in duration-250">
-          <div className="flex items-start gap-3.5">
-            <div className="bg-emerald-500 text-white p-2.5 rounded-2xl shadow-xs mt-0.5 shrink-0">
-              <Check className="w-4 h-4 font-extrabold text-white" />
-            </div>
-            <div>
-              <h4 className="text-xs font-semibold text-emerald-950 leading-tight">Verified Sabicrest Teacher Profile</h4>
-              <p className="text-[11px] text-emerald-800/80 font-light mt-1 max-w-2xl leading-relaxed">
-                Your previous work, sample lessons, and quick teaching video have been verified by the Sabicrest team! You can now propose new classes, create courses, and enroll students.
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowVerificationPortal(true)}
-            className="bg-emerald-800 hover:bg-emerald-900 text-white font-medium text-[10px] uppercase tracking-wider px-3.5 py-2 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 shrink-0 self-start sm:self-center"
-          >
-            <Sparkles size={11} className="text-brand-yellow" /> View Verification Details
-          </button>
-        </div>
-      ) : (
+      {!currentUser.verified && (
         <div id="trainer-verification-status-banner" className="bg-amber-50/70 border border-amber-200/60 rounded-3xl p-5 mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-5 text-left animate-in fade-in duration-250">
           <div className="space-y-1.5 max-w-4xl">
             <span className="text-[9px] uppercase font-mono tracking-widest bg-amber-100 text-amber-805 px-2.5 py-0.5 rounded-md border border-amber-200 inline-block font-semibold">
@@ -485,7 +467,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
               <Unlock size={14} className="text-amber-600" /> Unlock Course Propose Capabilities
             </h3>
             <p className="text-xs text-zinc-650 font-light leading-relaxed">
-              To make sure standard students receive awesome training across Sabicrest, all teachers are asked to complete three quick steps. It takes less than 10 minutes.
+              To make sure standard students receive awesome training across Sabicrest, all trainers are asked to complete three quick steps. It takes less than 10 minutes.
             </p>
             
             {/* Horizontal step indicators tracking progress */}
@@ -588,10 +570,10 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
             </div>
           </div>
           <div className="text-3xl font-light text-brand-black tracking-tight">
-            <span>{coachedStudentsCount}</span>
-            <span className="text-xs text-indigo-600 ml-2 font-light">Students</span>
-          </div>
-          <p className="text-[10px] font-light text-brand-gray mt-2">Connecting students and teachers together for learning and sharing work.</p>
+              <span>{coachedStudentsCount}</span>
+              <span className="text-xs text-indigo-600 ml-2 font-light">Students</span>
+            </div>
+            <p className="text-[10px] font-light text-brand-gray mt-2">Connecting students and trainers together for learning and sharing work.</p>
         </div>
 
       </div>
@@ -1049,7 +1031,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
             {/* Verification Status Settings Card */}
             <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs space-y-4">
               <h4 className="text-xs font-semibold uppercase tracking-wider text-brand-black border-b border-zinc-50 pb-2 flex items-center gap-1.5 font-light">
-                <Shield size={13} className="text-brand-yellow" /> Teacher Verification Status
+                <Shield size={13} className="text-brand-yellow" /> Trainer Verification Status
               </h4>
 
               <div className="space-y-3.5 pt-1">
@@ -1558,7 +1540,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
             <div className="flex justify-between items-start pb-4 border-b border-zinc-150/50">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="bg-amber-100 text-amber-800 text-[9px] tracking-wider uppercase px-2.5 py-0.5 rounded-full font-mono font-bold">Teacher Hub</span>
+                  <span className="bg-amber-100 text-amber-800 text-[9px] tracking-wider uppercase px-2.5 py-0.5 rounded-full font-mono font-bold">Trainer Hub</span>
                   <span className="text-zinc-300">//</span>
                   <span className="text-[10px] text-zinc-400 font-mono">ID: {currentUser.id.substring(0, 8)}</span>
                 </div>
@@ -2211,7 +2193,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                   {/* Summary grid */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs font-light">
                     <div className="bg-white p-3 rounded-xl border border-zinc-150">
-                      <span className="text-[9px] uppercase font-bold text-zinc-450 block font-mono">1. Teacher Name</span>
+                      <span className="text-[9px] uppercase font-bold text-zinc-450 block font-mono">1. Trainer Name</span>
                       <strong className="text-zinc-800 block text-[11px] mt-0.5 truncate">{currentUser.name}</strong>
                       <span className="text-[9px] text-zinc-400 block truncate">{currentUser.email}</span>
                     </div>
@@ -2257,10 +2239,10 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                   <div className="bg-amber-50/50 border border-amber-250/50 rounded-2xl p-5 space-y-3">
                     <div className="flex items-center gap-2">
                       <Shield className="text-amber-600 w-4 h-4 fill-amber-100" />
-                      <h5 className="text-[11px] uppercase font-mono tracking-wider font-bold text-zinc-850">Teacher Verification Override Panel (For Testing)</h5>
+                      <h5 className="text-[11px] uppercase font-mono tracking-wider font-bold text-zinc-850">Trainer Verification Override Panel (For Testing)</h5>
                     </div>
                     <p className="text-[11px] text-zinc-650 font-light">
-                      To help you quickly test this application from start to finish, you can click the button below to instantly approve this account as a verified teacher!
+                      To help you quickly test this application from start to finish, you can click the button below to instantly approve this account as a verified trainer!
                     </p>
 
                     <div className="flex flex-wrap gap-2 pt-1 font-mono">
@@ -2290,7 +2272,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                         }}
                         className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-[10px] uppercase tracking-wider px-4 py-2.5 rounded-xl cursor-pointer transition-colors inline-flex items-center gap-1.5"
                       >
-                        <Check size={11} className="stroke-[3]" /> Approve Teacher Instantly
+                        <Check size={11} className="stroke-[3]" /> Approve Trainer Instantly
                       </button>
 
                       <button
@@ -2323,7 +2305,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
             {/* Bottom Controls */}
             <div className="pt-4 flex justify-between items-center bg-white">
               <span className="text-[10px] text-zinc-400 font-mono">
-                {verificationData.status === 'approved' ? '✓ Registered Sabicrest Instructor' : 'Vetting state: ' + verificationData.status.toUpperCase()}
+                {verificationData.status === 'approved' ? '✓ Registered Sabicrest Trainer' : 'Vetting state: ' + verificationData.status.toUpperCase()}
               </span>
 
               <button

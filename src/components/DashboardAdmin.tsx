@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Curriculum, CourseEnrollment, AdminActivity } from '../types';
 import { db } from '../db';
+import VerifiedBadge from './VerifiedBadge';
 import { Shield, Sparkles, BookOpen, UserCheck, Settings, Server, CheckSquare, XCircle, ToggleLeft, ToggleRight, Radio, RefreshCw, KeyRound, Clock, AlertCircle, X, Award, ClipboardCheck, Activity, Search, ArrowUpRight } from 'lucide-react';
 
 interface DashboardAdminProps {
@@ -816,7 +817,7 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
                           </div>
                         )}
                         <div>
-                          <p className="font-semibold text-brand-black leading-none">{user.name}</p>
+                          <p className="font-semibold text-brand-black leading-none flex items-center gap-1.5">{user.name}{user.role === 'trainer' && user.verified && <VerifiedBadge />}</p>
                           <p className="text-[9px] text-zinc-400 font-mono leading-none mt-1">{user.email}</p>
                         </div>
                       </td>
@@ -960,12 +961,12 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
             <div className="space-y-4">
               <div className="bg-zinc-50 p-3.5 rounded-xl text-xs font-light text-zinc-500 leading-relaxed border border-zinc-100">
                 <span className="font-semibold text-brand-black block mb-1 text-[11px]">Course Approvals</span>
-                Check that a course has good lessons and tasks before letting it launch. If a course is not ready, tell the teacher what they can do to fix it.
+                Check that a course has good lessons and tasks before letting it launch. If a course is not ready, tell the Trainer what they can do to fix it.
               </div>
 
               <div className="bg-zinc-50 p-3.5 rounded-xl text-xs font-light text-zinc-500 leading-relaxed border border-zinc-100">
-                <span className="font-semibold text-brand-black block mb-1 text-[11px]">Teacher Verification</span>
-                Teachers can design classes once they are approved. Make sure we check their background information before approving them.
+                <span className="font-semibold text-brand-black block mb-1 text-[11px]">Trainer Verification</span>
+                Trainers can design classes once they are approved. Make sure we check their background information before approving them.
               </div>
 
               <div className="bg-zinc-55 p-3.5 rounded-xl text-xs font-light text-zinc-500 leading-relaxed border border-zinc-100">

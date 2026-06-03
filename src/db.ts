@@ -305,11 +305,23 @@ export class AppwriteDatabase {
       // Sync Messages
       try {
         const res = await this.proxyList('messages');
-        if (res && res.documents) {
-          this.messages = res.documents.map((doc: any) => {
+        if (res && res.documents && res.documents.length > 0) {
+          const syncedMessages = res.documents.map((doc: any) => {
             const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
             return { id: $id, ...data } as any;
           });
+          
+          const merged = [...this.messages];
+          syncedMessages.forEach((remoteMsg: Message) => {
+            const idx = merged.findIndex(m => m.id === remoteMsg.id);
+            if (idx >= 0) {
+              merged[idx] = remoteMsg;
+            } else {
+              merged.push(remoteMsg);
+            }
+          });
+          this.messages = merged;
+          this.saveToStorage();
         }
       } catch (err) {
         console.warn('Appwrite sync error [messages]:', err);
@@ -318,8 +330,8 @@ export class AppwriteDatabase {
       // Sync Hub Messages
       try {
         const res = await this.proxyList('hub_messages');
-        if (res && res.documents) {
-          this.hubMessages = res.documents.map((doc: any) => {
+        if (res && res.documents && res.documents.length > 0) {
+          const syncedHub = res.documents.map((doc: any) => {
             const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
             let parsedReactions = {};
             if (typeof data.reactions === 'string') {
@@ -329,6 +341,18 @@ export class AppwriteDatabase {
             }
             return { id: $id, ...data, reactions: parsedReactions } as any;
           });
+          
+          const merged = [...this.hubMessages];
+          syncedHub.forEach((remoteMsg: HubMessage) => {
+            const idx = merged.findIndex(m => m.id === remoteMsg.id);
+            if (idx >= 0) {
+              merged[idx] = remoteMsg;
+            } else {
+              merged.push(remoteMsg);
+            }
+          });
+          this.hubMessages = merged;
+          this.saveToStorage();
         }
       } catch (err) {
         console.warn('Appwrite sync error [hub_messages]:', err);

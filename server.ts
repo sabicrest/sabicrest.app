@@ -27,8 +27,10 @@ async function startServer() {
       const targetEmail = email.trim().toLowerCase();
       let isRegisteredInAuth = false;
 
-      // 1. Check if the user exists in Appwrite Auth list
-      if (appwriteApiKey) {
+      // Seed admin bypass
+      if (targetEmail === 'officialsabicrest@gmail.com') {
+        isRegisteredInAuth = true;
+      } else if (appwriteApiKey) {
         try {
           const authUsersUrl = `${appwriteEndpoint}/users?search=${encodeURIComponent(targetEmail)}`;
           const authRes = await fetch(authUsersUrl, {
@@ -67,30 +69,34 @@ async function startServer() {
 
       // 2. Check if the email exists in the Appwrite database "users" collection
       let isRegisteredInDatabase = false;
-      try {
-        const dbUsersUrl = `${appwriteEndpoint}/databases/${appwriteDatabaseId}/collections/users/documents?limit=100`;
-        const dbHeaders: Record<string, string> = {
-          'X-Appwrite-Project': appwriteProjectId,
-          'Content-Type': 'application/json',
-        };
-        if (appwriteApiKey) {
-          dbHeaders['X-Appwrite-Key'] = appwriteApiKey;
-        }
-
-        const dbRes = await fetch(dbUsersUrl, { headers: dbHeaders });
-        if (dbRes.ok) {
-          const dbData = await dbRes.json();
-          const matchedDoc = dbData.documents?.find(
-            (u: any) => u.email?.toLowerCase().trim() === targetEmail
-          );
-          if (matchedDoc) {
-            isRegisteredInDatabase = true;
+      if (targetEmail === 'officialsabicrest@gmail.com') {
+        isRegisteredInDatabase = true;
+      } else {
+        try {
+          const dbUsersUrl = `${appwriteEndpoint}/databases/${appwriteDatabaseId}/collections/users/documents?limit=100`;
+          const dbHeaders: Record<string, string> = {
+            'X-Appwrite-Project': appwriteProjectId,
+            'Content-Type': 'application/json',
+          };
+          if (appwriteApiKey) {
+            dbHeaders['X-Appwrite-Key'] = appwriteApiKey;
           }
-        } else {
-          console.warn(`Appwrite users database query returned status: ${dbRes.status}`);
+
+          const dbRes = await fetch(dbUsersUrl, { headers: dbHeaders });
+          if (dbRes.ok) {
+            const dbData = await dbRes.json();
+            const matchedDoc = dbData.documents?.find(
+              (u: any) => u.email?.toLowerCase().trim() === targetEmail
+            );
+            if (matchedDoc) {
+              isRegisteredInDatabase = true;
+            }
+          } else {
+            console.warn(`Appwrite users database query returned status: ${dbRes.status}`);
+          }
+        } catch (dbErr: any) {
+          console.warn('Could not query Appwrite Database users list:', dbErr.message || dbErr);
         }
-      } catch (dbErr: any) {
-        console.warn('Could not query Appwrite Database users list:', dbErr.message || dbErr);
       }
 
       if (!isRegisteredInDatabase) {

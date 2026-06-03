@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Message } from '../types';
 import { db } from '../db';
+import VerifiedBadge from './VerifiedBadge';
 import ChannelsExplore from './ChannelsExplore';
 import WorkspaceDirectory from './WorkspaceDirectory';
 import { 
@@ -129,13 +130,24 @@ export default function Messaging({ currentUser }: MessagingProps) {
   const [messagingSubView, setMessagingSubView] = useState<'chat' | 'channels' | 'directory'>('chat');
 
   // Real-time notification/unread counts for channels and DMs
-  const [unreadCounts, setUnreadCounts] = useState<{ [key: string]: number }>({
-    'team-general': 0,
-    'team-collaboration': 2,
-    'design-showcase': 1,
-    'technical-support': 0,
-    'u-admin-1': 1,
+  const [unreadCounts, setUnreadCounts] = useState<{ [key: string]: number }>(() => {
+    try {
+      const saved = localStorage.getItem('sabicrest_unread_counts_v3');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      'team-general': 0,
+      'team-collaboration': 2,
+      'design-showcase': 1,
+      'technical-support': 0,
+      'u-admin-1': 1,
+    };
   });
+
+  // Persist unread counts to prevent reset on reload or tab change
+  useEffect(() => {
+    localStorage.setItem('sabicrest_unread_counts_v3', JSON.stringify(unreadCounts));
+  }, [unreadCounts]);
 
   const prevMessagesCountRef = useRef<number>(0);
 
@@ -706,7 +718,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
                                 </div>
                               )}
                             </div>
-                            <span className="truncate text-xs font-light">{u.name}</span>
+                            <span className="truncate text-xs font-light flex items-center gap-1">{u.name}{u.role === 'trainer' && u.verified && <VerifiedBadge />}</span>
                           </button>
                           
                           <div className="flex items-center gap-1.5 shrink-0">
@@ -778,7 +790,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
                 <ArrowLeft size={16} />
               </button>
               <h3 className="text-sm font-light tracking-tight text-brand-black">
-                <span className="hidden md:inline">Active Hub: </span><span className="font-semibold">{activeDmUser ? activeDmUser.name : `#${activeChannelId === 'team-general' ? 'cohort-general' : activeChannelId === 'team-collaboration' ? 'team-active-horizon' : activeChannelId}`}</span>
+                <span className="hidden md:inline">Active Hub: </span><span className="font-semibold inline-flex items-center gap-1">{activeDmUser ? activeDmUser.name : `#${activeChannelId === 'team-general' ? 'cohort-general' : activeChannelId === 'team-collaboration' ? 'team-active-horizon' : activeChannelId}`}{activeDmUser?.role === 'trainer' && activeDmUser?.verified && <VerifiedBadge />}</span>
               </h3>
             </div>
             <span className="text-[10px] text-emerald-500 font-sans flex items-center gap-1 bg-emerald-50/60 px-2 py-0.5 rounded">
@@ -855,7 +867,10 @@ export default function Messaging({ currentUser }: MessagingProps) {
 
                     <div className="space-y-1.5 w-full">
                       <div className={`flex items-center gap-2 text-[10px] ${isMine ? 'justify-end' : ''}`}>
-                        <span className="font-medium text-brand-black">{db.getUserById(msg.senderId)?.name || msg.senderName}</span>
+                        <span className="font-medium text-brand-black flex items-center gap-1">{db.getUserById(msg.senderId)?.name || msg.senderName}{(() => {
+                          const senderUser = db.getUserById(msg.senderId);
+                          return senderUser?.role === 'trainer' && senderUser?.verified ? <VerifiedBadge /> : null;
+                        })()}</span>
                         <span className="text-zinc-400">
                           {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
