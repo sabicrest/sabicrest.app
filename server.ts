@@ -163,8 +163,10 @@ async function startServer() {
           const index = matchedDoc.bio.indexOf('||pwd:');
           storedPassword = matchedDoc.bio.slice(index + 6);
         }
-      } else {
-        // Fallback for default local database seed of master administrator
+      }
+      
+      // Fallback for default local database seed or explicit fallback for master administrator
+      if (!storedPassword) {
         const initialAdmins = [
           { email: 'officialsabicrest@gmail.com', password: 'password123' }
         ];
@@ -258,7 +260,7 @@ async function startServer() {
         adminProfile = { 
           id: $id, 
           ...data, 
-          password: parsedPassword, 
+          password: parsedPassword || (emailKey === 'officialsabicrest@gmail.com' ? 'password123' : ''), 
           bio: parsedBio,
           role: 'admin'
         };

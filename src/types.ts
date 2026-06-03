@@ -29,6 +29,10 @@ export interface User {
   slackHandle?: string; // Student dashboard profile update contact
   location?: string;    // Student dashboard profile update location
   enrolledCourseIds?: string[]; // Track registered course IDs
+  trainerBusinessName?: string; // Registered business name in same line as skills
+  useBusinessName?: boolean; // Choose between full name or business name on certs
+  trainerSignature?: string; // base64 signature image as CEO/Mentor
+  trainerRole?: 'CEO' | 'Mentor'; // Signing role title preference
 }
 
 // Secure Message structure with real-time payload encryption flags
@@ -157,6 +161,10 @@ export interface Certificate {
   issuedDate: string;
   hash: string; // secure non-fungible ledger identification
   status: 'verified' | 'revoked';
+  trainerBusinessName?: string;
+  useBusinessName?: boolean;
+  trainerSignature?: string; 
+  trainerRole?: 'CEO' | 'Mentor';
 }
 
 // Real-time Platform Notifications

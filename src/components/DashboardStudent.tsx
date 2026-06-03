@@ -168,118 +168,234 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
         format: [842, 595]
       });
 
-      // Gold Outer Border
-      doc.setDrawColor(218, 165, 32); 
-      doc.setLineWidth(4);
-      doc.rect(20, 20, 802, 555); 
-      
-      // Charcoal Inner Border
-      doc.setDrawColor(39, 39, 42); 
+      // Try to read trainer settings from DB if we can, to capture live changes
+      const trainerUser = db.getUsers().find(u => u.role === 'trainer' && u.name === cert.trainerName);
+      const isBusinessShared = cert.useBusinessName || trainerUser?.useBusinessName || false;
+      const businessName = cert.trainerBusinessName || trainerUser?.trainerBusinessName || '';
+      const signaturePayload = cert.trainerSignature || trainerUser?.trainerSignature || '';
+      const capacityRole = cert.trainerRole || trainerUser?.trainerRole || 'Mentor';
+
+      // 1. Base Canvas Soft/Aesthetic Background Ivory Color Fill
+      doc.setFillColor(253, 252, 248);
+      doc.rect(0, 0, 842, 595, 'F');
+
+      // 2. Dual borders
+      // Charcoal/Navy Outer Border
+      doc.setDrawColor(24, 24, 27); 
+      doc.setLineWidth(1.5);
+      doc.rect(18, 18, 806, 559); 
+
+      // Bronze/Gold Inner Border
+      doc.setDrawColor(197, 160, 89); 
       doc.setLineWidth(1);
-      doc.rect(26, 26, 790, 543); 
+      doc.rect(23, 23, 796, 549); 
 
-      // Decorative Corner Accents
-      doc.setDrawColor(218, 165, 32);
-      doc.setLineWidth(2);
-      doc.line(15, 40, 40, 15);
-      doc.line(827, 40, 802, 15);
-      doc.line(15, 555, 40, 580);
-      doc.line(827, 555, 802, 580);
+      // 3. Antique Corner Ornament Brackets (Gold)
+      doc.setDrawColor(197, 160, 89);
+      doc.setLineWidth(1.5);
+      // Top-Left
+      doc.line(14, 35, 35, 14);
+      doc.line(23, 45, 45, 23);
+      // Top-Right
+      doc.line(828, 35, 807, 14);
+      doc.line(819, 45, 797, 23);
+      // Bottom-Left
+      doc.line(14, 560, 35, 581);
+      doc.line(23, 550, 45, 572);
+      // Bottom-Right
+      doc.line(828, 560, 807, 581);
+      doc.line(819, 550, 797, 572);
 
-      // Header Text
-      doc.setTextColor(39, 39, 42);
+      // 4. Main Headline Board - "SABICREST ACADEMY"
+      doc.setTextColor(15, 23, 42);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(28);
-      doc.text('SABICREST ACADEMY', 421, 85, { align: 'center' });
+      doc.text('SABICREST ACADEMY', 421, 75, { align: 'center' });
 
-      // Subtitle
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      doc.setTextColor(113, 113, 122);
-      doc.text('VERIFIED PORTAL OF PROFESSIONAL CREDENTIALS', 421, 102, { align: 'center' });
-
-      // Gold Star Emblem Seal
-      doc.setFillColor(218, 165, 32);
-      doc.setDrawColor(184, 134, 11);
+      // Subtle Underline Accent
+      doc.setDrawColor(197, 160, 89);
       doc.setLineWidth(1.5);
-      doc.circle(421, 155, 25, 'FD');
-      
-      doc.setTextColor(255, 255, 255);
+      doc.line(300, 85, 542, 85);
+
+      // 5. Partnership Statement label
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(115, 115, 115);
+      doc.text('IN OFFICIAL PROFESSIONAL COLLABORATION WITH', 421, 102, { align: 'center' });
+
+      // Collaborative Partner text (Use Business Name only if they have registered it)
+      const partnerText = isBusinessShared && businessName
+        ? `${businessName.toUpperCase()}`
+        : `${cert.trainerName.toUpperCase()}`;
+
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.text('★', 421, 161, { align: 'center' });
+      doc.setFontSize(15);
+      doc.setTextColor(197, 160, 89);
+      doc.text(partnerText, 421, 122, { align: 'center' });
 
-      // Certified Statement
-      doc.setFont('times', 'italic');
-      doc.setFontSize(14);
-      doc.setTextColor(113, 113, 122);
-      doc.text('This verified document certifies that', 421, 215, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(115, 115, 115);
+      doc.text('(REGISTERED PROFESSIONAL TRAINER AND MENTOR)', 421, 134, { align: 'center' });
 
-      // Student Name
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(32);
-      doc.setTextColor(15, 23, 42);
-      doc.text(cert.studentName.toUpperCase(), 421, 260, { align: 'center' });
-
-      // Name Line
-      doc.setDrawColor(228, 228, 231);
+      // 6. Star Gold Emblem Badge Logo Seal
+      doc.setFillColor(197, 160, 89);
+      doc.setDrawColor(161, 121, 51);
       doc.setLineWidth(1);
-      doc.line(250, 275, 592, 275);
-
-      // Successfully Completed Statement
-      doc.setFont('times', 'italic');
+      doc.circle(421, 175, 20, 'FD');
+      
+      doc.setTextColor(253, 252, 248);
+      doc.setFont('helvetica', 'bold');
       doc.setFontSize(14);
-      doc.setTextColor(113, 113, 122);
-      doc.text('has successfully demonstrated maximum competence and completed the professional syllabus for', 421, 310, { align: 'center' });
+      doc.text('★', 421, 180, { align: 'center' });
 
-      // Course Name
+      // 7. Statement of Honor / Award Address
+      doc.setFont('times', 'italic');
+      doc.setFontSize(13);
+      doc.setTextColor(82, 82, 91);
+      doc.text('This verified professional certificate is jointly awarded to', 421, 218, { align: 'center' });
+
+      // Recipient Graduate Name - Bold & Distinctive
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(22);
-      doc.setTextColor(218, 165, 32);
-      doc.text(cert.curriculumTitle, 421, 345, { align: 'center' });
+      doc.setFontSize(28);
+      doc.setTextColor(15, 23, 42);
+      doc.text(cert.studentName.toUpperCase(), 421, 252, { align: 'center' });
 
-      // Divider Line
+      // Graduate Name Underline Accent
+      doc.setDrawColor(228, 228, 231);
+      doc.setLineWidth(1.2);
+      doc.line(220, 262, 622, 262);
+
+      // Completion Statement
+      doc.setFont('times', 'italic');
+      doc.setFontSize(12);
+      doc.setTextColor(82, 82, 91);
+      doc.text('for exceptional commitment, caliber, and full completion of the industry accredited curriculum', 421, 282, { align: 'center' });
+
+      // Curriculum Course Title (Accent color)
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(20);
+      doc.setTextColor(197, 160, 89);
+      doc.text(cert.curriculumTitle.toUpperCase(), 421, 312, { align: 'center' });
+
+      // Audit identifiers
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(161, 161, 170);
+      doc.text(`Official Graduation Date: ${cert.issuedDate}  |  Platform Audit ID: SC-${cert.hash.substring(0, 12).toUpperCase()}`, 421, 332, { align: 'center' });
+
+      // Thin separator before signatures
       doc.setDrawColor(244, 244, 245);
-      doc.line(150, 395, 692, 395);
+      doc.setLineWidth(1);
+      doc.line(100, 348, 742, 348);
 
-      // Left Column - Mentor
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
+      // 8. Signature columns (Symmetric 4 Column Grid)
+      // Columns: [Founder 1] [Founder 2] [Founder 3] [Trainer / Mentor / CEO]
+      // Coordinates: Col 1: 135, Col 2: 325, Col 3: 515, Col 4: 705
+
+      // Subscripts base settings
+      doc.setFontSize(8);
       doc.setTextColor(39, 39, 42);
-      const mentorX = 230;
-      doc.text(cert.trainerName, mentorX, 440, { align: 'center' });
-      
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.setTextColor(113, 113, 122);
-      doc.text('AUTHORIZED MENTOR', mentorX, 452, { align: 'center' });
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(16, 185, 129);
-      doc.text('VERIFIED TUTOR', mentorX, 464, { align: 'center' });
 
-      // Right Column - Date
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
-      doc.setTextColor(39, 39, 42);
-      const dateX = 612;
-      doc.text(cert.issuedDate, dateX, 440, { align: 'center' });
-      
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.setTextColor(113, 113, 122);
-      doc.text('DATE SECURED', dateX, 452, { align: 'center' });
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(59, 130, 246);
-      doc.text('SABICREST ACCREDITED', dateX, 464, { align: 'center' });
+      // COLUMN 1: Founder 1 Signature Space
+      doc.setDrawColor(197, 160, 89);
+      doc.setLineWidth(0.8);
+      doc.line(135 - 55, 410, 135 + 55, 410);
 
-      // Blockchain verification panel
+      doc.setFont('times', 'italic');
+      doc.setFontSize(9);
+      doc.setTextColor(161, 161, 170);
+      doc.text('Authorized Signature', 135, 400, { align: 'center' });
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(15, 23, 42);
+      doc.text('FOUNDER & MD', 135, 422, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(115, 115, 115);
+      doc.text('SABICREST ACADEMY', 135, 431, { align: 'center' });
+
+      // COLUMN 2: Founder 2 Signature Space
+      doc.setDrawColor(197, 160, 89);
+      doc.line(325 - 55, 410, 325 + 55, 410);
+
+      doc.setFont('times', 'italic');
+      doc.setFontSize(9);
+      doc.setTextColor(161, 161, 170);
+      doc.text('Authorized Signature', 325, 400, { align: 'center' });
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(15, 23, 42);
+      doc.text('CO-FOUNDER & COO', 325, 422, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(115, 115, 115);
+      doc.text('SABICREST ACADEMY', 325, 431, { align: 'center' });
+
+      // COLUMN 3: Founder 3 Signature Space
+      doc.setDrawColor(197, 160, 89);
+      doc.line(515 - 55, 410, 515 + 55, 410);
+
+      doc.setFont('times', 'italic');
+      doc.setFontSize(9);
+      doc.setTextColor(161, 161, 170);
+      doc.text('Authorized Signature', 515, 400, { align: 'center' });
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(15, 23, 42);
+      doc.text('DIRECTOR OF DEGREES', 515, 422, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(115, 115, 115);
+      doc.text('SABICREST ACADEMY', 515, 431, { align: 'center' });
+
+      // COLUMN 4: Trainer/Mentor Signature (CEO or Mentor mode)
+      doc.setDrawColor(197, 160, 89);
+      doc.line(705 - 55, 410, 705 + 55, 410);
+
+      if (signaturePayload) {
+        try {
+          doc.addImage(signaturePayload, 'PNG', 705 - 45, 368, 90, 36);
+        } catch (imgErr) {
+          console.warn("Signature add failed:", imgErr);
+          doc.setFont('times', 'italic');
+          doc.setFontSize(11);
+          doc.setTextColor(197, 160, 89);
+          doc.text(cert.trainerName, 705, 400, { align: 'center' });
+        }
+      } else {
+        doc.setFont('times', 'italic');
+        doc.setFontSize(11);
+        doc.setTextColor(197, 160, 89);
+        doc.text(cert.trainerName, 705, 400, { align: 'center' });
+      }
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(15, 23, 42);
+      doc.text(cert.trainerName.toUpperCase(), 705, 422, { align: 'center' });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(115, 115, 115);
+      
+      const subscriptRole = isBusinessShared && businessName && capacityRole === 'CEO'
+        ? `CEO, ${businessName.toUpperCase()}`
+        : 'AUTHORIZED TRAINER & MENTOR';
+      
+      doc.text(subscriptRole, 705, 431, { align: 'center' });
+
+      // 9. Blockchain verification panel
       doc.setFillColor(244, 244, 245);
-      doc.rect(171, 495, 500, 30, 'F');
+      doc.rect(171, 480, 500, 26, 'F');
       
       doc.setFont('courier', 'normal');
-      doc.setFontSize(9);
+      doc.setFontSize(7.5);
       doc.setTextColor(113, 113, 122);
-      doc.text(`VERIFICATION HASH: ${cert.hash} (BLOCKCHAIN LEDGER AUDITED)`, 421, 513, { align: 'center' });
+      doc.text(`VERIFICATION LEDGER HASH: ${cert.hash} (AUDITED BY SABICREST SYNDICATE)`, 421, 496, { align: 'center' });
 
       // Execute Download
       doc.save(`SABICREST_CERTIFICATE_${cert.studentName.replace(/\s+/g, '_')}_${cert.curriculumTitle.replace(/\s+/g, '_')}.pdf`);

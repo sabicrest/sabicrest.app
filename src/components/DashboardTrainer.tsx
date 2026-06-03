@@ -37,6 +37,10 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
   const [profileSlack, setProfileSlack] = useState(currentUser.slackHandle || '');
   const [profileBio, setProfileBio] = useState(currentUser.bio || '');
   const [profileSpecialty, setProfileSpecialty] = useState(currentUser.location || 'Senior Spatial UI Designer');
+  const [profileBusinessName, setProfileBusinessName] = useState(currentUser.trainerBusinessName || '');
+  const [useBusinessName, setUseBusinessName] = useState(currentUser.useBusinessName || false);
+  const [profileSignature, setProfileSignature] = useState(currentUser.trainerSignature || '');
+  const [trainerRole, setTrainerRole] = useState<'CEO' | 'Mentor'>(currentUser.trainerRole || 'Mentor');
 
   // Custom Preferences
   const [prefEmailAlerts, setPrefEmailAlerts] = useState(true);
@@ -180,6 +184,10 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
     setProfileSlack(currentUser.slackHandle || '');
     setProfileBio(currentUser.bio || '');
     setProfileSpecialty(currentUser.location || 'Senior Spatial UI Designer');
+    setProfileBusinessName(currentUser.trainerBusinessName || '');
+    setUseBusinessName(currentUser.useBusinessName || false);
+    setProfileSignature(currentUser.trainerSignature || '');
+    setTrainerRole(currentUser.trainerRole || 'Mentor');
   }, [currentUser]);
 
   useEffect(() => {
@@ -216,7 +224,11 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
       phone: profilePhone,
       slackHandle: profileSlack,
       location: profileSpecialty,
-      bio: profileBio
+      bio: profileBio,
+      trainerBusinessName: profileBusinessName,
+      useBusinessName: useBusinessName,
+      trainerSignature: profileSignature,
+      trainerRole: trainerRole
     };
 
     try {
@@ -384,6 +396,25 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
       if (event.target?.result) {
         setCurrImageUrl(event.target.result as string);
         showToast("Cover image loaded successfully!");
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSignatureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast("Only image files are allowed!");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setProfileSignature(event.target.result as string);
+        showToast("Signature loaded successfully! Click Save Profile below to persist.");
       }
     };
     reader.readAsDataURL(file);
@@ -1145,6 +1176,129 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                   onChange={(e) => setProfileBio(e.target.value)}
                   className="w-full min-h-24 text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow resize-none"
                 ></textarea>
+              </div>
+
+              <div id="sabicrest-branding-options-section" className="pt-6 border-t border-zinc-100 space-y-4">
+                <div>
+                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-brand-black flex items-center gap-1.5">
+                    <Award size={14} className="text-brand-yellow" /> Sabicrest Collaboration & Official Branding Settings
+                  </h4>
+                  <p className="text-[11px] text-zinc-400 font-light mt-0.5">
+                    Configure your verified registered business partnership and choose how your credentials/title display on student certificates.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">Registered Business Name (If applicable)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. DesignCrest Solutions Ltd."
+                      value={profileBusinessName}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setProfileBusinessName(val);
+                        if (!val) {
+                          setUseBusinessName(false);
+                          setTrainerRole('Mentor');
+                        }
+                      }}
+                      className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow"
+                    />
+                    <span className="text-[9px] text-zinc-400 font-light mt-1 block leading-snug">
+                      Must be a registered business in the same line as your teaching skill to enable collaboration certificate mode.
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1.5">Certificate Identity Mode</label>
+                    <div className="space-y-2 pt-1">
+                      <label className="flex items-center gap-2 text-xs font-light cursor-pointer select-none">
+                        <input
+                          type="radio"
+                          name="certIdentityMode"
+                          checked={!useBusinessName}
+                          onChange={() => setUseBusinessName(false)}
+                          className="accent-brand-yellow"
+                        />
+                        <span>Sabicrest in collaboration with <strong className="font-semibold">{profileName}</strong> (as Mentor)</span>
+                      </label>
+                      <label className={`flex items-center gap-2 text-xs font-light select-none ${profileBusinessName ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
+                        <input
+                          type="radio"
+                          name="certIdentityMode"
+                          checked={useBusinessName}
+                          disabled={!profileBusinessName}
+                          onChange={() => setUseBusinessName(true)}
+                          className="accent-brand-yellow"
+                        />
+                        <span>
+                          Sabicrest in collaboration with <strong className="font-semibold">{profileBusinessName || '[Enter Business Name First]'}</strong>
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1.5">Official Title / Capacity</label>
+                    <select
+                      value={trainerRole}
+                      onChange={(e) => setTrainerRole(e.target.value as 'CEO' | 'Mentor')}
+                      className="w-full text-xs font-light bg-brand-light/50 border border-zinc-150 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow"
+                    >
+                      <option value="Mentor">Authorized Mentor</option>
+                      {profileBusinessName && (
+                        <option value="CEO">CEO of {profileBusinessName}</option>
+                      )}
+                    </select>
+                    <span className="text-[9px] text-zinc-400 font-light mt-1 block">
+                      Determines the subscript subscript text shown underneath your signature line on official PDF certificates.
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1.5">Official Digital Signature</label>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <label className="flex flex-col items-center justify-center border border-dashed border-zinc-200 hover:border-brand-yellow bg-zinc-50 hover:bg-white rounded-xl p-3 cursor-pointer transition-all">
+                          <Upload size={14} className="text-zinc-405 mb-1" />
+                          <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider">Upload PNG/JPG</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleSignatureUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                      
+                      <div className="w-28 h-14 bg-white border border-zinc-100 rounded-xl flex flex-col items-center justify-center p-1 relative overflow-hidden select-none">
+                        {profileSignature ? (
+                          <>
+                            <img
+                              src={profileSignature}
+                              alt="Signature Preview"
+                              className="max-h-full max-w-full object-contain pointer-events-none"
+                              referrerPolicy="no-referrer"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setProfileSignature('')}
+                              className="absolute top-0.5 right-0.5 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-650 transition-colors cursor-pointer"
+                              title="Clear Signature"
+                            >
+                              <X size={8} />
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-[7.5px] text-zinc-400 font-mono text-center">Unsigned Digital Key</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="pt-4 border-t border-zinc-50">

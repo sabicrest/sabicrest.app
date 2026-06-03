@@ -879,7 +879,33 @@ export class AppwriteDatabase {
     return this.certificates;
   }
 
-  issueCertificate(studentId: string, studentName: string, curriculumTitle: string, trainerName: string): Certificate {
+  issueCertificate(
+    studentId: string, 
+    studentName: string, 
+    curriculumTitle: string, 
+    trainerName: string,
+    trainerBusinessName?: string,
+    useBusinessName?: boolean,
+    trainerSignature?: string,
+    trainerRole?: 'CEO' | 'Mentor'
+  ): Certificate {
+    let tBiz = trainerBusinessName;
+    let tUseBiz = useBusinessName;
+    let tSig = trainerSignature;
+    let tRole = trainerRole;
+
+    if (!tBiz || tUseBiz === undefined || !tSig) {
+      const trainerUser = this.users.find(u => u.role === 'trainer' && u.name === trainerName);
+      if (trainerUser) {
+        if (tBiz === undefined) tBiz = trainerUser.trainerBusinessName;
+        if (tUseBiz === undefined) tUseBiz = trainerUser.useBusinessName;
+        if (tSig === undefined) tSig = trainerUser.trainerSignature;
+        if (tRole === undefined) {
+          tRole = trainerUser.useBusinessName ? 'CEO' : 'Mentor';
+        }
+      }
+    }
+
     const newCert: Certificate = {
       id: `cert-${Date.now()}`,
       studentId,
@@ -888,7 +914,11 @@ export class AppwriteDatabase {
       trainerName,
       issuedDate: new Date().toISOString().split('T')[0],
       hash: generateTxHash(),
-      status: 'verified'
+      status: 'verified',
+      trainerBusinessName: tBiz,
+      useBusinessName: tUseBiz,
+      trainerSignature: tSig,
+      trainerRole: tRole || 'Mentor'
     };
     this.certificates.push(newCert);
     this.saveToStorage();
