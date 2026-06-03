@@ -7,10 +7,12 @@ import React, { useState, useEffect } from 'react';
 import { User, Assignment, Certificate, Curriculum, CourseEnrollment } from '../types';
 import { db } from '../db';
 import VerifiedBadge from './VerifiedBadge';
+import { getCourseImage } from '../utils/course';
 import { 
   Award, BookOpen, Clock, FileText, CheckCircle2, ChevronRight, Upload, Link, AlertCircle, 
   FileCheck, Printer, Settings, User as UserIcon, Mail, Phone, MapPin, Sliders, Bell, 
-  Compass, Radio, Heart, HelpCircle, Activity, CreditCard, Lock, X, ExternalLink, ShieldCheck, Coins, Search, ArrowUpRight
+  Compass, Radio, Heart, HelpCircle, Activity, CreditCard, Lock, X, ExternalLink, ShieldCheck, Coins, Search, ArrowUpRight,
+  ChevronDown, ChevronUp, Sparkles
 } from 'lucide-react';
 
 interface DashboardStudentProps {
@@ -779,7 +781,7 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {db.getCurricula()
                 .filter(c => c.status === 'approved')
                 .filter(course => 
@@ -790,93 +792,121 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
                 )
                 .map(course => {
                 const alreadyEnrolled = (currentUser.enrolledCourseIds || ['c-1']).includes(course.id);
+                const coverImage = getCourseImage(course.category, course.title, course.imageUrl);
                 return (
-                  <div key={course.id} className="border border-zinc-100 rounded-2xl p-5 hover:border-brand-yellow bg-zinc-50/10 hover:bg-white transition-all flex flex-col justify-between space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-start">
-                        <span className="text-[9px] font-mono uppercase bg-zinc-100 px-2 py-0.5 rounded text-zinc-500 font-medium">
-                          {course.category}
-                        </span>
-                        <span className="text-[10px] text-zinc-400 font-mono">
-                          {course.durationWeeks} Weeks
-                        </span>
+                  <div key={course.id} className="border border-zinc-150 rounded-2xl overflow-hidden hover:shadow-md bg-white hover:border-zinc-300 transition-all duration-300 flex flex-col justify-between group">
+                    <div className="space-y-0">
+                      {/* Course Card Visual Cover */}
+                      <div className="relative h-44 w-full bg-zinc-150 overflow-hidden">
+                        <img 
+                          src={coverImage} 
+                          alt={course.title}
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 ease-out"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-brand-black/40 via-transparent to-transparent" />
+                        <div className="absolute top-4 left-4 flex gap-2">
+                          <span className="bg-brand-black/80 backdrop-blur-xs text-[9px] text-white font-mono uppercase font-bold tracking-wider px-2.5 py-1 rounded-md">
+                            {course.category}
+                          </span>
+                          <span className="bg-white/90 backdrop-blur-xs text-[9px] text-zinc-800 font-mono font-medium px-2 py-1 rounded-md">
+                            {course.level || 'Intermediate'}
+                          </span>
+                        </div>
+                        <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center text-white">
+                          <span className="text-[10px] font-mono backdrop-blur-xs bg-brand-black/35 px-2 py-0.5 rounded-md flex items-center gap-1">
+                            <Clock size={10} className="text-brand-yellow" />
+                            {course.durationWeeks} Weeks
+                          </span>
+                        </div>
                       </div>
 
-                      <h4 className="text-sm font-semibold text-brand-black leading-tight">
-                        {course.title}
-                      </h4>
+                      {/* Content Area with Spacious Padding */}
+                      <div className="p-6 space-y-4">
+                        <div className="space-y-1.5 animate-in fade-in">
+                          <h4 className="text-base font-bold text-brand-black leading-snug tracking-tight group-hover:text-brand-yellow transition-colors">
+                            {course.title}
+                          </h4>
+                          <p className="text-xs text-brand-gray font-light leading-relaxed">
+                            {course.description}
+                          </p>
+                        </div>
 
-                      <p className="text-xs text-brand-gray font-light leading-relaxed">
-                        {course.description}
-                      </p>
-
-                      <div className="space-y-1.5 pt-2">
-                        <h5 className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Syllabus modules:</h5>
-                        <ul className="space-y-1">
-                          {course.modules.slice(0, 3).map((mod, i) => (
-                            <li key={i} className="text-[10px] text-zinc-550 font-mono flex items-center gap-1.5 truncate">
-                              <span className="w-1 h-1 rounded-full bg-brand-yellow shrink-0" />
-                              Week {i + 1}: {mod}
-                            </li>
-                          ))}
-                          {course.modules.length > 3 && (
-                            <li className="text-[9px] text-zinc-400 italic pl-2.5">
-                              + {course.modules.length - 3} more modules in syllabus
-                            </li>
-                          )}
-                        </ul>
+                        {/* Syllabus Outline Snippet */}
+                        <div className="space-y-2.5 pt-4 border-t border-zinc-100 bg-zinc-50/10 rounded-xl p-3">
+                          <h5 className="text-[9px] uppercase font-bold text-brand-gray tracking-widest flex items-center gap-1.5">
+                            <BookOpen size={11} className="text-brand-yellow" />
+                            Featured Syllabus Topics:
+                          </h5>
+                          <ul className="space-y-2">
+                            {course.modules.slice(0, 3).map((mod, i) => (
+                              <li key={i} className="text-[10.5px] text-zinc-650 font-sans flex items-start gap-2">
+                                <span className="text-[9px] font-mono leading-none bg-zinc-200 text-brand-black px-1 py-0.5 rounded font-bold mt-0.5 shrink-0">W{i + 1}</span>
+                                <span className="truncate">{mod}</span>
+                              </li>
+                            ))}
+                            {course.modules.length > 3 && (
+                              <li className="text-[9.5px] text-zinc-400 italic pl-8">
+                                + {course.modules.length - 3} more modules in comprehensive syllabus
+                              </li>
+                            )}
+                          </ul>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t border-zinc-50 flex items-center justify-between gap-1">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-zinc-400 font-light truncate flex items-center gap-1.5 flex-wrap">
-                          Trainer: <strong className="text-zinc-700">{course.trainerName}</strong>
-                          {isTrainerVerified(course.trainerName) && <VerifiedBadge />}
-                        </span>
-                        <span className="text-[11px] font-semibold text-zinc-900 font-mono mt-0.5">
-                          ₦{(course.price || 35000).toLocaleString()}
-                        </span>
-                      </div>
+                    {/* Bottom Action Section with Nice Isolation */}
+                    <div className="p-6 pt-0">
+                      <div className="pt-4 border-t border-zinc-100 flex items-center justify-between gap-2.5">
+                        <div className="flex flex-col">
+                          <span className="text-[9.5px] text-zinc-400 font-light tracking-wide truncate flex items-center gap-1 mb-0.5">
+                            Mentor: <strong className="text-zinc-700 font-medium">{course.trainerName}</strong>
+                            {isTrainerVerified(course.trainerName) && <VerifiedBadge />}
+                          </span>
+                          <span className="text-sm font-bold text-zinc-900 font-mono">
+                            ₦{(course.price || 35000).toLocaleString()}
+                          </span>
+                        </div>
 
-                      {(() => {
-                        const enr = enrollments.find(e => e.courseId === course.id);
-                        if (alreadyEnrolled || (enr && enr.paymentStatus === 'approved')) {
-                          return (
-                            <div className="text-[10.5px] text-emerald-600 font-semibold bg-emerald-50 px-3 py-1.5 rounded-xl uppercase tracking-wider flex items-center gap-1 shrink-0">
-                              <CheckCircle2 size={11} /> Enrolled
-                            </div>
-                          );
-                        }
-                        if (enr && enr.paymentStatus === 'pending_verification') {
+                        {(() => {
+                          const enr = enrollments.find(e => e.courseId === course.id);
+                          if (alreadyEnrolled || (enr && enr.paymentStatus === 'approved')) {
+                            return (
+                              <div className="text-[10px] text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 px-3.5 py-2 rounded-xl uppercase tracking-wider flex items-center gap-1 shrink-0 animate-in zoom-in-95">
+                                <CheckCircle2 size={12} /> Registered
+                              </div>
+                            );
+                          }
+                          if (enr && enr.paymentStatus === 'pending_verification') {
+                            return (
+                              <button
+                                onClick={() => handleViewCourseDetails(course)}
+                                className="text-[10px] text-amber-600 font-semibold bg-amber-50 border border-amber-100/70 px-3.5 py-2 rounded-xl uppercase tracking-wider flex items-center gap-1 shrink-0 cursor-pointer hover:bg-amber-100 transition-colors"
+                              >
+                                <Clock size={11} className="animate-spin" /> Verifying
+                              </button>
+                            );
+                          }
+                          if (enr && enr.paymentStatus === 'rejected') {
+                            return (
+                              <button
+                                onClick={() => handleViewCourseDetails(course)}
+                                className="text-[10px] text-red-650 font-semibold bg-red-50 border border-red-100/50 px-3.5 py-2 rounded-xl uppercase tracking-wider flex items-center gap-1 shrink-0 cursor-pointer hover:bg-red-100 transition-colors"
+                              >
+                                <AlertCircle size={11} /> Rejected Referral
+                              </button>
+                            );
+                          }
                           return (
                             <button
                               onClick={() => handleViewCourseDetails(course)}
-                              className="text-[10px] text-amber-600 font-semibold bg-amber-50 px-3 py-1.5 rounded-xl uppercase tracking-wider flex items-center gap-1 shrink-0 cursor-pointer hover:bg-amber-100 transition-colors"
+                              className="bg-brand-black hover:bg-zinc-900 text-brand-yellow rounded-xl text-[10px] tracking-wider uppercase px-4py-2.5 px-4 py-2 hover:px-5 hover:text-white transition-all font-semibold cursor-pointer shadow-xs focus-ring shrink-0"
                             >
-                              <Clock size={11} className="animate-spin" /> Verifying
+                              Explore Details
                             </button>
                           );
-                        }
-                        if (enr && enr.paymentStatus === 'rejected') {
-                          return (
-                            <button
-                              onClick={() => handleViewCourseDetails(course)}
-                              className="text-[10px] text-red-650 font-semibold bg-red-50/70 px-3 py-1.5 rounded-xl uppercase tracking-wider flex items-center gap-1 shrink-0 cursor-pointer hover:bg-red-100 transition-colors"
-                            >
-                              <AlertCircle size={11} /> Rejected
-                            </button>
-                          );
-                        }
-                        return (
-                          <button
-                            onClick={() => handleViewCourseDetails(course)}
-                            className="bg-brand-black hover:bg-zinc-900 text-brand-yellow rounded-xl text-[10px] tracking-wide uppercase px-4 py-2 font-medium cursor-pointer shadow-xs transition-colors focus-ring shrink-0"
-                          >
-                            Details & Enroll
-                          </button>
-                        );
-                      })()}
+                        })()}
+                      </div>
                     </div>
                   </div>
                 );
@@ -1058,6 +1088,16 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
                 >
                   <X size={20} />
                 </button>
+              </div>
+
+              {/* Cover Image Banner */}
+              <div className="relative h-44 w-full rounded-2xl overflow-hidden bg-zinc-150 shadow-xs border border-zinc-200">
+                <img 
+                  src={getCourseImage(selectedCourse.category, selectedCourse.title, selectedCourse.imageUrl)} 
+                  alt={selectedCourse.title}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                />
               </div>
 
               {/* Course Brief Detail */}

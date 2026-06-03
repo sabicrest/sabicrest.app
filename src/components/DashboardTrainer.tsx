@@ -7,10 +7,13 @@ import React, { useState, useEffect } from 'react';
 import { User, Assignment, Curriculum } from '../types';
 import { db } from '../db';
 import VerifiedBadge from './VerifiedBadge';
+import { audio } from '../utils/audio';
+import { getCourseImage } from '../utils/course';
 import { 
   BookOpen, FileText, CheckCircle2, Award, ClipboardCheck, Sparkles, Plus, AlertCircle, 
   FileCheck, HelpCircle, Settings, Sliders, Bell, User as UserIcon, Mail, Phone, MapPin, Activity, X, Search, ArrowUpRight,
-  Lock, Unlock, Laptop, Tractor, Camera, Check, Play, Upload, Globe, Compass, Shield, MessageSquare, Video as VideoIcon, Hourglass
+  Lock, Unlock, Laptop, Tractor, Camera, Check, Play, Upload, Globe, Compass, Shield, MessageSquare, Video as VideoIcon, Hourglass,
+  Volume2, VolumeX, Pencil, ChevronDown, ChevronUp, Eye
 } from 'lucide-react';
 
 interface DashboardTrainerProps {
@@ -40,6 +43,14 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
   const [prefSlackSync, setPrefSlackSync] = useState(true);
   const [prefSoundEffects, setPrefSoundEffects] = useState(true);
 
+  // Msg sound cue preferences
+  const [msgSoundEnabled, setMsgSoundEnabled] = useState(() => {
+    return localStorage.getItem('sabicrest_msg_sound_enabled') !== 'false';
+  });
+  const [msgSoundId, setMsgSoundId] = useState(() => {
+    return localStorage.getItem('sabicrest_msg_sound_id') || 'cosmic-chime';
+  });
+
   // Security and notification triggers
   const [trainerNotifs, setTrainerNotifs] = useState(db.getNotifications().filter(n => n.userId === currentUser.id));
 
@@ -55,14 +66,17 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
 
   // Curriculum Proposed System State
   const [showCurriculumModal, setShowCurriculumModal] = useState(false);
+  const [editingCurriculum, setEditingCurriculum] = useState<Curriculum | null>(null);
   const [currTitle, setCurrTitle] = useState('');
   const [currDesc, setCurrDesc] = useState('');
   const [currCategory, setCurrCategory] = useState('Visual Design');
   const [currLevel, setCurrLevel] = useState<'Beginner' | 'Intermediate' | 'Advanced'>('Intermediate');
   const [currDuration, setCurrDuration] = useState(6);
   const [currPrice, setCurrPrice] = useState<number>(150000);
+  const [currImageUrl, setCurrImageUrl] = useState('');
   const [newModuleText, setNewModuleText] = useState('');
   const [moduleList, setModuleList] = useState<string[]>([]);
+  const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
 
   // Assign Assignment System States
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -343,38 +357,72 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
     setModuleList(moduleList.filter((_, i) => i !== idx));
   };
 
+  const handleStartEditProposal = (curr: Curriculum) => {
+    setEditingCurriculum(curr);
+    setCurrTitle(curr.title);
+    setCurrDesc(curr.description);
+    setCurrCategory(curr.category);
+    setCurrLevel(curr.level);
+    setCurrDuration(curr.durationWeeks);
+    setCurrPrice(curr.price || 150000);
+    setCurrImageUrl(curr.imageUrl || '');
+    setModuleList(curr.modules || []);
+    setShowCurriculumModal(true);
+  };
+
   const handleCreateCurriculum = (e: React.FormEvent) => {
     e.preventDefault();
     if (!currTitle || !currDesc || moduleList.length === 0) return;
 
-    const newCurr: Omit<Curriculum, 'id' | 'status' | 'submittedAt'> = {
-      trainerId: currentUser.id,
-      trainerName: currentUser.name,
-      title: currTitle,
-      description: currDesc,
-      category: currCategory,
-      level: currLevel,
-      durationWeeks: Number(currDuration),
-      modules: moduleList,
-      price: Number(currPrice) || 0
-    };
+    if (editingCurriculum) {
+      const updatedCurr: Curriculum = {
+        ...editingCurriculum,
+        title: currTitle,
+        description: currDesc,
+        category: currCategory,
+        level: currLevel,
+        durationWeeks: Number(currDuration),
+        modules: moduleList,
+        price: Number(currPrice) || 0,
+        imageUrl: currImageUrl || undefined
+      };
+      db.updateCurriculum(updatedCurr);
+      showToast("Course proposal updated successfully!");
+    } else {
+      const newCurr: Omit<Curriculum, 'id' | 'status' | 'submittedAt'> = {
+        trainerId: currentUser.id,
+        trainerName: currentUser.name,
+        title: currTitle,
+        description: currDesc,
+        category: currCategory,
+        level: currLevel,
+        durationWeeks: Number(currDuration),
+        modules: moduleList,
+        price: Number(currPrice) || 0,
+        imageUrl: currImageUrl || undefined
+      };
 
-    db.addCurriculum(newCurr);
+      db.addCurriculum(newCurr);
+
+      // Notify admins
+      db.addNotification({
+        userId: 'u-admin-1', // admin user id directly
+        title: 'Curriculum Proposed for Review',
+        message: `${currentUser.name} has submitted a new curriculum proposal: "${currTitle}".`,
+        type: 'curriculum'
+      });
+      showToast("Course proposed for review successfully!");
+    }
+
     reloadTrainerData();
-
-    // Notify admins
-    db.addNotification({
-      userId: 'u-admin-1', // admin user id directly
-      title: 'Curriculum Proposed for Review',
-      message: `${currentUser.name} has submitted a new curriculum proposal: "${currTitle}".`,
-      type: 'curriculum'
-    });
 
     // Reset values
     setCurrTitle('');
     setCurrDesc('');
     setCurrPrice(150000);
+    setCurrImageUrl('');
     setModuleList([]);
+    setEditingCurriculum(null);
     setShowCurriculumModal(false);
   };
 
@@ -881,7 +929,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                 )}
               </div>
 
-              <div className="space-y-3.5">
+              <div className="space-y-5 flex-1 overflow-y-auto pr-1">
                 {curricula
                   .filter(curr => 
                     curr.title.toLowerCase().includes(coursesSearchQuery.toLowerCase()) ||
@@ -892,32 +940,99 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                   const isApproved = curr.status === 'approved';
                   const isPending = curr.status === 'pending';
                   const isRejected = curr.status === 'rejected';
+                  const isExpanded = expandedCourseId === curr.id;
+                  const coverImage = getCourseImage(curr.category, curr.title, curr.imageUrl);
 
                   return (
-                    <div key={curr.id} className="border border-zinc-100 bg-zinc-50/20 rounded-xl p-3.5 hover:bg-white transition-all">
-                      <div className="flex justify-between items-start">
-                        <h4 className="text-xs font-semibold text-brand-black pr-2 leading-tight">{curr.title}</h4>
-                        <span className={`text-[8px] font-mono font-semibold uppercase px-2 py-0.5 rounded ${
-                          isApproved ? 'bg-emerald-50 text-emerald-800' :
-                          isRejected ? 'bg-red-50 text-red-800' : 'bg-amber-50 text-amber-800 animate-pulse'
-                        }`}>
-                          {curr.status}
-                        </span>
+                    <div key={curr.id} className="border border-zinc-150 bg-white rounded-2xl overflow-hidden hover:shadow-xs transition-all duration-200">
+                      {/* Visual Header Image */}
+                      <div className="relative h-28 w-full bg-zinc-100 overflow-hidden">
+                        <img 
+                          src={coverImage} 
+                          alt={curr.title}
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-2.5 left-2.5 flex gap-1.5">
+                          <span className="bg-brand-black/75 backdrop-blur-xs text-[9px] text-white font-medium px-2 py-0.5 rounded-md uppercase font-mono">
+                            {curr.category}
+                          </span>
+                          <span className="bg-white/85 backdrop-blur-xs text-[9px] text-zinc-800 font-mono px-2 py-0.5 rounded-md">
+                            {curr.level || 'Intermediate'}
+                          </span>
+                        </div>
+                        <div className="absolute top-2.5 right-2.5">
+                          <span className={`text-[8.5px] font-mono font-semibold uppercase px-2 py-0.5 rounded-md shadow-xs ${
+                            isApproved ? 'bg-emerald-500 text-white' :
+                            isRejected ? 'bg-red-500 text-white' : 'bg-amber-400 text-brand-black animate-pulse'
+                          }`}>
+                            {curr.status === 'pending' ? 'Pending' : curr.status}
+                          </span>
+                        </div>
                       </div>
 
-                      <p className="text-[11px] text-brand-gray font-light mt-1.5 leading-relaxed">{curr.description}</p>
-                      <div className="text-[9px] text-zinc-400 font-mono font-light mt-2 pt-2 border-t border-zinc-50 uppercase flex justify-between items-center">
-                        <span>weeks: {curr.durationWeeks} // {curr.category}</span>
-                        {curr.price !== undefined && (
-                          <span className="text-brand-black font-semibold font-sans normal-case">₦{curr.price.toLocaleString()}</span>
+                      <div className="p-4 space-y-3.5">
+                        <div className="space-y-0.5">
+                          <h4 className="text-xs font-semibold text-brand-black leading-tight tracking-tight">
+                            {curr.title}
+                          </h4>
+                          <div className="flex items-center gap-1.5 text-[9.5px] text-zinc-400 font-mono">
+                            <span>Duration: <strong className="text-zinc-700">{curr.durationWeeks} Weeks</strong></span>
+                            <span>•</span>
+                            <span>Tuition: <strong className="text-zinc-700">₦{(curr.price || 150000).toLocaleString()}</strong></span>
+                          </div>
+                        </div>
+
+                        <p className="text-[11px] text-brand-gray font-light leading-relaxed">
+                          {curr.description}
+                        </p>
+
+                        {isRejected && curr.rejectionReason && (
+                          <div className="bg-red-50/70 border border-red-100 text-red-700 p-2.5 rounded-xl text-[10px] font-light leading-relaxed">
+                            <span className="font-semibold block text-red-800 mb-0.5 uppercase text-[8px] tracking-wider">Rejection Reason:</span>
+                            "{curr.rejectionReason}"
+                          </div>
+                        )}
+
+                        {/* Expandable Module Syllabus Breakdown */}
+                        <div className="pt-2.5 border-t border-zinc-100">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedCourseId(isExpanded ? null : curr.id)}
+                            className="w-full flex items-center justify-between text-[10px] font-medium text-zinc-500 hover:text-brand-black transition-colors"
+                          >
+                            <span className="flex items-center gap-1 uppercase tracking-wider text-[8.5px]">
+                              <BookOpen size={10} className="text-brand-yellow" />
+                              Syllabus Breakdown ({curr.modules.length} Modules)
+                            </span>
+                            {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                          </button>
+
+                          {isExpanded && (
+                            <div className="mt-2.5 space-y-1.5 max-h-40 overflow-y-auto pr-1 animate-in fade-in duration-200">
+                              {curr.modules.map((m, idx) => (
+                                <div key={idx} className="bg-zinc-50 border border-zinc-100 p-2 rounded-xl flex items-start gap-2">
+                                  <span className="text-[9px] font-mono font-bold text-brand-black bg-zinc-200 px-1.5 py-0.5 rounded shrink-0">W{idx + 1}</span>
+                                  <p className="text-[10.5px] text-zinc-600 leading-normal font-light">{m}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Edit Button for Pending Proposal */}
+                        {isPending && (
+                          <div className="pt-1 flex">
+                            <button
+                              id={`edit-proposal-btn-${curr.id}`}
+                              onClick={() => handleStartEditProposal(curr)}
+                              className="w-full flex items-center justify-center gap-1 bg-zinc-100 hover:bg-brand-yellow/15 border border-zinc-200 hover:border-brand-yellow/50 text-zinc-700 hover:text-brand-black transition-all rounded-xl py-2 text-[10px] uppercase tracking-wide font-medium cursor-pointer"
+                            >
+                              <Pencil size={10} /> Edit Course Proposal
+                            </button>
+                          </div>
                         )}
                       </div>
-
-                      {isRejected && curr.rejectionReason && (
-                        <div className="bg-red-50 text-red-700 px-3 py-2 rounded-lg text-[10px] font-light mt-2.5 leading-normal">
-                          <strong>Rejection Reason:</strong> "{curr.rejectionReason}"
-                        </div>
-                      )}
                     </div>
                   );
                 })}
@@ -1108,7 +1223,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
+                 <div className="flex items-center justify-between border-b border-zinc-50 pb-3 mb-1">
                   <div>
                     <span className="text-[11px] font-medium text-brand-black block leading-none">Alert Sounds</span>
                     <span className="text-[9px] text-zinc-400 block">Play a sound when a certificate is given to a student</span>
@@ -1119,6 +1234,76 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                     onChange={(e) => setPrefSoundEffects(e.target.checked)}
                     className="accent-brand-yellow focus:outline-hidden w-4 h-4 cursor-pointer"
                   />
+                </div>
+
+                {/* Chat Message Sound Cues */}
+                <div className="pt-1 mt-1 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[11px] font-medium text-brand-black block leading-none flex items-center gap-1.5">
+                        {msgSoundEnabled ? <Volume2 size={12} className="text-brand-yellow animate-pulse" /> : <VolumeX size={12} className="text-zinc-400" />}
+                        Message Audio Cues
+                      </span>
+                      <span className="text-[9px] text-zinc-400 block">Subtle acoustics when chat messages arrive</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={msgSoundEnabled}
+                      onChange={(e) => {
+                        setMsgSoundEnabled(e.target.checked);
+                        localStorage.setItem('sabicrest_msg_sound_enabled', String(e.target.checked));
+                        if (e.target.checked) {
+                          audio.playSound(msgSoundId);
+                        }
+                      }}
+                      className="accent-brand-yellow focus:outline-hidden w-4 h-4 cursor-pointer"
+                    />
+                  </div>
+
+                  {msgSoundEnabled && (
+                    <div className="space-y-1.5 animate-in slide-in-from-top-1.5 duration-150">
+                      <label className="block text-[9px] uppercase tracking-wider font-semibold text-zinc-400">Select Message Sound</label>
+                      <div className="grid grid-cols-1 gap-1.5 bg-zinc-50/50 p-2 rounded-xl border border-zinc-100">
+                        {[
+                          { id: 'cosmic-chime', label: 'Cosmic Chime 🌌', desc: 'Harmonious sine waves' },
+                          { id: 'digital-bubble', label: 'Digital Bubble 🫧', desc: 'High sweep blip' },
+                          { id: 'gentle-woodblock', label: 'Gentle Woodblock 🪵', desc: 'Crisp organic knock' },
+                          { id: 'retro-pip', label: 'Retro Pip 👾', desc: 'Nostalgic 8-bit pulse' },
+                          { id: 'modern-synth', label: 'Modern Synth 🎹', desc: 'Warm dual chord filter' }
+                        ].map((sound) => (
+                          <div 
+                            key={sound.id}
+                            onClick={() => {
+                              setMsgSoundId(sound.id);
+                              localStorage.setItem('sabicrest_msg_sound_id', sound.id);
+                              audio.playSound(sound.id);
+                            }}
+                            className={`flex items-center justify-between p-1.5 px-2 rounded-lg cursor-pointer transition-all border ${
+                              msgSoundId === sound.id 
+                                ? 'bg-white border-brand-yellow/50 shadow-2xs' 
+                                : 'bg-transparent border-transparent hover:bg-white/40'
+                            }`}
+                          >
+                            <div>
+                              <span className="text-[10px] font-medium text-brand-black block leading-none">{sound.label}</span>
+                              <span className="text-[8px] text-zinc-400 block font-light leading-none mt-1">{sound.desc}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                audio.playSound(sound.id);
+                              }}
+                              className="p-1 text-zinc-400 hover:text-brand-black hover:bg-zinc-100 rounded-md transition-all cursor-pointer flex items-center justify-center shrink-0 border border-zinc-100 bg-white"
+                              title="Play Preview"
+                            >
+                              <Play size={10} className="fill-current" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1263,11 +1448,14 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
             
             <div className="flex items-center justify-between border-b border-zinc-50 pb-4 mb-4">
               <h3 className="text-base font-light tracking-tight text-brand-black">
-                Propose New Course // <span className="font-semibold">Course Proposal Wizard</span>
+                {editingCurriculum ? 'Edit Course Proposal' : 'Propose New Course'} // <span className="font-semibold">{editingCurriculum ? 'Update details' : 'Course Proposal Wizard'}</span>
               </h3>
               <button
                 id="close-curriculum-modal-btn"
-                onClick={() => setShowCurriculumModal(false)}
+                onClick={() => {
+                  setShowCurriculumModal(false);
+                  setEditingCurriculum(null);
+                }}
                 className="text-zinc-400 hover:text-brand-black font-semibold text-xl"
               >
                 &times;
@@ -1357,6 +1545,21 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                 </div>
               </div>
 
+              <div>
+                <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Course Cover Image (Optional URL)</label>
+                <input
+                  id="cur-input-image"
+                  type="url"
+                  placeholder="e.g. https://images.unsplash.com/photo-..."
+                  value={currImageUrl}
+                  onChange={(e) => setCurrImageUrl(e.target.value)}
+                  className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow"
+                />
+                <p className="text-[9px] text-zinc-400 mt-1 font-light">
+                  Optionally paste any cover image web link. Leave empty to let us auto-assign a themed aesthetic artwork.
+                </p>
+              </div>
+
               {/* Modules list addition */}
               <div>
                 <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Weekly Modules Syllabus ({moduleList.length})</label>
@@ -1401,12 +1604,20 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                   type="submit"
                   className="bg-brand-black hover:bg-zinc-900 text-white px-4 py-2.5 rounded-xl text-xs font-light uppercase tracking-wide cursor-pointer flex-1"
                 >
-                  Submit Proposal to Admin
+                  {editingCurriculum ? 'Save Changes' : 'Submit Proposal to Admin'}
                 </button>
                 <button
                   id="cancel-propose-cur-btn"
                   type="button"
-                  onClick={() => setShowCurriculumModal(false)}
+                  onClick={() => {
+                    setShowCurriculumModal(false);
+                    setEditingCurriculum(null);
+                    setCurrTitle('');
+                    setCurrDesc('');
+                    setCurrPrice(150000);
+                    setCurrImageUrl('');
+                    setModuleList([]);
+                  }}
                   className="bg-zinc-100 text-zinc-600 px-4 py-2.5 rounded-xl text-xs font-light uppercase cursor-pointer"
                 >
                   Cancel

@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, NotificationAlert } from '../types';
 import { db } from '../db';
+import { audio } from '../utils/audio';
 import { 
   Sliders, 
   Bell, 
@@ -21,7 +22,10 @@ import {
   AlertTriangle, 
   Trash2, 
   Camera, 
-  Upload 
+  Upload,
+  Volume2,
+  VolumeX,
+  Play
 } from 'lucide-react';
 
 interface StudentSettingsProps {
@@ -47,6 +51,14 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
   const [prefEmailAlerts, setPrefEmailAlerts] = useState(true);
   const [prefSlackSync, setPrefSlackSync] = useState(true);
   const [prefSoundEffects, setPrefSoundEffects] = useState(true);
+
+  // Msg sound cue preferences
+  const [msgSoundEnabled, setMsgSoundEnabled] = useState(() => {
+    return localStorage.getItem('sabicrest_msg_sound_enabled') !== 'false';
+  });
+  const [msgSoundId, setMsgSoundId] = useState(() => {
+    return localStorage.getItem('sabicrest_msg_sound_id') || 'cosmic-chime';
+  });
 
   // Notifications State
   const [studentNotifs, setStudentNotifs] = useState<NotificationAlert[]>([]);
@@ -501,7 +513,7 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
                 />
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between border-t border-zinc-50 pt-3 mt-1">
                 <div>
                   <span className="text-[11px] font-medium text-brand-black block leading-none">Notification Sound FX</span>
                   <span className="text-[9px] text-zinc-400 block">Acoustic chime triggers on new assignments</span>
@@ -512,6 +524,76 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
                   onChange={(e) => setPrefSoundEffects(e.target.checked)}
                   className="accent-brand-yellow focus:outline-hidden w-4 h-4 cursor-pointer"
                 />
+              </div>
+
+              {/* Chat Message Sound Cues */}
+              <div className="border-t border-zinc-50 pt-3 mt-3 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[11px] font-medium text-brand-black block leading-none flex items-center gap-1.5">
+                      {msgSoundEnabled ? <Volume2 size={12} className="text-brand-yellow animate-pulse" /> : <VolumeX size={12} className="text-zinc-400" />}
+                      Message Audio Cues
+                    </span>
+                    <span className="text-[9px] text-zinc-400 block">Subtle acoustics when chat messages arrive</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={msgSoundEnabled}
+                    onChange={(e) => {
+                      setMsgSoundEnabled(e.target.checked);
+                      localStorage.setItem('sabicrest_msg_sound_enabled', String(e.target.checked));
+                      if (e.target.checked) {
+                        audio.playSound(msgSoundId);
+                      }
+                    }}
+                    className="accent-brand-yellow focus:outline-hidden w-4 h-4 cursor-pointer"
+                  />
+                </div>
+
+                {msgSoundEnabled && (
+                  <div className="space-y-1.5 animate-in slide-in-from-top-1.5 duration-150">
+                    <label className="block text-[9px] uppercase tracking-wider font-semibold text-zinc-400">Select Message Sound</label>
+                    <div className="grid grid-cols-1 gap-1.5 bg-zinc-50/50 p-2 rounded-xl border border-zinc-100">
+                      {[
+                        { id: 'cosmic-chime', label: 'Cosmic Chime 🌌', desc: 'Harmonious sine waves' },
+                        { id: 'digital-bubble', label: 'Digital Bubble 🫧', desc: 'High sweep blip' },
+                        { id: 'gentle-woodblock', label: 'Gentle Woodblock 🪵', desc: 'Crisp organic knock' },
+                        { id: 'retro-pip', label: 'Retro Pip 👾', desc: 'Nostalgic 8-bit pulse' },
+                        { id: 'modern-synth', label: 'Modern Synth 🎹', desc: 'Warm dual chord filter' }
+                      ].map((sound) => (
+                        <div 
+                          key={sound.id}
+                          onClick={() => {
+                            setMsgSoundId(sound.id);
+                            localStorage.setItem('sabicrest_msg_sound_id', sound.id);
+                            audio.playSound(sound.id);
+                          }}
+                          className={`flex items-center justify-between p-1.5 px-2 rounded-lg cursor-pointer transition-all border ${
+                            msgSoundId === sound.id 
+                              ? 'bg-white border-brand-yellow/50 shadow-2xs' 
+                              : 'bg-transparent border-transparent hover:bg-white/40'
+                          }`}
+                        >
+                          <div>
+                            <span className="text-[10px] font-medium text-brand-black block leading-none">{sound.label}</span>
+                            <span className="text-[8px] text-zinc-400 block font-light leading-none mt-1">{sound.desc}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              audio.playSound(sound.id);
+                            }}
+                            className="p-1 text-zinc-400 hover:text-brand-black hover:bg-zinc-100 rounded-md transition-all cursor-pointer flex items-center justify-center shrink-0 border border-zinc-100 bg-white"
+                            title="Play Preview"
+                          >
+                            <Play size={10} className="fill-current" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

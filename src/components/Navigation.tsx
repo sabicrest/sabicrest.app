@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { User, NotificationAlert } from '../types';
 import { db } from '../db';
 import { Bell, LogOut, CheckCircle, Shield, Menu, X, Terminal, Sparkles, AlertTriangle, MessageSquare, Search } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 // @ts-ignore
 import sabicrestLogo from '../assets/images/sabicrest_logo_1780159096569.png';
 
@@ -26,6 +27,21 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
   const [chatCount, setChatCount] = useState(0);
   const [navSearchQuery, setNavSearchQuery] = useState('');
   const [showSearchInput, setShowSearchInput] = useState(false);
+  const notifContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: Event) {
+      if (showNotifDropdown && notifContainerRef.current && !notifContainerRef.current.contains(event.target as Node)) {
+        setShowNotifDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [showNotifDropdown]);
 
   useEffect(() => {
     setNavSearchQuery('');
@@ -40,12 +56,75 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
   };
 
   const loadChatCount = () => {
-    const total = db.getMessages().filter(m => 
-      !m.receiverId || 
-      m.receiverId === currentUser.id || 
-      m.senderId === currentUser.id
-    ).length;
-    setChatCount(total);
+    const allMsgs = db.getMessages();
+    let lastReadMap: Record<string, string> = {};
+    try {
+      const saved = localStorage.getItem('sabicrest_last_read_map');
+      if (saved) {
+        lastReadMap = JSON.parse(saved);
+      }
+    } catch (e) {}
+
+    let unreadTotal = 0;
+
+    // 1. Unread from Channels
+    const channels = ['team-general', 'team-collaboration', 'design-showcase', 'technical-support'];
+    channels.forEach(chanId => {
+      const channelMsgs = allMsgs.filter(m => m.channelId === chanId && m.senderId !== currentUser.id);
+      if (channelMsgs.length > 0) {
+        const lastReadId = lastReadMap[`channel-${chanId}`];
+        if (!lastReadId) {
+          unreadTotal += channelMsgs.length;
+        } else {
+          const idx = channelMsgs.findIndex(m => m.id === lastReadId);
+          if (idx !== -1) {
+            unreadTotal += channelMsgs.slice(idx + 1).length;
+          } else {
+            // Find message and check timestamp
+            const lastReadMsg = allMsgs.find(m => m.id === lastReadId);
+            if (lastReadMsg) {
+              const lastReadTime = new Date(lastReadMsg.timestamp).getTime();
+              unreadTotal += channelMsgs.filter(m => new Date(m.timestamp).getTime() > lastReadTime).length;
+            } else {
+              unreadTotal += channelMsgs.length;
+            }
+          }
+        }
+      }
+    });
+
+    // 2. Unread from DMs
+    // Get all unique DM sender IDs targeting this user
+    const dmSenders = Array.from(new Set(
+      allMsgs
+        .filter(m => m.receiverId === currentUser.id && m.senderId !== currentUser.id)
+        .map(m => m.senderId)
+    ));
+
+    dmSenders.forEach(senderId => {
+      const dmMessages = allMsgs.filter(m => m.senderId === senderId && m.receiverId === currentUser.id);
+      if (dmMessages.length > 0) {
+        const lastReadId = lastReadMap[`dm-${senderId}`];
+        if (!lastReadId) {
+          unreadTotal += dmMessages.length;
+        } else {
+          const idx = dmMessages.findIndex(m => m.id === lastReadId);
+          if (idx !== -1) {
+            unreadTotal += dmMessages.slice(idx + 1).length;
+          } else {
+            const lastReadMsg = allMsgs.find(m => m.id === lastReadId);
+            if (lastReadMsg) {
+              const lastReadTime = new Date(lastReadMsg.timestamp).getTime();
+              unreadTotal += dmMessages.filter(m => new Date(m.timestamp).getTime() > lastReadTime).length;
+            } else {
+              unreadTotal += dmMessages.length;
+            }
+          }
+        }
+      }
+    });
+
+    setChatCount(unreadTotal);
   };
 
   useEffect(() => {
@@ -122,7 +201,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
             {/* Functional Search Icon & Expandable Input Bar */}
             <div className="relative flex items-center">
               {showSearchInput ? (
-                <div className="flex items-center gap-1.5 animate-in slide-in-from-right-3 duration-150">
+                <div className="hidden md:flex items-center gap-1.5 animate-in slide-in-from-right-3 duration-150">
                   <input
                     type="text"
                     id="nav-search-bar-input"
@@ -146,16 +225,20 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
                     <X size={14} />
                   </button>
                 </div>
-              ) : (
-                <button
-                  id="nav-search-trigger-btn"
-                  onClick={() => setShowSearchInput(true)}
-                  className="p-2 text-zinc-400 hover:text-brand-black hover:bg-zinc-50 rounded-xl transition-all cursor-pointer"
-                  title="Search Current View"
-                >
-                  <Search size={18} />
-                </button>
-              )}
+              ) : null}
+              
+              <button
+                id="nav-search-trigger-btn"
+                onClick={() => setShowSearchInput(!showSearchInput)}
+                className={`p-2 transition-all cursor-pointer rounded-xl ${
+                  showSearchInput 
+                    ? 'text-brand-yellow bg-zinc-900 md:hidden' 
+                    : 'text-zinc-400 hover:text-brand-black hover:bg-zinc-50'
+                }`}
+                title={showSearchInput ? "Close Search" : "Search Current View"}
+              >
+                {showSearchInput ? <X size={18} /> : <Search size={18} />}
+              </button>
             </div>
 
             {/* Realtime Chats Icon Badge */}
@@ -199,7 +282,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
             </button>
 
             {/* Realtime Notification Bell Icon dropdown */}
-            <div className="relative">
+            <div ref={notifContainerRef} className="relative">
               <button
                 id="noti-bell-trigger"
                 onClick={() => setShowNotifDropdown(!showNotifDropdown)}
@@ -353,8 +436,16 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
 
       {/* Logout Confirmation popover overlay modal */}
       {showLogoutConfirm && (
-        <div id="logout-confirm-overlay" className="fixed inset-0 bg-zinc-950/60 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in duration-200">
-          <div id="logout-confirm-card" className="bg-white border border-zinc-100 rounded-3xl p-6 max-w-sm w-full mx-4 shadow-xl space-y-4 animate-in zoom-in-95 duration-200">
+        <div 
+          id="logout-confirm-overlay" 
+          onClick={() => setShowLogoutConfirm(false)}
+          className="fixed inset-0 bg-zinc-950/60 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in duration-200"
+        >
+          <div 
+            id="logout-confirm-card" 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-zinc-100 rounded-3xl p-6 max-w-sm w-full mx-4 shadow-xl space-y-4 animate-in zoom-in-95 duration-200"
+          >
             <div className="flex items-start gap-4">
               <div className="p-3 bg-red-50 text-red-600 rounded-2xl">
                 <AlertTriangle size={20} />
@@ -391,6 +482,59 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
           </div>
         </div>
       )}
+
+      {/* Mobile Glassmorphic Search Interface - flapped just under the header */}
+      <AnimatePresence>
+        {showSearchInput && (
+          <motion.div
+            id="mobile-glass-search-panel"
+            initial={{ height: 0, opacity: 0, y: -20 }}
+            animate={{ height: 'auto', opacity: 1, y: 0 }}
+            exit={{ height: 0, opacity: 0, y: -20 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 180 }}
+            className="md:hidden absolute top-[64px] left-0 right-0 bg-white/70 backdrop-blur-md border-b border-zinc-200/50 py-3.5 px-4 shadow-lg z-35 overflow-hidden"
+          >
+            <div className="flex items-center gap-2 max-w-lg mx-auto">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  id="nav-search-bar-input-mobile"
+                  placeholder="Search current view..."
+                  value={navSearchQuery}
+                  onChange={(e) => {
+                    setNavSearchQuery(e.target.value);
+                    window.dispatchEvent(new CustomEvent('sabicrest-search', { detail: e.target.value }));
+                  }}
+                  className="w-full bg-white/90 border border-zinc-200/80 rounded-xl pl-9 pr-3 py-2 text-xs text-brand-black placeholder-zinc-400 focus:outline-hidden focus:border-brand-yellow font-light shadow-2xs"
+                  autoFocus
+                />
+                <Search size={14} className="text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('sabicrest-search', { detail: navSearchQuery }));
+                }}
+                className="bg-brand-black hover:bg-zinc-800 text-white rounded-xl px-4 py-2 text-xs font-semibold tracking-wide transition-all cursor-pointer shadow-xs whitespace-nowrap active:scale-95"
+              >
+                Search
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setNavSearchQuery('');
+                  setShowSearchInput(false);
+                  window.dispatchEvent(new CustomEvent('sabicrest-search', { detail: '' }));
+                }}
+                className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95 flex items-center justify-center border border-zinc-100"
+                title="Close Search"
+              >
+                <X size={15} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }

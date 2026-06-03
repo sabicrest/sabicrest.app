@@ -9,6 +9,7 @@ import { db } from '../db';
 import VerifiedBadge from './VerifiedBadge';
 import ChannelsExplore from './ChannelsExplore';
 import WorkspaceDirectory from './WorkspaceDirectory';
+import { audio } from '../utils/audio';
 import { 
   Send, 
   MessageSquare, 
@@ -129,59 +130,27 @@ export default function Messaging({ currentUser }: MessagingProps) {
   const [dmsCollapsed, setDmsCollapsed] = useState(false);
   const [messagingSubView, setMessagingSubView] = useState<'chat' | 'channels' | 'directory'>('chat');
 
-  // Real-time notification/unread counts for channels and DMs
-  const [unreadCounts, setUnreadCounts] = useState<{ [key: string]: number }>(() => {
-    try {
-      const saved = localStorage.getItem('sabicrest_unread_counts_v3');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {}
-    return {
-      'team-general': 0,
-      'team-collaboration': 2,
-      'design-showcase': 1,
-      'technical-support': 0,
-      'u-admin-1': 1,
-    };
-  });
-
-  // Persist unread counts to prevent reset on reload or tab change
-  useEffect(() => {
-    localStorage.setItem('sabicrest_unread_counts_v3', JSON.stringify(unreadCounts));
-  }, [unreadCounts]);
-
   const prevMessagesCountRef = useRef<number>(0);
 
+  // Close emoji reaction picker when tapping/clicking outside
   useEffect(() => {
-    const key = activeDmUser ? activeDmUser.id : activeChannelId;
-    if (key) {
-      setUnreadCounts(prev => ({
-        ...prev,
-        [key]: 0
-      }));
-    }
-  }, [activeChannelId, activeDmUser]);
-
-  useEffect(() => {
-    if (messages.length > prevMessagesCountRef.current) {
-      const newMessages = messages.slice(prevMessagesCountRef.current);
-      if (prevMessagesCountRef.current > 0) {
-        setUnreadCounts(prev => {
-          const updated = { ...prev };
-          newMessages.forEach(m => {
-            if (m.senderId !== currentUser.id) {
-              const msgKey = m.channelId || m.senderId;
-              const activeKey = activeDmUser ? activeDmUser.id : activeChannelId;
-              if (msgKey && msgKey !== activeKey) {
-                updated[msgKey] = (updated[msgKey] || 0) + 1;
-              }
-            }
-          });
-          return updated;
-        });
+    function handleDocumentClick(event: Event) {
+      if (activeEmojiPickerId) {
+        const target = event.target as HTMLElement;
+        const clickedTrigger = target.closest('[id^="react-trigger-"]');
+        const clickedPicker = target.closest('[id^="emoji-picker-"]');
+        if (!clickedTrigger && !clickedPicker) {
+          setActiveEmojiPickerId(null);
+        }
       }
-      prevMessagesCountRef.current = messages.length;
     }
-  }, [messages, activeChannelId, activeDmUser, currentUser.id]);
+    document.addEventListener('mousedown', handleDocumentClick);
+    document.addEventListener('touchstart', handleDocumentClick);
+    return () => {
+      document.removeEventListener('mousedown', handleDocumentClick);
+      document.removeEventListener('touchstart', handleDocumentClick);
+    };
+  }, [activeEmojiPickerId]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -205,6 +174,29 @@ export default function Messaging({ currentUser }: MessagingProps) {
     const interval = setInterval(loadMessages, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  const lastMsgCountRef = useRef<number>(0);
+  const isFirstMessagesLoad = useRef<boolean>(true);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      if (isFirstMessagesLoad.current) {
+        lastMsgCountRef.current = messages.length;
+        isFirstMessagesLoad.current = false;
+        return;
+      }
+
+      if (messages.length > lastMsgCountRef.current) {
+        // Find newly appended messages
+        const newMsgs = messages.slice(lastMsgCountRef.current);
+        const hasIncomingMsg = newMsgs.some(m => m.senderId !== currentUser.id);
+        if (hasIncomingMsg) {
+          audio.playCurrentMessageSound();
+        }
+        lastMsgCountRef.current = messages.length;
+      }
+    }
+  }, [messages, currentUser.id]);
 
   // Poll typing statuses
   useEffect(() => {
@@ -410,6 +402,71 @@ export default function Messaging({ currentUser }: MessagingProps) {
       return m.channelId === activeChannelId;
     }
   });
+
+  // Real-time notification/unread counts for channels and DMs
+  const unreadCounts = React.useMemo(() => {
+    const counts: { [key: string]: number } = {};
+    
+    // 1. Calculate for Channels
+    const channels = ['team-general', 'team-collaboration', 'design-showcase', 'technical-support'];
+    channels.forEach(chanId => {
+      const channelMsgs = messages.filter(m => m.channelId === chanId && m.senderId !== currentUser.id);
+      const lastReadId = lastReadMessageMap[`channel-${chanId}`];
+      if (!lastReadId) {
+        counts[chanId] = channelMsgs.length;
+      } else {
+        const idx = channelMsgs.findIndex(m => m.id === lastReadId);
+        if (idx !== -1) {
+          counts[chanId] = channelMsgs.slice(idx + 1).length;
+        } else {
+          const lastReadMsg = messages.find(m => m.id === lastReadId);
+          if (lastReadMsg) {
+            const lastReadTime = new Date(lastReadMsg.timestamp).getTime();
+            counts[chanId] = channelMsgs.filter(m => new Date(m.timestamp).getTime() > lastReadTime).length;
+          } else {
+            counts[chanId] = channelMsgs.length;
+          }
+        }
+      }
+    });
+
+    // 2. Calculate for DMs
+    const users = db.getUsers();
+    users.forEach(u => {
+      const dmMessages = messages.filter(m => m.senderId === u.id && m.receiverId === currentUser.id);
+      const lastReadId = lastReadMessageMap[`dm-${u.id}`];
+      if (!lastReadId) {
+        counts[u.id] = dmMessages.length;
+      } else {
+        const idx = dmMessages.findIndex(m => m.id === lastReadId);
+        if (idx !== -1) {
+          counts[u.id] = dmMessages.slice(idx + 1).length;
+        } else {
+          const lastReadMsg = messages.find(m => m.id === lastReadId);
+          if (lastReadMsg) {
+            const lastReadTime = new Date(lastReadMsg.timestamp).getTime();
+            counts[u.id] = dmMessages.filter(m => new Date(m.timestamp).getTime() > lastReadTime).length;
+          } else {
+            counts[u.id] = dmMessages.length;
+          }
+        }
+      }
+    });
+
+    return counts;
+  }, [messages, lastReadMessageMap, currentUser.id]);
+
+  // Mark current chat as read instantly when active context or incoming messages update
+  useEffect(() => {
+    if (filteredMessages.length > 0) {
+      const latestMsg = filteredMessages[filteredMessages.length - 1];
+      setLastReadMessageMap(prev => {
+        const next = { ...prev, [chatKey]: latestMsg.id };
+        localStorage.setItem('sabicrest_last_read_map', JSON.stringify(next));
+        return next;
+      });
+    }
+  }, [chatKey, filteredMessages.length]);
 
   // Check if a message can be modified (sent by current user, under 10 minutes old)
   const canModifyMessage = (msg: Message) => {
@@ -1008,8 +1065,9 @@ export default function Messaging({ currentUser }: MessagingProps) {
                             <Reply size={11} /> <span>Reply</span>
                           </button>
 
-                          <div className="relative">
+                           <div className="relative">
                             <button
+                              id={`react-trigger-${msg.id}`}
                               type="button"
                               onClick={() => setActiveEmojiPickerId(activeEmojiPickerId === msg.id ? null : msg.id)}
                               className={`flex items-center gap-1 hover:text-amber-400 transition-colors cursor-pointer ${
@@ -1022,9 +1080,12 @@ export default function Messaging({ currentUser }: MessagingProps) {
 
                             {/* Standard Emojis selector list (opens up or down inside context) */}
                             {activeEmojiPickerId === msg.id && (
-                              <div className={`absolute bottom-6 bg-white border border-zinc-205 rounded-full shadow-lg p-1.5 flex gap-1 z-30 animate-in zoom-in-50 duration-150 ${
-                                isMine ? 'right-0' : 'left-0'
-                              }`}>
+                              <div 
+                                id={`emoji-picker-${msg.id}`}
+                                className={`absolute bottom-6 bg-white border border-zinc-205 rounded-full shadow-lg p-1.5 flex gap-1 z-30 animate-in zoom-in-50 duration-150 ${
+                                  isMine ? 'right-0' : 'left-0'
+                                }`}
+                              >
                                 {['👍', '❤️', '😂', '😮', '🤔', '🙏'].map(emoji => (
                                   <button
                                     key={emoji}

@@ -104,6 +104,7 @@ export interface Curriculum {
   submittedAt: string;
   approvedAt?: string;
   price?: number; // Price of the course in NGN (Nigerian Naira)
+  imageUrl?: string; // Opt course cover image URL
 }
 
 // Assignment state
