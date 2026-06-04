@@ -389,9 +389,22 @@ export default function Messaging({ currentUser }: MessagingProps) {
     return (hasMessages && !isHidden) || isActive;
   });
 
-  const filteredDisplayDms = displayDms.filter(u =>
-    u.name.toLowerCase().includes(dmSearchQuery.toLowerCase())
-  );
+  const filteredDisplayDms = displayDms.filter(u => {
+    const q = dmSearchQuery.trim().toLowerCase();
+    if (!q) return true;
+
+    // Filter by contact name
+    const matchesName = u.name.toLowerCase().includes(q);
+    if (matchesName) return true;
+
+    // Filter by message content in the conversation with this user
+    const hasMatchingMessage = messages.some(m => {
+      const isExchanged = (m.senderId === currentUser.id && m.receiverId === u.id) ||
+                          (m.senderId === u.id && m.receiverId === currentUser.id);
+      return isExchanged && m.content && m.content.toLowerCase().includes(q);
+    });
+    return hasMatchingMessage;
+  });
 
   // Filter messages based on active context
   const filteredMessages = messages.filter(m => {
@@ -617,8 +630,31 @@ export default function Messaging({ currentUser }: MessagingProps) {
             mobileActiveView !== 'sidebar' ? 'hidden md:flex' : 'flex'
           }`}
         >
-          <div className="space-y-6">
+          <div className="space-y-5">
             
+            {/* Modern Search bar for filtering active conversations */}
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-3 text-zinc-400" />
+              <input
+                id="conversation-search-input"
+                type="text"
+                placeholder="Search contact or message..."
+                value={dmSearchQuery}
+                onChange={(e) => setDmSearchQuery(e.target.value)}
+                className="w-full bg-white border border-zinc-200 focus:border-brand-black text-[11px] rounded-2xl pl-9 pr-8 py-2 focus:outline-hidden transition-all placeholder:text-zinc-400 font-light shadow-2xs"
+              />
+              {dmSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setDmSearchQuery('')}
+                  className="absolute right-3 top-2.5 text-zinc-400 hover:text-zinc-650 cursor-pointer"
+                  title="Clear search"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
             {/* Discussions Section */}
             <div>
               <button
@@ -707,26 +743,6 @@ export default function Messaging({ currentUser }: MessagingProps) {
               
                {isDmsExpanded && (
                 <div className="space-y-1 text-xs font-light mt-2 animate-in fade-in duration-150">
-                  {/* Search input to quickly filter existing DM conversations */}
-                  <div className="relative mt-1 mb-2 pr-1">
-                    <Search size={12} className="absolute left-2.5 top-2.5 text-zinc-400" />
-                    <input
-                      type="text"
-                      placeholder="Filter conversations..."
-                      value={dmSearchQuery}
-                      onChange={(e) => setDmSearchQuery(e.target.value)}
-                      className="w-full bg-zinc-50 border border-zinc-200 focus:border-brand-black text-[11px] rounded-xl pl-8 pr-8 py-1.5 focus:outline-none transition-all placeholder:text-zinc-400 font-light"
-                    />
-                    {dmSearchQuery && (
-                      <button
-                        type="button"
-                        onClick={() => setDmSearchQuery('')}
-                        className="absolute right-2.5 top-2.5 text-zinc-400 hover:text-zinc-600 cursor-pointer"
-                      >
-                        <X size={12} />
-                      </button>
-                    )}
-                  </div>
 
                   <div className="space-y-1 max-h-56 overflow-y-auto">
                     {filteredDisplayDms.slice(0, dmLimit).map(u => {
