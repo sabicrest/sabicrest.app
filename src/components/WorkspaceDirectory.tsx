@@ -44,8 +44,8 @@ export default function WorkspaceDirectory({
 
   const itemsPerPage = 12;
 
-  // We want to list all students, trainers or general members (filtering out current user)
-  const displayUsers = usersList.filter(u => u.id !== currentUser.id);
+  // We want to list all students, trainers or general members (including current user so they can view their own card details)
+  const displayUsers = usersList;
 
   // Filter & Search application
   const filteredUsers = displayUsers.filter(u => {
