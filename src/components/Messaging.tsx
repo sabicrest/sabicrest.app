@@ -433,24 +433,8 @@ export default function Messaging({ currentUser }: MessagingProps) {
     // 2. Calculate for DMs
     const users = db.getUsers();
     users.forEach(u => {
-      const dmMessages = messages.filter(m => m.senderId === u.id && m.receiverId === currentUser.id);
-      const lastReadId = lastReadMessageMap[`dm-${u.id}`];
-      if (!lastReadId) {
-        counts[u.id] = dmMessages.length;
-      } else {
-        const idx = dmMessages.findIndex(m => m.id === lastReadId);
-        if (idx !== -1) {
-          counts[u.id] = dmMessages.slice(idx + 1).length;
-        } else {
-          const lastReadMsg = messages.find(m => m.id === lastReadId);
-          if (lastReadMsg) {
-            const lastReadTime = new Date(lastReadMsg.timestamp).getTime();
-            counts[u.id] = dmMessages.filter(m => new Date(m.timestamp).getTime() > lastReadTime).length;
-          } else {
-            counts[u.id] = dmMessages.length;
-          }
-        }
-      }
+      const unreadDmMessages = messages.filter(m => m.senderId === u.id && m.receiverId === currentUser.id && m.read !== true);
+      counts[u.id] = unreadDmMessages.length;
     });
 
     return counts;
@@ -465,8 +449,11 @@ export default function Messaging({ currentUser }: MessagingProps) {
         localStorage.setItem('sabicrest_last_read_map', JSON.stringify(next));
         return next;
       });
+      if (activeDmUser) {
+        db.markMessagesRead(activeDmUser.id, currentUser.id);
+      }
     }
-  }, [chatKey, filteredMessages.length]);
+  }, [chatKey, filteredMessages.length, activeDmUser]);
 
   // Check if a message can be modified (sent by current user, under 10 minutes old)
   const canModifyMessage = (msg: Message) => {
@@ -928,8 +915,19 @@ export default function Messaging({ currentUser }: MessagingProps) {
                           const senderUser = db.getUserById(msg.senderId);
                           return senderUser?.role === 'trainer' && senderUser?.verified ? <VerifiedBadge /> : null;
                         })()}</span>
-                        <span className="text-zinc-400">
-                          {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        <span className="text-zinc-400 flex items-center gap-1 select-none">
+                          <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          {isMine && !msg.channelId && (
+                            <span className="flex items-center leading-none">
+                              {msg.read ? (
+                                <span className="text-sky-400 font-bold text-[13px] tracking-[-3px] mr-1" title="Read/Seen">✓✓</span>
+                              ) : msg.delivered ? (
+                                <span className="text-zinc-400 font-bold text-[13px] tracking-[-3px] mr-1" title="Delivered">✓✓</span>
+                              ) : (
+                                <span className="text-zinc-500 font-bold text-[11px]" title="Sent">✓</span>
+                              )}
+                            </span>
+                          )}
                         </span>
                       </div>
 

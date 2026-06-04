@@ -55,6 +55,8 @@ export interface Message {
   attachmentUrl?: string; // base64 payload URL
   attachmentName?: string;
   attachmentType?: 'image' | 'file';
+  delivered?: boolean;
+  read?: boolean;
 }
 
 // Interactive Sabicrest General Community Hub message matching WhatsApp capabilities

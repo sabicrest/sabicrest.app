@@ -94,43 +94,18 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
     });
 
     // 2. Unread from DMs
-    // Get all unique DM sender IDs targeting this user
-    const dmSenders = Array.from(new Set(
-      allMsgs
-        .filter(m => m.receiverId === currentUser.id && m.senderId !== currentUser.id)
-        .map(m => m.senderId)
-    ));
-
-    dmSenders.forEach(senderId => {
-      const dmMessages = allMsgs.filter(m => m.senderId === senderId && m.receiverId === currentUser.id);
-      if (dmMessages.length > 0) {
-        const lastReadId = lastReadMap[`dm-${senderId}`];
-        if (!lastReadId) {
-          unreadTotal += dmMessages.length;
-        } else {
-          const idx = dmMessages.findIndex(m => m.id === lastReadId);
-          if (idx !== -1) {
-            unreadTotal += dmMessages.slice(idx + 1).length;
-          } else {
-            const lastReadMsg = allMsgs.find(m => m.id === lastReadId);
-            if (lastReadMsg) {
-              const lastReadTime = new Date(lastReadMsg.timestamp).getTime();
-              unreadTotal += dmMessages.filter(m => new Date(m.timestamp).getTime() > lastReadTime).length;
-            } else {
-              unreadTotal += dmMessages.length;
-            }
-          }
-        }
-      }
-    });
+    const unreadDMs = allMsgs.filter(m => m.receiverId === currentUser.id && m.senderId !== currentUser.id && m.read !== true);
+    unreadTotal += unreadDMs.length;
 
     setChatCount(unreadTotal);
   };
 
   useEffect(() => {
+    db.markMessagesDelivered(currentUser.id);
     loadNotifications();
     loadChatCount();
     const interval = setInterval(() => {
+      db.markMessagesDelivered(currentUser.id);
       loadNotifications();
       loadChatCount();
     }, 1000);

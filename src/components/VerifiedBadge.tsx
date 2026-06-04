@@ -31,10 +31,25 @@ export default function VerifiedBadge({ className = '' }: VerifiedBadgeProps) {
           e.stopPropagation();
           setShowLabel(prev => !prev);
         }}
-        className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand-yellow hover:bg-amber-400 active:scale-95 transition-all text-brand-black cursor-pointer shadow-3xs"
+        className="inline-flex items-center justify-center w-4 h-4 active:scale-95 transition-transform cursor-pointer"
         title="Verified Sabicrest Trainer"
       >
-        <span className="text-[10px] font-black leading-none text-brand-black">✓</span>
+        <svg
+          viewBox="0 0 24 24"
+          className="w-4 h-4 text-brand-yellow fill-current hover:text-amber-400 drop-shadow-[0_1px_1.5px_rgba(0,0,0,0.15)] transition-colors"
+        >
+          {/* 16-pointed star rosette/badge */}
+          <path d="M12 2l1.9 2.5 3.1-.6.6 3.1 2.5 1.9-1.3 2.9 1.3 2.9-2.5 1.9-.6 3.1-3.1-.6L12 22l-1.9-2.5-3.1.6-.6-3.1-2.5-1.9 1.3-2.9-1.3-2.9 2.5-1.9.6-3.1 3.1.6z" />
+          {/* Vector checkmark tick */}
+          <path
+            d="M8.5 12.5l2.2 2.2 4.8-4.8"
+            fill="none"
+            stroke="#0a0a0a"
+            strokeWidth="3.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </button>
 
       {showLabel && (

@@ -42,6 +42,13 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
   const [profileSignature, setProfileSignature] = useState(currentUser.trainerSignature || '');
   const [trainerRole, setTrainerRole] = useState<'CEO' | 'Mentor'>(currentUser.trainerRole || 'Mentor');
 
+  // Custom in-app dropdown toggle states
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+  const [isGradeDropdownOpen, setIsGradeDropdownOpen] = useState(false);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const [isLevelDropdownOpen, setIsLevelDropdownOpen] = useState(false);
+  const [isStudentDropdownOpen, setIsStudentDropdownOpen] = useState(false);
+
   // Custom Preferences
   const [prefEmailAlerts, setPrefEmailAlerts] = useState(true);
   const [prefSlackSync, setPrefSlackSync] = useState(true);
@@ -74,6 +81,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
   const [currTitle, setCurrTitle] = useState('');
   const [currDesc, setCurrDesc] = useState('');
   const [currCategory, setCurrCategory] = useState('Visual Design');
+  const [customCategory, setCustomCategory] = useState('');
   const [currLevel, setCurrLevel] = useState<'Beginner' | 'Intermediate' | 'Advanced'>('Intermediate');
   const [currDuration, setCurrDuration] = useState(6);
   const [currPrice, setCurrPrice] = useState<number>(150000);
@@ -373,7 +381,25 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
     setEditingCurriculum(curr);
     setCurrTitle(curr.title);
     setCurrDesc(curr.description);
-    setCurrCategory(curr.category);
+    
+    const standardCategories = [
+      "Business",
+      "Marketing",
+      "Design",
+      "Tech",
+      "Vocational (Hairmaking, Carpentry, etc.)",
+      "Visual Design",
+      "Cloud Architecture",
+      "Security Engineering"
+    ];
+    if (standardCategories.includes(curr.category)) {
+      setCurrCategory(curr.category);
+      setCustomCategory('');
+    } else {
+      setCurrCategory('Other');
+      setCustomCategory(curr.category);
+    }
+    
     setCurrLevel(curr.level);
     setCurrDuration(curr.durationWeeks);
     setCurrPrice(curr.price || 150000);
@@ -424,12 +450,14 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
     e.preventDefault();
     if (!currTitle || !currDesc || moduleList.length === 0) return;
 
+    const finalCategory = currCategory === 'Other' && customCategory.trim() ? customCategory.trim() : currCategory;
+
     if (editingCurriculum) {
       const updatedCurr: Curriculum = {
         ...editingCurriculum,
         title: currTitle,
         description: currDesc,
-        category: currCategory,
+        category: finalCategory,
         level: currLevel,
         durationWeeks: Number(currDuration),
         modules: moduleList,
@@ -444,7 +472,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
         trainerName: currentUser.name,
         title: currTitle,
         description: currDesc,
-        category: currCategory,
+        category: finalCategory,
         level: currLevel,
         durationWeeks: Number(currDuration),
         modules: moduleList,
@@ -469,6 +497,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
     // Reset values
     setCurrTitle('');
     setCurrDesc('');
+    setCustomCategory('');
     setCurrPrice(150000);
     setCurrImageUrl('');
     setModuleList([]);
@@ -1210,16 +1239,45 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                   <div>
                     <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1.5">Official Title / Capacity</label>
-                    <select
-                      value={trainerRole}
-                      onChange={(e) => setTrainerRole(e.target.value as 'CEO' | 'Mentor')}
-                      className="w-full text-xs font-light bg-brand-light/50 border border-zinc-150 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow"
-                    >
-                      <option value="Mentor">Authorized Mentor</option>
-                      {profileBusinessName && (
-                        <option value="CEO">CEO of {profileBusinessName}</option>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+                        className="w-full text-left text-xs font-light bg-brand-light/50 border border-zinc-150 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow flex items-center justify-between select-none cursor-pointer"
+                      >
+                        <span>{trainerRole === 'Mentor' ? 'Authorized Mentor' : `CEO of ${profileBusinessName}`}</span>
+                        <ChevronDown size={14} className={`text-zinc-500 transition-transform ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {isRoleDropdownOpen && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setIsRoleDropdownOpen(false)} />
+                          <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-zinc-150 rounded-xl shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTrainerRole('Mentor');
+                                setIsRoleDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-3.5 py-2 text-xs font-light hover:bg-zinc-50 transition-colors select-none ${trainerRole === 'Mentor' ? 'bg-brand-light font-medium text-brand-black' : 'text-zinc-700'}`}
+                            >
+                              Authorized Mentor
+                            </button>
+                            {profileBusinessName && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setTrainerRole('CEO');
+                                  setIsRoleDropdownOpen(false);
+                                }}
+                                className={`w-full text-left px-3.5 py-2 text-xs font-light hover:bg-zinc-50 transition-colors select-none ${trainerRole === 'CEO' ? 'bg-brand-light font-medium text-brand-black' : 'text-zinc-700'}`}
+                              >
+                                CEO of {profileBusinessName}
+                              </button>
+                            )}
+                          </div>
+                        </>
                       )}
-                    </select>
+                    </div>
                     <span className="text-[9px] text-zinc-400 font-light mt-1 block">
                       Determines the subscript subscript text shown underneath your signature line on official PDF certificates.
                     </span>
@@ -1510,18 +1568,48 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Grade Mark</label>
-                  <select
-                    id="grade-mark-select"
-                    value={gradeInput}
-                    onChange={(e) => setGradeInput(e.target.value)}
-                    className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3 py-2.5"
-                  >
-                    <option value="A+">A+ (Outstanding Portfolio)</option>
-                    <option value="A">A (Design Grid Approved)</option>
-                    <option value="B+">B+ (Good spacing balance)</option>
-                    <option value="B">B (Adequate Layout)</option>
-                    <option value="C">C (Action Suggested)</option>
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsGradeDropdownOpen(!isGradeDropdownOpen)}
+                      className="w-full text-left text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3 py-2.5 flex items-center justify-between select-none cursor-pointer"
+                    >
+                      <span>
+                        {gradeInput === 'A+' && 'A+ (Outstanding Portfolio)'}
+                        {gradeInput === 'A' && 'A (Design Grid Approved)'}
+                        {gradeInput === 'B+' && 'B+ (Good spacing balance)'}
+                        {gradeInput === 'B' && 'B (Adequate Layout)'}
+                        {gradeInput === 'C' && 'C (Action Suggested)'}
+                      </span>
+                      <ChevronDown size={14} className={`text-zinc-500 transition-transform ${isGradeDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isGradeDropdownOpen && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setIsGradeDropdownOpen(false)} />
+                        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-zinc-150 rounded-xl shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+                          {[
+                            { value: 'A+', label: 'A+ (Outstanding Portfolio)' },
+                            { value: 'A', label: 'A (Design Grid Approved)' },
+                            { value: 'B+', label: 'B+ (Good spacing balance)' },
+                            { value: 'B', label: 'B (Adequate Layout)' },
+                            { value: 'C', label: 'C (Action Suggested)' }
+                          ].map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => {
+                                setGradeInput(opt.value);
+                                setIsGradeDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 text-xs font-light hover:bg-zinc-50 transition-colors select-none ${gradeInput === opt.value ? 'bg-brand-light font-medium text-brand-black' : 'text-zinc-700'}`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -1617,10 +1705,10 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Course Syllabus Scope</label>
+                <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Course Summary & Outcome (what the end goal will be for the student who takes the course)</label>
                 <textarea
                   id="cur-input-desc"
-                  placeholder="Draft syllabus details, course objectives, and targets for students..."
+                  placeholder="Draft a brief course summary & outcome, including what the end goal will be for the student who takes the course..."
                   value={currDesc}
                   onChange={(e) => setCurrDesc(e.target.value)}
                   className="w-full min-h-20 text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow resize-none"
@@ -1629,32 +1717,92 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="col-span-1">
+                <div className="col-span-1 relative z-30">
                   <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Category</label>
-                  <select
-                    id="cur-select-category"
-                    value={currCategory}
-                    onChange={(e) => setCurrCategory(e.target.value)}
-                    className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-2 py-2"
-                  >
-                    <option value="Visual Design">Visual Design</option>
-                    <option value="Cloud Architecture">Cloud Architecture</option>
-                    <option value="Privacy Engineering">Security Engineering</option>
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCategoryDropdownOpen(!isCategoryDropdownOpen);
+                        setIsLevelDropdownOpen(false);
+                      }}
+                      className="w-full text-left text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-2.5 py-2 flex items-center justify-between select-none cursor-pointer"
+                    >
+                      <span className="truncate">{currCategory}</span>
+                      <ChevronDown size={12} className={`text-zinc-500 shrink-0 transition-transform ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isCategoryDropdownOpen && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setIsCategoryDropdownOpen(false)} />
+                        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-zinc-150 rounded-xl shadow-lg max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-150">
+                          {[
+                            "Business",
+                            "Marketing",
+                            "Design",
+                            "Tech",
+                            "Vocational (Hairmaking, Carpentry, etc.)",
+                            "Visual Design",
+                            "Cloud Architecture",
+                            "Security Engineering",
+                            "Other"
+                          ].map((cat) => (
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() => {
+                                setCurrCategory(cat);
+                                setIsCategoryDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-2.5 py-2 text-[11px] font-light hover:bg-zinc-50 transition-colors select-none ${currCategory === cat ? 'bg-brand-light font-medium text-brand-black' : 'text-zinc-700'}`}
+                            >
+                              {cat}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
 
-                <div className="col-span-1">
+                <div className="col-span-1 relative z-30">
                   <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Target Skill level</label>
-                  <select
-                    id="cur-select-level"
-                    value={currLevel}
-                    onChange={(e) => setCurrLevel(e.target.value as any)}
-                    className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-2 py-2"
-                  >
-                    <option value="Beginner">Beginner</option>
-                    <option value="Intermediate">Intermediate</option>
-                    <option value="Advanced">Advanced</option>
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsLevelDropdownOpen(!isLevelDropdownOpen);
+                        setIsCategoryDropdownOpen(false);
+                      }}
+                      className="w-full text-left text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-2.5 py-2 flex items-center justify-between select-none cursor-pointer"
+                    >
+                      <span className="truncate">{currLevel}</span>
+                      <ChevronDown size={12} className={`text-zinc-500 shrink-0 transition-transform ${isLevelDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isLevelDropdownOpen && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setIsLevelDropdownOpen(false)} />
+                        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-zinc-150 rounded-xl shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+                          {[
+                            "Beginner",
+                            "Intermediate",
+                            "Advanced"
+                          ].map((lvl) => (
+                            <button
+                              key={lvl}
+                              type="button"
+                              onClick={() => {
+                                setCurrLevel(lvl as any);
+                                setIsLevelDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-2.5 py-2 text-[11px] font-light hover:bg-zinc-50 transition-colors select-none ${currLevel === lvl ? 'bg-brand-light font-medium text-brand-black' : 'text-zinc-700'}`}
+                            >
+                              {lvl}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 <div className="col-span-1">
@@ -1684,6 +1832,20 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                   />
                 </div>
               </div>
+
+              {currCategory === 'Other' && (
+                <div className="animate-in fade-in duration-150">
+                  <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Custom Category Name</label>
+                  <input
+                    type="text"
+                    placeholder="Enter custom category name..."
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow"
+                    required
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1.5 flex items-center gap-1.5">
@@ -1840,19 +2002,38 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
             <form onSubmit={handleAssignAssignment} className="space-y-4">
               <div>
                 <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Target Student</label>
-                <select
-                  id="assign-select-student"
-                  value={assignStudentId}
-                  onChange={(e) => setAssignStudentId(e.target.value)}
-                  className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow"
-                  required
-                >
-                  {allStudents.map(student => (
-                    <option key={student.id} value={student.id}>
-                      {student.name} ({student.email})
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsStudentDropdownOpen(!isStudentDropdownOpen)}
+                    className="w-full text-left text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 flex items-center justify-between select-none cursor-pointer"
+                  >
+                    <span>
+                      {allStudents.find(s => s.id === assignStudentId)?.name || 'Select a student'} {allStudents.find(s => s.id === assignStudentId) ? `(${allStudents.find(s => s.id === assignStudentId)?.email})` : ''}
+                    </span>
+                    <ChevronDown size={14} className={`text-zinc-500 transition-transform ${isStudentDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isStudentDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setIsStudentDropdownOpen(false)} />
+                      <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-zinc-150 rounded-xl shadow-lg max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-150">
+                        {allStudents.map((student) => (
+                          <button
+                            key={student.id}
+                            type="button"
+                            onClick={() => {
+                              setAssignStudentId(student.id);
+                              setIsStudentDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-3.5 py-2 text-xs font-light hover:bg-zinc-50 transition-colors select-none ${assignStudentId === student.id ? 'bg-brand-light font-medium text-brand-black' : 'text-zinc-700'}`}
+                          >
+                            {student.name} ({student.email})
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
 
               <div>

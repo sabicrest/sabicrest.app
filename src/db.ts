@@ -770,6 +770,38 @@ export class AppwriteDatabase {
     this.logTransaction('TOGGLE_DM_REACTION', 'Messages', `msgId: ${msgId}, emoji: ${emoji}`);
   }
 
+  markMessagesDelivered(userId: string): void {
+    let hasChanged = false;
+    this.messages = this.messages.map(m => {
+      if (m.receiverId === userId && !m.delivered) {
+        const next = { ...m, delivered: true };
+        this.saveToAppwrite('messages', m.id, next);
+        hasChanged = true;
+        return next;
+      }
+      return m;
+    });
+    if (hasChanged) {
+      this.saveToStorage();
+    }
+  }
+
+  markMessagesRead(senderId: string, receiverId: string): void {
+    let hasChanged = false;
+    this.messages = this.messages.map(m => {
+      if (m.senderId === senderId && m.receiverId === receiverId && (!m.delivered || !m.read)) {
+        const next = { ...m, delivered: true, read: true };
+        this.saveToAppwrite('messages', m.id, next);
+        hasChanged = true;
+        return next;
+      }
+      return m;
+    });
+    if (hasChanged) {
+      this.saveToStorage();
+    }
+  }
+
   // --- Real-time Typing Statuses ---
   private typingUsers: { [chatId: string]: { [userId: string]: { name: string; timestamp: number } } } = {};
 
