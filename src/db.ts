@@ -18,6 +18,7 @@ import {
   CourseEnrollment,
   AdminActivity
 } from './types';
+import { audio } from './utils/audio';
 
 let appwriteClient: Client | null = null;
 let appwriteDatabases: Databases | null = null;
@@ -167,6 +168,7 @@ export class AppwriteDatabase {
   private transactions: DbTransactionLog[];
   private enrollments: CourseEnrollment[];
   private adminActivities: AdminActivity[];
+  private knownNotificationIds: Set<string> = new Set<string>();
 
   constructor() {
     // Force reset old mock keys on first run to clean up active browser storage
@@ -199,8 +201,11 @@ export class AppwriteDatabase {
     this.enrollments = JSON.parse(localStorage.getItem('sc_enrollments') || JSON.stringify(INITIAL_ENROLLMENTS));
     this.adminActivities = JSON.parse(localStorage.getItem('sc_admin_activities') || '[]');
 
+    this.notifications.forEach(n => this.knownNotificationIds.add(n.id));
+
     this.saveToStorage();
     this.syncFromAppwrite();
+    this.syncFastMessages();
   }
 
   private saveToStorage() {
@@ -317,6 +322,95 @@ export class AppwriteDatabase {
     } as User;
   }
 
+  private isFastSyncing = false;
+  async syncFastMessages(instant = false) {
+    if (this.isFastSyncing && !instant) return;
+    this.isFastSyncing = true;
+    try {
+      await Promise.all([
+        (async () => {
+          try {
+            const res = await this.proxyList('messages');
+            if (res && res.documents && res.documents.length > 0) {
+              const syncedMessages = res.documents.map((doc: any) => {
+                const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
+                return { id: $id, ...data } as any;
+              });
+              
+              const merged = [...this.messages];
+              let updated = false;
+              syncedMessages.forEach((remoteMsg: Message) => {
+                const idx = merged.findIndex(m => m.id === remoteMsg.id);
+                if (idx >= 0) {
+                  if (JSON.stringify(merged[idx]) !== JSON.stringify(remoteMsg)) {
+                    merged[idx] = remoteMsg;
+                    updated = true;
+                  }
+                } else {
+                  merged.push(remoteMsg);
+                  updated = true;
+                }
+              });
+              if (updated) {
+                this.messages = merged;
+                localStorage.setItem('sc_messages', JSON.stringify(this.messages));
+              }
+            }
+          } catch (err) {
+            // fail-silent
+          }
+        })(),
+        (async () => {
+          try {
+            const res = await this.proxyList('hub_messages');
+            if (res && res.documents && res.documents.length > 0) {
+              const syncedHub = res.documents.map((doc: any) => {
+                const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
+                let parsedReactions = {};
+                if (typeof data.reactions === 'string') {
+                  try { parsedReactions = JSON.parse(data.reactions); } catch(e){}
+                } else if (data.reactions) {
+                  parsedReactions = data.reactions;
+                }
+                return { id: $id, ...data, reactions: parsedReactions } as any;
+              });
+              
+              const merged = [...this.hubMessages];
+              let updated = false;
+              syncedHub.forEach((remoteMsg: HubMessage) => {
+                const idx = merged.findIndex(m => m.id === remoteMsg.id);
+                if (idx >= 0) {
+                  if (JSON.stringify(merged[idx]) !== JSON.stringify(remoteMsg)) {
+                    merged[idx] = remoteMsg;
+                    updated = true;
+                  }
+                } else {
+                  merged.push(remoteMsg);
+                  updated = true;
+                }
+              });
+              if (updated) {
+                this.hubMessages = merged;
+                localStorage.setItem('sc_hub_messages', JSON.stringify(this.hubMessages));
+              }
+            }
+          } catch (err) {
+            // fail-silent
+          }
+        })()
+      ]);
+    } catch (e) {
+      // ignore
+    } finally {
+      this.isFastSyncing = false;
+      if (!instant) {
+        setTimeout(() => {
+          this.syncFastMessages();
+        }, 750);
+      }
+    }
+  }
+
   async syncFromAppwrite() {
     try {
       console.log('Appwrite Background Sync Starting...');
@@ -329,62 +423,6 @@ export class AppwriteDatabase {
         }
       } catch (err) {
         console.warn('Appwrite sync error [users]:', err);
-      }
-
-      // Sync Messages
-      try {
-        const res = await this.proxyList('messages');
-        if (res && res.documents && res.documents.length > 0) {
-          const syncedMessages = res.documents.map((doc: any) => {
-            const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
-            return { id: $id, ...data } as any;
-          });
-          
-          const merged = [...this.messages];
-          syncedMessages.forEach((remoteMsg: Message) => {
-            const idx = merged.findIndex(m => m.id === remoteMsg.id);
-            if (idx >= 0) {
-              merged[idx] = remoteMsg;
-            } else {
-              merged.push(remoteMsg);
-            }
-          });
-          this.messages = merged;
-          this.saveToStorage();
-        }
-      } catch (err) {
-        console.warn('Appwrite sync error [messages]:', err);
-      }
-
-      // Sync Hub Messages
-      try {
-        const res = await this.proxyList('hub_messages');
-        if (res && res.documents && res.documents.length > 0) {
-          const syncedHub = res.documents.map((doc: any) => {
-            const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
-            let parsedReactions = {};
-            if (typeof data.reactions === 'string') {
-              try { parsedReactions = JSON.parse(data.reactions); } catch(e){}
-            } else if (data.reactions) {
-              parsedReactions = data.reactions;
-            }
-            return { id: $id, ...data, reactions: parsedReactions } as any;
-          });
-          
-          const merged = [...this.hubMessages];
-          syncedHub.forEach((remoteMsg: HubMessage) => {
-            const idx = merged.findIndex(m => m.id === remoteMsg.id);
-            if (idx >= 0) {
-              merged[idx] = remoteMsg;
-            } else {
-              merged.push(remoteMsg);
-            }
-          });
-          this.hubMessages = merged;
-          this.saveToStorage();
-        }
-      } catch (err) {
-        console.warn('Appwrite sync error [hub_messages]:', err);
       }
 
       // Sync Events
@@ -474,9 +512,13 @@ export class AppwriteDatabase {
       try {
         const res = await this.proxyList('notifications');
         if (res && res.documents) {
-          this.notifications = res.documents.map((doc: any) => {
+          const syncedNotifs = res.documents.map((doc: any) => {
             const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
             return { id: $id, ...data } as any;
+          });
+          this.notifications = syncedNotifs;
+          syncedNotifs.forEach((n: NotificationAlert) => {
+            this.checkAndPlayNotificationSound(n);
           });
         }
       } catch (err) {
@@ -515,6 +557,10 @@ export class AppwriteDatabase {
       console.log('Appwrite Background Sync Completed Successfully!');
     } catch (globalErr) {
       console.warn('Appwrite Global sync warning (offline secure local state activated):', globalErr);
+    } finally {
+      setTimeout(() => {
+        this.syncFromAppwrite();
+      }, 4000);
     }
   }
 
@@ -660,7 +706,9 @@ export class AppwriteDatabase {
     this.messages.push(newMsg);
     this.saveToStorage();
     this.logTransaction('INSERT_SECURE_MESSAGE', 'Messages', JSON.stringify(newMsg));
-    this.saveToAppwrite('messages', newMsg.id, newMsg);
+    this.saveToAppwrite('messages', newMsg.id, newMsg).then(() => {
+      this.syncFastMessages(true);
+    });
     return newMsg;
   }
 
@@ -674,7 +722,9 @@ export class AppwriteDatabase {
           content,
           encryptedContent: encrypted
         };
-        this.saveToAppwrite('messages', msgId, updated);
+        this.saveToAppwrite('messages', msgId, updated).then(() => {
+          this.syncFastMessages(true);
+        });
         return updated;
       }
       return m;
@@ -690,7 +740,9 @@ export class AppwriteDatabase {
     this.messages = this.messages.filter(m => m.id !== msgId);
     this.saveToStorage();
     this.logTransaction('DELETE_SECURE_MESSAGE', 'Messages', msgId);
-    this.saveToAppwrite('messages', msgId, null, true);
+    this.saveToAppwrite('messages', msgId, null, true).then(() => {
+      this.syncFastMessages(true);
+    });
   }
 
   addMessageReaction(msgId: string, emoji: string, userId: string): void {
@@ -707,7 +759,9 @@ export class AppwriteDatabase {
           reactions[emoji] = [...voters, userId];
         }
         const updated = { ...m, reactions };
-        this.saveToAppwrite('messages', msgId, updated);
+        this.saveToAppwrite('messages', msgId, updated).then(() => {
+          this.syncFastMessages(true);
+        });
         return updated;
       }
       return m;
@@ -772,7 +826,9 @@ export class AppwriteDatabase {
     this.hubMessages.push(newMsg);
     this.saveToStorage();
     this.logTransaction('INSERT_HUB_MESSAGE', 'HubMessages', JSON.stringify(newMsg));
-    this.saveToAppwrite('hub_messages', newMsg.id, newMsg);
+    this.saveToAppwrite('hub_messages', newMsg.id, newMsg).then(() => {
+      this.syncFastMessages(true);
+    });
     return newMsg;
   }
 
@@ -797,7 +853,9 @@ export class AppwriteDatabase {
     this.logTransaction('TOGGLE_HUB_REACTION', 'HubMessages', `msgId: ${msgId}, emoji: ${emoji}`);
     const updated = this.hubMessages.find(m => m.id === msgId);
     if (updated) {
-      this.saveToAppwrite('hub_messages', msgId, updated);
+      this.saveToAppwrite('hub_messages', msgId, updated).then(() => {
+        this.syncFastMessages(true);
+      });
     }
   }
 
@@ -812,7 +870,9 @@ export class AppwriteDatabase {
     this.logTransaction('TOGGLE_HUB_SOLVED', 'HubMessages', `msgId: ${msgId}`);
     const updated = this.hubMessages.find(m => m.id === msgId);
     if (updated) {
-      this.saveToAppwrite('hub_messages', msgId, updated);
+      this.saveToAppwrite('hub_messages', msgId, updated).then(() => {
+        this.syncFastMessages(true);
+      });
     }
   }
 
@@ -957,6 +1017,30 @@ export class AppwriteDatabase {
   }
 
   // --- Notifications CRUD ---
+  checkAndPlayNotificationSound(n: NotificationAlert) {
+    if (this.knownNotificationIds.has(n.id)) {
+      return;
+    }
+    this.knownNotificationIds.add(n.id);
+
+    let loggedInUserId: string | null = null;
+    try {
+      const saved = localStorage.getItem('sabicrest_current_user');
+      if (saved) {
+        const user = JSON.parse(saved);
+        loggedInUserId = user.id;
+      }
+    } catch (e) {}
+
+    if (loggedInUserId && (n.userId === loggedInUserId || n.userId === 'all') && !n.read) {
+      try {
+        audio.playCurrentMessageSound();
+      } catch (err) {
+        console.warn('Could not play notification sound:', err);
+      }
+    }
+  }
+
   getNotifications(): NotificationAlert[] {
     return this.notifications;
   }
@@ -971,6 +1055,7 @@ export class AppwriteDatabase {
     this.notifications.push(newNotif);
     this.saveToStorage();
     this.saveToAppwrite('notifications', newNotif.id, newNotif);
+    this.checkAndPlayNotificationSound(newNotif);
     return newNotif;
   }
 
