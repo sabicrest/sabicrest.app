@@ -9,7 +9,7 @@ import { db } from '../db';
 import { Bell, LogOut, CheckCircle, Shield, Menu, X, Terminal, Sparkles, AlertTriangle, MessageSquare, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 // @ts-ignore
-import sabicrestLogo from '../assets/images/sabicrest_logo_1780159096569.png';
+import sabicrestLogo from '../assets/images/sabicrest_logo_1780580951205.png';
 
 interface NavigationProps {
   currentUser: User;

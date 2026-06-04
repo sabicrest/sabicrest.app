@@ -8,7 +8,7 @@ import { User, UserRole } from '../types';
 import { db, encryptPayload, getAppwriteAccount, getAdminEmails } from '../db';
 import { Shield, Sparkles, Key, Mail, Lock, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 // @ts-ignore
-import sabicrestLogo from '../assets/images/sabicrest_logo_1780159096569.png';
+import sabicrestLogo from '../assets/images/sabicrest_logo_1780580951205.png';
 
 interface LoginScreenProps {
   onLoginSuccess: (user: User) => void;
