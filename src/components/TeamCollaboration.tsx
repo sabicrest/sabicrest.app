@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { User, Team, TeamTask } from '../types';
-import { db } from '../db';
+import { db, getAdminEmails } from '../db';
 import { CheckSquare, Square, Users, BookOpen, Layers, Plus, Save, Award } from 'lucide-react';
 
 interface TeamCollaborationProps {
@@ -175,15 +175,28 @@ export default function TeamCollaboration({ currentUser }: TeamCollaborationProp
             <div className="mt-6 pt-6 border-t border-zinc-50">
               <h4 className="text-[10px] uppercase font-semibold text-brand-black tracking-wider mb-3">Verified Participants ({teamMembersDetails.length})</h4>
               <div className="space-y-3">
-                {teamMembersDetails.map(member => (
-                  <div key={member.id} className="flex items-center gap-2.5">
-                    <img src={member.avatar} alt="member avatar" className="w-7 h-7 rounded-full object-cover border border-zinc-100 referrerPolicy='no-referrer'" />
-                    <div>
-                      <div className="text-xs font-medium text-brand-black">{member.name}</div>
-                      <div className="text-[9px] text-zinc-400 font-mono font-light uppercase tracking-wider">{member.email}</div>
+                {teamMembersDetails.map(member => {
+                  const adminEmails = getAdminEmails();
+                  const isAdminEmail = adminEmails.includes(member.email?.trim().toLowerCase());
+                  let displayedEmail = member.email;
+                  if (isAdminEmail && member.email) {
+                    const [local, domain] = member.email.split('@');
+                    if (domain) {
+                      displayedEmail = local.length <= 2 
+                        ? `${local[0]}***@${domain}` 
+                        : `${local[0]}***${local[local.length - 1]}@${domain}`;
+                    }
+                  }
+                  return (
+                    <div key={member.id} className="flex items-center gap-2.5">
+                      <img src={member.avatar} alt="member avatar" className="w-7 h-7 rounded-full object-cover border border-zinc-100 referrerPolicy='no-referrer'" />
+                      <div>
+                        <div className="text-xs font-medium text-brand-black">{member.name}</div>
+                        <div className="text-[9px] text-zinc-400 font-mono font-light uppercase tracking-wider">{displayedEmail}</div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

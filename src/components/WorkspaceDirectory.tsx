@@ -7,9 +7,13 @@ import React, { useState } from 'react';
 import { ArrowLeft, MessageSquare, Sparkles, Search, ChevronDown, ChevronUp, MessageCircle, ExternalLink } from 'lucide-react';
 import { motion } from 'motion/react';
 import { User } from '../types';
+import VerifiedBadge from './VerifiedBadge';
 
-const obfuscateEmail = (email: string) => {
+const obfuscateEmail = (email: string, revealsRealEmail = false) => {
   if (!email) return '';
+  if (revealsRealEmail) {
+    return email;
+  }
   const [local, domain] = email.split('@');
   if (!domain) return local;
   if (local.length <= 2) {
@@ -248,7 +252,10 @@ export default function WorkspaceDirectory({
                     )}
                   </div>
                   <div className="space-y-1 overflow-hidden">
-                    <h4 className="font-semibold text-brand-black text-sm truncate">{u.name}</h4>
+                    <h4 className="font-semibold text-brand-black text-sm truncate flex items-center gap-1.5">
+                      <span>{u.name}</span>
+                      {u.verified && <VerifiedBadge />}
+                    </h4>
                     <div className="flex flex-wrap items-center gap-1.5 font-light">
                       <span className={`text-[8.5px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                         u.role === 'admin' 
@@ -300,7 +307,7 @@ export default function WorkspaceDirectory({
                   <div className="space-y-0.5">
                     <span className="text-zinc-400 text-[9px] uppercase font-bold tracking-wider">Email Address</span>
                     <p className="text-xs text-brand-black font-mono truncate">
-                      {currentUser.role === 'trainer' || currentUser.role === 'admin' ? u.email : obfuscateEmail(u.email)}
+                      {obfuscateEmail(u.email, currentUser.role === 'trainer' || currentUser.role === 'admin')}
                     </p>
                   </div>
 

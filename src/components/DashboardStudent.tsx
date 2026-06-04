@@ -776,28 +776,6 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
             Track certification degrees, evaluate active assignments, and collaborate in real-time.
           </p>
         </div>
-
-        {/* Dynamic header search box */}
-        <div className="relative z-10 w-full md:w-64 shrink-0">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400">
-            <Search size={14} />
-          </span>
-          <input
-            type="text"
-            placeholder="Search assignments or certificates..."
-            value={dashboardSearchQuery}
-            onChange={(e) => setDashboardSearchQuery(e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-hidden focus:border-brand-yellow font-light shadow-2xs"
-          />
-          {dashboardSearchQuery && (
-            <button 
-              onClick={() => setDashboardSearchQuery('')} 
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white cursor-pointer"
-            >
-              <X size={12} />
-            </button>
-          )}
-        </div>
       </div>
 
       {/* Analytics Bento Grid Row */}

@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
-import { db, encryptPayload, getAppwriteAccount } from '../db';
+import { db, encryptPayload, getAppwriteAccount, getAdminEmails } from '../db';
 import { Shield, Sparkles, Key, Mail, Lock, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 // @ts-ignore
 import sabicrestLogo from '../assets/images/sabicrest_logo_1780159096569.png';
@@ -119,7 +119,9 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     try {
       // Live sync fetch of the users from Appwrite users collection
       const users = await db.fetchLiveUsers();
-      let emailAddress = provider === 'Google' ? 'officialsabicrest@gmail.com' : 'student.mentee@edu.sabicrest.com';
+      const adminEmails = getAdminEmails();
+      const defaultAdmin = adminEmails[0] || 'officialsabicrest@gmail.com';
+      let emailAddress = provider === 'Google' ? defaultAdmin : 'student.mentee@edu.sabicrest.com';
       let matched = users.find(u => u.email.toLowerCase() === emailAddress.toLowerCase());
       
       if (!matched) {
@@ -290,7 +292,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                   <input
                     id="admin-input-email"
                     type="email"
-                    placeholder="E.g., CAO officialsabicrest@gmail.com"
+                    placeholder={`E.g., CAO ${getAdminEmails()[0] || 'officialsabicrest@gmail.com'}`}
                     value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
                     className="w-full text-sm font-light bg-brand-light border border-zinc-100 rounded-xl pl-10 pr-4 py-3 focus:outline-hidden focus:border-brand-yellow transition-all text-black"
@@ -485,13 +487,16 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           )}
 
           <div id="login-field-email">
-            <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Academic Email Address</label>
+            <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">
+              {isRegistering ? "Email Address" : "Academic Email Address"}
+            </label>
             <div className="relative">
               <Mail size={14} className="absolute left-4 top-4 text-zinc-300" />
               <input
                 id="login-input-email"
                 type="email"
-                placeholder="name@edu.sabicrest.com"
+                name={isRegistering ? "email address" : "email"}
+                placeholder={isRegistering ? "enter your email" : "name@edu.sabicrest.com"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full text-sm font-light bg-brand-light border border-zinc-100 rounded-xl pl-10 pr-4 py-3 focus:outline-hidden focus:border-brand-yellow transition-all"

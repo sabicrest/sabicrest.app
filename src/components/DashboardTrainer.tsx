@@ -496,27 +496,6 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
         </div>
 
         <div className="relative z-10 flex flex-wrap items-center gap-2 shrink-0">
-          {/* Dynamic header search box */}
-          <div className="relative w-full sm:w-48">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
-              <Search size={12} />
-            </span>
-            <input
-              type="text"
-              placeholder="Search screen..."
-              value={dashboardSearchQuery}
-              onChange={(e) => setDashboardSearchQuery(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-8 pr-4 py-2 text-xs text-white placeholder-zinc-550 focus:outline-hidden focus:border-brand-yellow font-light"
-            />
-            {dashboardSearchQuery && (
-              <button 
-                onClick={() => setDashboardSearchQuery('')} 
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white cursor-pointer"
-              >
-                <X size={10} />
-              </button>
-            )}
-          </div>
           <button
             id="assign-assignment-trigger"
             onClick={() => setShowAssignModal(true)}
@@ -867,18 +846,6 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
           <ClipboardCheck size={13} className={activeSubTab === 'work' ? 'text-brand-yellow font-bold' : 'text-zinc-400'} />
           Deliverables Queue & Assignments
         </button>
-
-        <button
-          onClick={() => setActiveSubTab('settings')}
-          className={`py-3 px-4 text-xs uppercase tracking-wider font-medium border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
-            activeSubTab === 'settings'
-              ? 'border-brand-yellow text-brand-black'
-              : 'border-transparent text-zinc-400 hover:text-zinc-650'
-          }`}
-        >
-          <Settings size={13} className={activeSubTab === 'settings' ? 'text-brand-yellow font-bold' : 'text-zinc-400'} />
-          Trainer Settings & Profile
-        </button>
       </div>
 
       {activeSubTab === 'work' && (
@@ -1094,7 +1061,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
       )}
 
       {activeSubTab === 'settings' && (
-        <div id="trainer-settings-workspace" className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-200">
+        <div id="trainer-settings-workspace" className="hidden">
           
           {/* Settings & Profile form */}
           <div className="lg:col-span-2 bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs space-y-6">

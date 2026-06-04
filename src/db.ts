@@ -98,11 +98,40 @@ const generateTxHash = (): string => {
 };
 
 /// Initial state mock definitions (Offline seed fallback database)
+const decodeBase64 = (b64: string): string => {
+  try {
+    if (typeof window !== 'undefined' && window.atob) {
+      return window.atob(b64);
+    }
+    return '';
+  } catch {
+    return '';
+  }
+};
+
+export const getAdminEmails = (): string[] => {
+  const envEmails = import.meta.env.VITE_ALLOWED_ADMIN_EMAILS || '';
+  if (envEmails.trim()) {
+    return envEmails.split(',').map((e: string) => e.trim().toLowerCase()).filter(Boolean);
+  }
+  const BASE64_ADMINS = [
+    'b2ZmaWNpYWxzYWJpY3Jlc3RAZ21haWwuY29t',
+    'b2ZmaWNpYWxwcmluY2VkaWtlQGdtYWlsLmNvbQ==',
+    'bWljaGFlbGJlcm5hcmRvbGF5ZW1pQGdtYWlsLmNvbQ==',
+    'aWFtcGF1bGtleXNAZ21haWwuY29t'
+  ];
+  return BASE64_ADMINS.map(decodeBase64).filter(Boolean);
+};
+
+const getFirstAdminEmail = (): string => {
+  return getAdminEmails()[0] || 'officialsabicrest@gmail.com';
+};
+
 const INITIAL_USERS: User[] = [
   {
     id: 'u-admin-1',
     name: 'Chief Admin Officer',
-    email: 'officialsabicrest@gmail.com',
+    email: getFirstAdminEmail(),
     role: 'admin',
     password: 'password123',
     verified: true,
