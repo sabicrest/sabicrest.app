@@ -353,23 +353,23 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
     <div id="admin-dashboard-root" className="py-6 max-w-7xl mx-auto px-4 select-none">
       
       {/* Header Banner - Upgraded to match Student/Trainer aesthetics */}
-      <div id="admin-hero-banner" className="bg-brand-black text-white rounded-3xl p-8 mb-8 relative overflow-hidden shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div id="admin-hero-banner" className="bg-brand-black dark:bg-brand-yellow text-white dark:text-black rounded-3xl p-8 mb-8 relative overflow-hidden shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border border-transparent dark:border-white">
         <div className="absolute top-0 right-0 w-96 h-96 bg-zinc-800/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
         <div className="relative z-10 space-y-2 max-w-2xl">
-          <span className="text-[10px] uppercase font-mono tracking-widest bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full border border-zinc-700">
+          <span className="text-[10px] uppercase font-mono tracking-widest bg-zinc-800 dark:bg-black/10 text-zinc-300 dark:text-black px-3 py-1 rounded-full border border-zinc-700 dark:border-black/20">
             Welcome back
           </span>
-          <h2 className="text-2xl md:text-3xl font-light tracking-tight">
-            Administration dashboard // <span className="font-semibold text-brand-yellow">{currentUser.name}</span>
+          <h2 className="text-2xl md:text-3xl font-light tracking-tight text-white dark:text-black">
+            Administration dashboard // <span className="font-semibold text-brand-yellow dark:text-black">{currentUser.name}</span>
           </h2>
-          <p className="text-xs text-zinc-400 font-light leading-relaxed">
+          <p className="text-xs text-zinc-400 dark:text-black/85 font-light leading-relaxed">
             Review course proposals, approve educational materials, manage user accounts, and view platform activity.
           </p>
         </div>
 
         {/* Dynamic header search box */}
         <div className="relative z-10 w-full md:w-64 shrink-0">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400">
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-black/60">
             <Search size={14} />
           </span>
           <input
@@ -377,12 +377,12 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
             placeholder="Search users or courses..."
             value={dashboardSearchQuery}
             onChange={(e) => setDashboardSearchQuery(e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-hidden focus:border-brand-yellow font-light shadow-2xs"
+            className="w-full bg-zinc-900 dark:bg-black/10 border border-zinc-700 dark:border-black/20 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white dark:text-black placeholder-zinc-500 dark:placeholder-black/50 focus:outline-hidden focus:border-brand-yellow dark:focus:border-black font-light shadow-2xs"
           />
           {dashboardSearchQuery && (
             <button 
               onClick={() => setDashboardSearchQuery('')} 
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white cursor-pointer"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white dark:text-black/60 dark:hover:text-black cursor-pointer"
             >
               <X size={12} />
             </button>

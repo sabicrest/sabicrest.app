@@ -509,17 +509,17 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
     <div id="trainer-dashboard-root" className="py-6 max-w-7xl mx-auto px-4 select-none">
       
       {/* Header Banner - Upgraded to match Settings aesthetics */}
-      <div id="trainer-hero-banner" className="bg-brand-black text-white rounded-3xl p-8 mb-8 relative overflow-hidden shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div id="trainer-hero-banner" className="bg-brand-black dark:bg-brand-yellow text-white dark:text-black rounded-3xl p-8 mb-8 relative overflow-hidden shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border border-transparent dark:border-white">
         <div className="absolute top-0 right-0 w-96 h-96 bg-zinc-800/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
         <div className="relative z-10 space-y-2 max-w-2xl">
-          <span className="text-[10px] uppercase font-mono tracking-widest bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full border border-zinc-700">
+          <span className="text-[10px] uppercase font-mono tracking-widest bg-zinc-800 dark:bg-black/10 text-zinc-300 dark:text-black px-3 py-1 rounded-full border border-zinc-700 dark:border-black/20">
             Welcome back
           </span>
-          <h2 className="text-2xl md:text-3xl font-light tracking-tight flex items-center gap-1.5 flex-wrap">
-            Trainer dashboard // <span className="font-semibold text-brand-yellow">{currentUser.name}</span>
+          <h2 className="text-2xl md:text-3xl font-light tracking-tight flex items-center gap-1.5 flex-wrap text-white dark:text-black">
+            Trainer dashboard // <span className="font-semibold text-brand-yellow dark:text-black">{currentUser.name}</span>
             {currentUser.verified && <VerifiedBadge />}
           </h2>
-          <p className="text-xs text-zinc-400 font-light leading-relaxed">
+          <p className="text-xs text-zinc-400 dark:text-black/85 font-light leading-relaxed">
             Propose core courses, review student submissions, and grade completed works.
           </p>
         </div>

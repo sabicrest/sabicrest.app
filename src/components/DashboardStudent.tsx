@@ -18,10 +18,11 @@ import {
 
 interface DashboardStudentProps {
   currentUser: User;
+  activeTab?: string;
   onNavigateChange: (tabId: string) => void;
 }
 
-export default function DashboardStudent({ currentUser, onNavigateChange }: DashboardStudentProps) {
+export default function DashboardStudent({ currentUser, activeTab, onNavigateChange }: DashboardStudentProps) {
   const [assignments, setAssignments] = useState<Assignment[]>(
     db.getAssignments().filter(a => a.studentId === currentUser.id)
   );
@@ -36,6 +37,16 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
 
   // Sub Tab states
   const [activeSubTab, setActiveSubTab] = useState<'assignments' | 'register'>('assignments');
+
+  useEffect(() => {
+    if (activeTab === 'courses') {
+      setActiveSubTab('register');
+    } else if (activeTab === 'tasks') {
+      setActiveSubTab('assignments');
+    } else if (activeTab === 'dashboard') {
+      setActiveSubTab('assignments');
+    }
+  }, [activeTab]);
 
   // Profile fields state
   const [profileName, setProfileName] = useState(currentUser.name);
@@ -762,151 +773,20 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
   return (
     <div id="student-dashboard-root" className="py-6 max-w-7xl mx-auto px-4 select-none">
       
-      {/* Header Banner - Upgraded to match Settings aesthetics */}
-      <div id="student-hero-banner" className="bg-brand-black text-white rounded-3xl p-8 mb-8 relative overflow-hidden shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-zinc-800/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
-        <div className="relative z-10 space-y-2 max-w-2xl">
-          <span className="text-[10px] uppercase font-mono tracking-widest bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full border border-zinc-700">
-            Welcome back
-          </span>
-          <h2 className="text-2xl md:text-3xl font-light tracking-tight">
-            Welcome back, <span className="font-semibold text-brand-yellow">{currentUser.name}</span>
-          </h2>
-          <p className="text-xs text-zinc-400 font-light leading-relaxed">
-            Track certification degrees, evaluate active assignments, and collaborate in real-time.
-          </p>
-        </div>
-      </div>
-
-      {/* Analytics Bento Grid Row */}
-      <div id="student-bento-row" className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        
-        <div 
-          onClick={() => {
-            setActiveSubTab('assignments');
-            setTimeout(() => {
-              document.getElementById('student-assignments-stream')?.scrollIntoView({ behavior: 'smooth' });
-            }, 50);
-          }}
-          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
-        >
-          <div className="flex items-center justify-between text-zinc-400 mb-3">
-            <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Assignment Progress</span>
-            <div className="flex items-center gap-1.5">
-              <FileText size={16} className="text-brand-yellow font-normal" />
-              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
-            </div>
-          </div>
-          <div className="text-3xl font-light text-brand-black tracking-tight flex items-baseline gap-1.5">
-            <span>{gradeRate}%</span>
-            <span className="text-xs text-zinc-400 font-mono font-light">({finishedCount}/{totalCount})</span>
-          </div>
-          <div className="w-full bg-zinc-100 h-1 rounded-full mt-3 overflow-hidden">
-            <div className="bg-brand-black h-1 rounded-full" style={{ width: `${gradeRate}%` }}></div>
-          </div>
-        </div>
-
-        <div 
-          onClick={() => {
-            setActiveSubTab('assignments');
-            setTimeout(() => {
-              document.getElementById('earned-certificates-section')?.scrollIntoView({ behavior: 'smooth' });
-            }, 50);
-          }}
-          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
-        >
-          <div className="flex items-center justify-between text-zinc-400 mb-3">
-            <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Earned Certificates</span>
-            <div className="flex items-center gap-1.5">
-              <Award size={16} className="text-brand-yellow" />
-              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
-            </div>
-          </div>
-          <div className="text-3xl font-light text-brand-black tracking-tight">
-            <span>{certs.length}</span>
-            <span className="text-xs text-brand-yellow font-mono ml-2 font-light">Issued</span>
-          </div>
-          <p className="text-[10px] font-light text-brand-gray mt-2 leading-relaxed font-sans">Verified and stored securely.</p>
-        </div>
-
-        <div 
-          onClick={() => {
-            setActiveSubTab('register');
-            setTimeout(() => {
-              document.getElementById('course-offering-catalog')?.scrollIntoView({ behavior: 'smooth' });
-            }, 50);
-          }}
-          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
-        >
-          <div className="flex items-center justify-between text-zinc-400 mb-3">
-            <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Current Topic</span>
-            <div className="flex items-center gap-1.5">
-              <BookOpen size={16} className="text-brand-yellow" />
-              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
-            </div>
-          </div>
-          <div className="text-lg font-light tracking-tight text-brand-black truncate">
-            Spatial UI Typography
-          </div>
-          <p className="text-[10px] font-mono uppercase tracking-wider text-emerald-600 mt-2 flex items-center gap-1 bg-emerald-50/50 w-fit px-2 py-0.5 rounded">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> Active Module
-          </p>
-        </div>
-
-        {/* Custom micro sparkline SVG */}
-        <div 
-          onClick={() => {
-            setActiveSubTab('assignments');
-            setTimeout(() => {
-              document.getElementById('student-assignments-stream')?.scrollIntoView({ behavior: 'smooth' });
-            }, 50);
-          }}
-          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs flex flex-col justify-between cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Grade History</span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-mono text-emerald-600 font-light">Performance Progress</span>
-              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
-            </div>
-          </div>
-          
-          <div id="sparkline-container" className="h-10 w-full bg-zinc-50/50 rounded flex items-center justify-center">
-            {gradedAssignments.length >= 2 ? (
-              <svg className="w-full h-full p-1" viewBox="0 0 100 60">
-                <polyline
-                  fill="none"
-                  stroke="#FBBF1E"
-                  strokeWidth="1.5"
-                  points={linePoints.join(' ')}
-                />
-              </svg>
-            ) : (
-              <span className="text-[10px] text-zinc-400 italic">No grading history yet</span>
-            )}
-          </div>
-          
-          <span className="text-[9px] text-zinc-400 block tracking-wide font-mono mt-1 text-right uppercase">
-            Updated performance trend
-          </span>
-        </div>
-
-      </div>
-
       {/* Centered Modal for Alerts & Confirmations */}
       {toastMessage && (
         <div id="toast-modal-overlay" className="fixed inset-0 bg-brand-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-55 animate-in fade-in duration-150 select-none">
-          <div className="bg-white border border-zinc-150 rounded-2xl p-6 shadow-xl max-w-sm w-full text-center space-y-4 animate-in zoom-in-95 duration-200">
-            <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center mx-auto text-brand-yellow">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800 rounded-2xl p-6 shadow-xl max-w-sm w-full text-center space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-550/15 flex items-center justify-center mx-auto text-brand-yellow">
               <CheckCircle2 size={24} />
             </div>
             <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-brand-black">Instruction Alert</h3>
-              <p className="text-xs font-light text-zinc-650 leading-normal">{toastMessage}</p>
+              <h3 className="text-sm font-semibold text-brand-black dark:text-white">Instruction Alert</h3>
+              <p className="text-xs font-light text-zinc-650 dark:text-zinc-350 leading-normal">{toastMessage}</p>
             </div>
             <button
               onClick={() => setToastMessage(null)}
-              className="bg-brand-black hover:bg-zinc-850 text-white text-xs font-light tracking-wide uppercase px-4 py-2.5 rounded-xl transition-all w-full cursor-pointer"
+              className="bg-brand-black dark:bg-zinc-850 hover:bg-zinc-850 dark:hover:bg-zinc-700 text-white text-xs font-light tracking-wide uppercase px-4 py-2.5 rounded-xl transition-all w-full cursor-pointer"
             >
               Okay
             </button>
@@ -914,38 +794,346 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
         </div>
       )}
 
-      {/* Internal Navigation Menu Tabs */}
-      <div id="student-tab-bar" className="flex border-b border-zinc-100 mb-8 overflow-x-auto whitespace-nowrap scrollbar-none">
-        <button
-          onClick={() => setActiveSubTab('assignments')}
-          className={`py-3 px-4 text-xs uppercase tracking-wider font-medium border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
-            activeSubTab === 'assignments'
-              ? 'border-brand-yellow text-brand-black'
-              : 'border-transparent text-zinc-400 hover:text-zinc-650'
-          }`}
-        >
-          <FileText size={13} className={activeSubTab === 'assignments' ? 'text-brand-yellow font-bold' : 'text-zinc-400'} />
-          Assignments & Grades
-        </button>
+      {/* DASHBOARD TAB (HOME) */}
+      {activeTab === 'dashboard' && (
+        <div className="animate-in fade-in duration-250">
+          {/* Premium Hero Welcome Banner */}
+          <div id="student-hero-banner" className="bg-gradient-to-br from-zinc-950 via-zinc-900 to-black dark:bg-brand-yellow dark:from-brand-yellow dark:via-brand-yellow dark:to-brand-yellow text-white dark:text-black rounded-3xl p-5 xs:p-7 md:p-10 mb-8 relative overflow-hidden border border-zinc-800/40 dark:border-white shadow-xl grid grid-cols-1 md:grid-cols-[13fr_7fr] gap-5 md:gap-10 items-stretch">
+            {/* Glow effect & subtle brand highlights */}
+            <div className="absolute -top-32 -right-32 w-80 h-80 bg-brand-yellow/10 rounded-full blur-3xl pointer-events-none dark:hidden" />
+            <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-amber-50/5 rounded-full blur-3xl pointer-events-none dark:hidden" />
+            <div className="absolute right-12 top-4 w-[2px] h-20 bg-gradient-to-b from-brand-yellow/40 to-transparent dark:from-black/10 blur-[1px] pointer-events-none" />
+            <div className="absolute right-24 bottom-4 w-[2px] h-12 bg-gradient-to-t from-amber-500/30 to-transparent dark:from-black/15 blur-[1.5px] pointer-events-none" />
+            
+            {/* Left container: greeting and motivational stats */}
+            <div className="relative z-10 flex flex-col justify-between space-y-3 sm:space-y-5">
+              <div className="space-y-2.5 sm:space-y-4">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-3">
+                  <span className="text-[9px] xs:text-[11px] sm:text-xs font-mono tracking-widest uppercase bg-zinc-805/85 dark:bg-black/10 text-brand-yellow dark:text-black px-2 py-0.5 sm:px-3 sm:py-1 rounded-md border border-zinc-700/60 dark:border-black/20 flex items-center gap-1 shrink-0 font-bold">
+                    <Sparkles size={10} className="text-brand-yellow dark:text-black animate-pulse" /> Welcome
+                  </span>
+                  <span className="text-[9px] xs:text-[11px] sm:text-xs font-mono tracking-widest uppercase bg-zinc-800/50 dark:bg-black/5 text-zinc-300 dark:text-black/85 px-2 py-0.5 sm:px-3 sm:py-1 rounded-md border border-zinc-800 dark:border-black/10 flex items-center gap-1 shrink-0 font-bold">
+                    🏆 Rank #3
+                  </span>
+                </div>
+                
+                <h2 className="text-[28px] xs:text-[36px] sm:text-[44px] md:text-5xl lg:text-6xl font-light tracking-tight pr-1 leading-tight break-words text-white dark:text-black">
+                  <span className="inline">Hello,</span>{' '}
+                  <span className="inline font-semibold text-brand-yellow dark:text-black bg-gradient-to-r from-brand-yellow via-amber-400 to-amber-300 dark:from-black dark:to-neutral-900 bg-clip-text text-transparent dark:bg-none">
+                    {currentUser.name ? currentUser.name.split(' ')[0] : 'Developer'}
+                  </span>
+                </h2>
+                
+                <p className="text-[11px]/[15px] xs:text-[13px]/[18px] sm:text-sm md:text-base text-zinc-300 dark:text-black/85 font-light leading-relaxed max-w-xl">
+                  Every line you code shapes the future. Keep pushing forward!
+                </p>
+              </div>
+ 
+              {/* Micro stat-line for Motivation */}
+              <div className="pt-2 sm:pt-4 border-t border-zinc-800/40 dark:border-black/10 flex flex-wrap items-center gap-3 sm:gap-5 text-zinc-400 dark:text-black/60">
+                <div className="flex items-center gap-1.5 sm:gap-2.5">
+                  <span className="text-[9px] xs:text-[11px] sm:text-xs uppercase font-mono tracking-wider text-zinc-500 dark:text-black/55 font-medium">Pace</span>
+                  <span className="text-[10.5px] xs:text-xs sm:text-sm font-semibold text-white dark:text-black">4.8h/Day</span>
+                </div>
+                <div className="w-[1px] h-3 sm:h-4 bg-zinc-800 dark:bg-black/10" />
+                <div className="flex items-center gap-1.5 sm:gap-2.5">
+                  <span className="text-[9px] xs:text-[11px] sm:text-xs uppercase font-mono tracking-wider text-zinc-500 dark:text-black/55 font-medium">Sync</span>
+                  <span className="text-[10.5px] xs:text-xs sm:text-sm font-semibold text-emerald-450 dark:text-emerald-850 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-450 dark:bg-emerald-800 animate-ping shrink-0" /> Live
+                  </span>
+                </div>
+              </div>
+            </div>
+ 
+            {/* Right container: Learning Streak Tracker beside it */}
+            <div className="relative z-10 flex flex-col justify-center items-stretch border-t md:border-t-0 md:border-l border-zinc-800/40 dark:border-black/10 pt-5 md:pt-0 pl-0 md:pl-6 lg:pl-10">
+              <div className="space-y-3 sm:space-y-4 w-full">
+                <div className="flex flex-row justify-between items-center w-full gap-2">
+                  <h3 className="text-[9px] xs:text-[11px] sm:text-xs md:text-sm uppercase font-mono tracking-widest text-zinc-400 dark:text-black/65 font-semibold">Streak</h3>
+                  <span className="text-[9px] xs:text-[11px] sm:text-xs md:text-sm font-bold text-brand-yellow dark:text-black font-mono bg-brand-yellow/10 dark:bg-black/10 border border-brand-yellow/30 dark:border-black/20 px-2 py-0.5 sm:px-3 shadow-xs rounded-full shrink-0">
+                    🔥 5 Days
+                  </span>
+                </div>
 
-        <button
-          onClick={() => setActiveSubTab('register')}
-          className={`py-3 px-4 text-xs uppercase tracking-wider font-medium border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
-            activeSubTab === 'register'
-              ? 'border-brand-yellow text-brand-black'
-              : 'border-transparent text-zinc-400 hover:text-zinc-650'
-          }`}
-        >
-          <Compass size={13} className={activeSubTab === 'register' ? 'text-brand-yellow font-bold' : 'text-zinc-400'} />
-          Register Courses
-        </button>
-      </div>
+                {/* Calendar/Daily activities visually engaging layout */}
+                <div className="bg-zinc-900/60 dark:bg-black/15 border border-zinc-800/80 dark:border-black/10 p-2 sm:p-4 rounded-xl sm:rounded-2xl space-y-2 sm:space-y-3">
+                  <div className="flex items-center justify-between text-[9px] xs:text-[10px] sm:text-[11px] md:text-xs text-zinc-300 dark:text-black/60 font-mono font-medium">
+                    <span className="truncate">MON - SUN STREAM</span>
+                    <span className="text-brand-yellow dark:text-black font-bold shrink-0">92%</span>
+                  </div>
+                  
+                  <div className="flex justify-between gap-0.5 sm:gap-1">
+                    {[
+                      { name: 'M', active: true, label: 'June 1' },
+                      { name: 'T', active: true, label: 'June 2' },
+                      { name: 'W', active: true, label: 'June 3' },
+                      { name: 'T', active: true, label: 'June 4' },
+                      { name: 'F', active: true, label: 'June 5' },
+                      { name: 'S', active: false, label: 'June 6' },
+                      { name: 'S', active: false, label: 'June 7' },
+                    ].map((day, idx) => (
+                      <div 
+                        key={idx} 
+                        className="flex-1 flex flex-col items-center gap-0.5 p-0.5 rounded-md sm:rounded-lg group/day cursor-pointer hover:bg-zinc-800/40 dark:hover:bg-black/5 transition-colors"
+                        title={`${day.label}: ${day.active ? 'Activity recorded' : 'Rest day'}`}
+                      >
+                        <span className="text-[8.5px] xs:text-[10px] sm:text-xs font-mono text-zinc-500 dark:text-black/40 font-bold group-hover/day:text-zinc-300 dark:group-hover/day:text-black">
+                          {day.name}
+                        </span>
+                        <div className={`w-[18px] h-[18px] xs:w-[22px] xs:h-[22px] sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[9px] xs:text-[10px] sm:text-xs transition-all shrink-0 ${
+                          day.active 
+                            ? 'bg-gradient-to-br from-brand-yellow to-amber-500 dark:from-black dark:to-neutral-900 text-black dark:text-brand-yellow font-semibold' 
+                            : 'bg-zinc-800/50 dark:bg-black/5 border border-zinc-700/40 dark:border-black/10 text-zinc-500 dark:text-black/30 group-hover/day:border-zinc-500'
+                        }`}>
+                          {day.active ? '✓' : '•'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[9px] xs:text-[10px] sm:text-[11px] text-zinc-400 dark:text-black/60 font-light leading-snug">
+                    Complete tasks to keep your streak active.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-      {activeSubTab === 'assignments' && (
-        <div id="student-main-content-layout" className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-200">
+        {/* Analytics Bento Grid Row - Structured in Two Elegant Columns */}
+        <div id="student-bento-row" className="grid grid-cols-2 gap-4 md:gap-6 mb-8">
+            
+            {/* Card 1: Assignment Progress */}
+            <div 
+              onClick={() => onNavigateChange('tasks')}
+              className="group bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 p-5 sm:p-7 md:p-9 rounded-2xl shadow-sm hover:shadow-md cursor-pointer hover:border-brand-yellow dark:hover:border-brand-yellow transition-all duration-300 relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between text-zinc-400 mb-3 sm:mb-4">
+                <span className="text-[9px] xs:text-[11px] sm:text-xs md:text-sm uppercase font-mono tracking-widest text-zinc-500 dark:text-zinc-450 font-semibold">Task Progress</span>
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <FileText className="text-brand-yellow w-4 h-4 sm:w-[17px] sm:h-[17px]" />
+                  <ArrowUpRight className="text-zinc-300 group-hover:text-brand-black dark:group-hover:text-white transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </div>
+              </div>
+              <div className="text-xl xs:text-2xl sm:text-3.5xl md:text-4.5xl lg:text-5xl font-light text-brand-black dark:text-white tracking-tight flex items-baseline gap-2 leading-tight">
+                <span className="font-extrabold">{gradeRate}%</span>
+                <span className="text-[10px] xs:text-xs sm:text-sm text-zinc-450 dark:text-zinc-550 font-mono font-medium">({finishedCount}/{totalCount})</span>
+              </div>
+              <div className="w-full bg-zinc-150 dark:bg-zinc-805 rounded-full h-1.5 sm:h-2 mt-4 sm:mt-5 overflow-hidden">
+                <div className="bg-gradient-to-r from-brand-yellow to-amber-500 h-1.5 sm:h-2 rounded-full transition-all duration-500" style={{ width: `${gradeRate}%` }}></div>
+              </div>
+              <p className="text-[9.5px]/[14px] xs:text-[11px]/[16px] sm:text-xs md:text-sm text-zinc-500 dark:text-zinc-400 font-light mt-3 sm:mt-4">Active course completion ratings.</p>
+            </div>
+
+            {/* Card 2: Earned Certificates */}
+            <div 
+              onClick={() => onNavigateChange('tasks')}
+              className="group bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 p-5 sm:p-7 md:p-9 rounded-2xl shadow-sm hover:shadow-md cursor-pointer hover:border-brand-yellow dark:hover:border-brand-yellow transition-all duration-300 relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between text-zinc-400 mb-3 sm:mb-4">
+                <span className="text-[9px] xs:text-[11px] sm:text-xs md:text-sm uppercase font-mono tracking-widest text-zinc-500 dark:text-zinc-450 font-semibold">Certificates</span>
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <Award className="text-brand-yellow w-4 h-4 sm:w-[17px] sm:h-[17px]" />
+                  <ArrowUpRight className="text-zinc-300 group-hover:text-brand-black dark:group-hover:text-white transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </div>
+              </div>
+              <div className="text-xl xs:text-2xl sm:text-3.5xl md:text-4.5xl lg:text-5xl font-light text-brand-black dark:text-white tracking-tight flex items-baseline gap-2 leading-tight">
+                <span className="font-extrabold">{certs.length}</span>
+                <span className="text-[9px] xs:text-[10px] sm:text-xs md:text-sm text-brand-yellow font-mono font-bold uppercase tracking-wider">Credentials</span>
+              </div>
+              <div className="w-full h-[1px] bg-zinc-150 dark:bg-zinc-800 mt-4 sm:mt-5" />
+              <p className="text-[9.5px]/[14px] xs:text-[11px]/[16px] sm:text-xs md:text-sm text-zinc-500 dark:text-zinc-400 font-light mt-3 sm:mt-4">Jointly verified with Sabicrest Syndicate.</p>
+            </div>
+
+            {/* Card 3: Current Topic */}
+            <div 
+              onClick={() => onNavigateChange('courses')}
+              className="group bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 p-5 sm:p-7 md:p-9 rounded-2xl shadow-sm hover:shadow-md cursor-pointer hover:border-brand-yellow dark:hover:border-brand-yellow transition-all duration-300 relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between text-zinc-400 mb-3 sm:mb-4">
+                <span className="text-[9px] xs:text-[11px] sm:text-xs md:text-sm uppercase font-mono tracking-widest text-zinc-500 dark:text-zinc-450 font-semibold">Active Topic</span>
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <BookOpen className="text-brand-yellow w-4 h-4 sm:w-[17px] sm:h-[17px]" />
+                  <ArrowUpRight className="text-zinc-300 group-hover:text-brand-black dark:group-hover:text-white transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </div>
+              </div>
+              <div className="text-sm xs:text-base sm:text-xl md:text-2xl lg:text-[26px] font-semibold tracking-tight text-brand-black dark:text-white truncate leading-tight">
+                {enrolledCoursesForProg.length > 0 ? enrolledCoursesForProg[0].title : 'Spatial UI Typography'}
+              </div>
+              <div className="flex items-center gap-1.5 sm:gap-2 mt-3 sm:mt-4">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[9px] xs:text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-400 font-bold font-mono uppercase tracking-wider">Active Module</span>
+              </div>
+              <p className="text-[9.5px]/[14px] xs:text-[11px]/[16px] sm:text-xs md:text-sm text-zinc-500 dark:text-zinc-400 font-light mt-2 sm:mt-3">Current active weekly tracker state.</p>
+            </div>
+
+            {/* Card 4: Grade History */}
+            <div 
+              onClick={() => onNavigateChange('tasks')}
+              className="group bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 p-5 sm:p-7 md:p-9 rounded-2xl shadow-sm hover:shadow-md cursor-pointer hover:border-brand-yellow dark:hover:border-brand-yellow transition-all duration-300 relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between text-zinc-400 mb-3">
+                <span className="text-[9px] xs:text-[11px] sm:text-xs md:text-sm uppercase font-mono tracking-widest text-zinc-550 dark:text-zinc-450 font-semibold">Grade Log</span>
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <span className="text-[9px] xs:text-[10px] sm:text-xs font-mono text-emerald-600 dark:text-emerald-400 font-bold truncate max-w-[60px] xs:max-w-none">Live Trend</span>
+                  <ArrowUpRight className="text-zinc-300 group-hover:text-brand-black dark:group-hover:text-white transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 sm:gap-5 py-1.5">
+                <div id="sparkline-container" className="h-10 sm:h-12 flex-1 bg-zinc-50/50 dark:bg-zinc-950/30 rounded-xl border border-zinc-100/50 dark:border-zinc-800 flex items-center justify-center">
+                  {gradedAssignments.length >= 2 ? (
+                    <svg className="w-full h-full p-1.5" viewBox="0 0 100 60">
+                      <polyline
+                        fill="none"
+                        stroke="#FBBF1E"
+                        strokeWidth="2"
+                        points={linePoints.join(' ')}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : (
+                    <span className="text-[9px] sm:text-xs text-zinc-400 italic">No grade data</span>
+                  )}
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-zinc-200">A+</span>
+                  <p className="text-[9px] xs:text-[10px] sm:text-xs font-mono text-zinc-450">Class Avg</p>
+                </div>
+              </div>
+              
+              <p className="text-[9.5px]/[14px] xs:text-[11px]/[16px] sm:text-xs md:text-sm text-zinc-500 dark:text-zinc-400 font-light mt-3 sm:mt-4">Real-time performance scores ledger.</p>
+            </div>
+
+          </div>
+
+          {/* Horizontally Scrollable Row of Quick Actions */}
+          <div className="mb-8">
+            <div className="px-1 mb-2.5 flex items-center gap-1.5">
+              <Sparkles size={12} className="text-brand-yellow font-bold" />
+              <span className="text-[10px] uppercase font-bold tracking-widest text-brand-gray dark:text-zinc-400">Quick Navigation Channels</span>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 pt-1 px-1 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
+              {[
+                { 
+                  label: 'Register Course', 
+                  icon: Compass, 
+                  onClick: () => onNavigateChange('courses')
+                },
+                { 
+                  label: 'View Certificates', 
+                  icon: Award, 
+                  onClick: () => onNavigateChange('tasks')
+                },
+                { 
+                  label: 'Assignments', 
+                  icon: FileText, 
+                  onClick: () => onNavigateChange('tasks')
+                },
+                { 
+                  label: 'Class Leaderboard', 
+                  icon: Activity, 
+                  onClick: () => {
+                    showToast("🏆 Sabicrest Syndicate Leaderboard: You are currently ranked #3 out of all registered active developers with an average score of 96.8%!");
+                  } 
+                },
+              ].map((action, i) => {
+                const Icon = action.icon;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={action.onClick}
+                    className="flex items-center gap-2 px-5 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-150/80 dark:border-zinc-800 hover:bg-white dark:hover:bg-zinc-900 hover:border-brand-yellow dark:hover:border-brand-yellow hover:shadow-xs transition-all cursor-pointer shrink-0"
+                  >
+                    <Icon size={14} className="text-brand-yellow shrink-0" />
+                    <span className="text-xs font-semibold text-brand-black dark:text-white tracking-tight">{action.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Home Active Courses Progress Hub - High Contrast Isolation */}
+          <div className="mt-8 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xs uppercase font-bold tracking-widest text-brand-gray dark:text-zinc-450 flex items-center gap-1.5">
+                <BookOpen size={13} className="text-brand-yellow" /> Active Curriculum Programs
+              </h3>
+              <button 
+                onClick={() => onNavigateChange('courses')}
+                className="text-xs text-brand-yellow font-semibold hover:underline"
+              >
+                Register For More Courses &rarr;
+              </button>
+            </div>
+
+            {enrolledCoursesForProg.length === 0 ? (
+              <div className="text-center p-8 text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900/30 rounded-2xl text-xs font-light border border-zinc-100/50 dark:border-zinc-800">
+                You are not currently enrolled in any curricula. Head over to the <strong className="text-brand-black dark:text-white cursor-pointer underline font-medium" onClick={() => onNavigateChange('courses')}>Register Courses</strong> page to explore available classes.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {enrolledCoursesForProg.map(course => {
+                  const courseTasks = assignments.filter(a => a.courseId === course.id);
+                  const gradedTasks = courseTasks.filter(a => a.status === 'graded');
+                  const hasAssignments = courseTasks.length > 0;
+                  const completionPercent = hasAssignments ? Math.round((gradedTasks.length / courseTasks.length) * 100) : 0;
+                  
+                  return (
+                    <div key={course.id} className="border border-zinc-150 dark:border-zinc-800/80 rounded-2xl p-4 bg-white dark:bg-zinc-900/50 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="w-10 h-8 rounded-lg overflow-hidden shrink-0 border border-zinc-100 dark:border-zinc-850">
+                          <img 
+                            src={getCourseImage(course.category, course.title, course.imageUrl)} 
+                            alt={course.title} 
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        </div>
+                        <div className="overflow-hidden">
+                          <h4 className="text-xs font-semibold text-brand-black dark:text-zinc-200 truncate max-w-[180px] sm:max-w-[240px]">{course.title}</h4>
+                          <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono">Trainer: {course.trainerName}</span>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-[10.5px] font-mono font-semibold text-brand-yellow">{completionPercent}% Complete</span>
+                        <div className="w-16 bg-zinc-100 dark:bg-zinc-950 h-1.5 rounded-full overflow-hidden mt-1">
+                          <div className="bg-brand-yellow h-1.5 rounded-full" style={{ width: `${completionPercent}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* STANDALONE TASKS/EVALUATION PAGE */}
+      {activeTab === 'tasks' && (
+        <div id="student-main-content-standalone-tasks" className="space-y-6 animate-in fade-in duration-200">
+          <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-zinc-100 dark:border-zinc-800/60 pb-5">
+            <div>
+              <h2 className="text-2xl font-light tracking-tight text-brand-black dark:text-white leading-tight">
+                Academic <span className="font-semibold text-brand-yellow">Coursework, Grades & Certificates</span>
+              </h2>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-1">
+                Upload your project files, track grades from your Trainers, and print certified joint-verified degrees.
+              </p>
+            </div>
+            <button 
+              onClick={() => onNavigateChange('dashboard')} 
+              className="text-xs text-zinc-500 hover:text-black dark:text-zinc-400 dark:hover:text-white font-semibold uppercase tracking-wider cursor-pointer border border-zinc-200 dark:border-zinc-800 px-3.5 py-2 rounded-xl bg-white dark:bg-zinc-900 transition-colors shrink-0 max-w-[140px]"
+            >
+              &larr; Back Home
+            </button>
+          </div>
           
-          {/* Assignments stream - Left Wide col */}
-          <div className="lg:col-span-2 space-y-6" id="student-assignments-stream">
+          <div id="student-main-content-layout" className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-200">
+            
+            {/* Assignments stream - Left Wide col */}
+            <div className="lg:col-span-2 space-y-6" id="student-assignments-stream">
             
             {/* Curriculum Progress & Certification Hub */}
             <div className="bg-white border border-zinc-150 rounded-2xl p-6 shadow-xs relative overflow-hidden" id="student-certification-hub">
@@ -1199,11 +1387,30 @@ export default function DashboardStudent({ currentUser, onNavigateChange }: Dash
           </div>
 
         </div>
+      </div>
       )}
 
-      {activeSubTab === 'register' && (
+      {activeTab === 'courses' && (
         <div id="student-register-courses-view" className="space-y-6 animate-in fade-in duration-200">
-          <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs" id="course-offering-catalog">
+          
+          <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-zinc-100 dark:border-zinc-800/60 pb-5">
+            <div>
+              <h2 className="text-2xl font-light tracking-tight text-brand-black dark:text-white leading-tight">
+                Available <span className="font-semibold text-brand-yellow">Course Curriculum Catalog</span>
+              </h2>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-1">
+                Browse detailed development syllabi, pay tuition securely, and interact with professional mentors.
+              </p>
+            </div>
+            <button 
+              onClick={() => onNavigateChange('dashboard')} 
+              className="text-xs text-zinc-500 hover:text-black dark:text-zinc-400 dark:hover:text-white font-semibold uppercase tracking-wider cursor-pointer border border-zinc-200 dark:border-zinc-800 px-3.5 py-2 rounded-xl bg-white dark:bg-zinc-900 transition-all shrink-0 max-w-[140px]"
+            >
+              &larr; Back Home
+            </button>
+          </div>
+
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-6 shadow-xs" id="course-offering-catalog">
             <h3 className="text-sm font-light tracking-tight text-brand-black mb-1">
               Join New Classes // <span className="font-semibold text-brand-yellow">Available Courses</span>
             </h3>

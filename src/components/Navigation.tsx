@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, NotificationAlert } from '../types';
 import { db } from '../db';
-import { Bell, LogOut, CheckCircle, Shield, Menu, X, Terminal, Sparkles, AlertTriangle, MessageSquare, Search } from 'lucide-react';
+import { Bell, LogOut, CheckCircle, Shield, Menu, X, Terminal, Sparkles, AlertTriangle, MessageSquare, Search, Sun, Moon, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 // @ts-ignore
 import sabicrestLogo from '../assets/images/sabicrest_logo_1780580951205.png';
@@ -28,6 +28,44 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
   const [navSearchQuery, setNavSearchQuery] = useState('');
   const [showSearchInput, setShowSearchInput] = useState(false);
   const notifContainerRef = useRef<HTMLDivElement>(null);
+
+  // Theme states & responsive bindings
+  const [themeMode, setThemeMode] = useState<'dark' | 'light' | 'system'>(() => {
+    return (localStorage.getItem('sabicrest_theme_mode') as 'dark' | 'light' | 'system') || 'dark';
+  });
+  const [showThemeDropdown, setShowThemeDropdown] = useState(false);
+  const themeContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleThemeUpdate = () => {
+      const mode = (localStorage.getItem('sabicrest_theme_mode') as 'dark' | 'light' | 'system') || 'dark';
+      setThemeMode(mode);
+    };
+    window.addEventListener('sabicrest-theme-change', handleThemeUpdate);
+    return () => {
+      window.removeEventListener('sabicrest-theme-change', handleThemeUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutsideTheme(event: Event) {
+      if (showThemeDropdown && themeContainerRef.current && !themeContainerRef.current.contains(event.target as Node)) {
+        setShowThemeDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutsideTheme);
+    document.addEventListener('touchstart', handleClickOutsideTheme);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutsideTheme);
+      document.removeEventListener('touchstart', handleClickOutsideTheme);
+    };
+  }, [showThemeDropdown]);
+
+  const handleThemeChange = (mode: 'dark' | 'light' | 'system') => {
+    localStorage.setItem('sabicrest_theme_mode', mode);
+    setThemeMode(mode);
+    window.dispatchEvent(new CustomEvent('sabicrest-theme-change'));
+  };
 
   useEffect(() => {
     function handleClickOutside(event: Event) {
@@ -220,7 +258,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
             <button
               id="header-chats-trigger"
               onClick={() => setActiveTab('messaging')}
-              className={`p-2 text-zinc-400 hover:text-brand-black hover:bg-zinc-50 rounded-xl transition-all relative cursor-pointer ${
+              className={`hidden md:flex p-2 text-zinc-400 hover:text-brand-black hover:bg-zinc-50 rounded-xl transition-all relative cursor-pointer ${
                 activeTab === 'messaging' ? 'text-black bg-zinc-100' : ''
               }`}
               title="Open Secure Chats"
@@ -230,29 +268,6 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
                 <span id="chat-count-counter" className="absolute top-1 right-1 w-4 h-4 bg-brand-yellow text-brand-black text-[9px] font-bold rounded-full flex items-center justify-center animate-pulse">
                   {chatCount}
                 </span>
-              )}
-            </button>
-
-            {/* Clickable Header Profile Icon (desktop/tablet/mobile) */}
-            <button
-              id="header-profile-icon"
-              onClick={() => setActiveTab('profile')}
-              className={`w-7 h-7 rounded-full overflow-hidden border transition-all cursor-pointer ${
-                activeTab === 'profile' ? 'border-brand-yellow ring-2 ring-brand-yellow/30' : 'border-zinc-200 hover:border-zinc-400'
-              }`}
-              title="Aesthetic Profile Settings"
-            >
-              {currentUser.avatar ? (
-                <img 
-                  src={currentUser.avatar} 
-                  alt="Current workspace user" 
-                  className="w-full h-full object-cover" 
-                  referrerPolicy="no-referrer" 
-                />
-              ) : (
-                <div className="w-full h-full bg-brand-black text-white flex items-center justify-center text-[10px] font-bold font-mono">
-                  {currentUser.name.charAt(0).toUpperCase()}
-                </div>
               )}
             </button>
 
@@ -318,6 +333,76 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
                       ))
                     )}
                   </div>
+                </div>
+              )}
+            </div>
+
+            {/* Clickable Header Profile Icon (desktop/tablet/mobile) */}
+            <button
+              id="header-profile-icon"
+              onClick={() => setActiveTab('profile')}
+              className={`hidden md:flex w-7 h-7 rounded-full overflow-hidden border transition-all cursor-pointer shrink-0 ${
+                activeTab === 'profile' ? 'border-brand-yellow ring-2 ring-brand-yellow/30' : 'border-zinc-200 hover:border-zinc-400'
+              }`}
+              title="Aesthetic Profile Settings"
+            >
+              {currentUser.avatar ? (
+                <img 
+                  src={currentUser.avatar} 
+                  alt="Current workspace user" 
+                  className="w-full h-full object-cover" 
+                  referrerPolicy="no-referrer" 
+                />
+              ) : (
+                <div className="w-full h-full bg-brand-black text-white flex items-center justify-center text-[10px] font-bold font-mono">
+                  {currentUser.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </button>
+
+            {/* Interactive Theme Selector Dropdown */}
+            <div className="relative flex items-center" ref={themeContainerRef}>
+              <button
+                id="theme-menu-trigger"
+                onClick={() => setShowThemeDropdown(!showThemeDropdown)}
+                className="p-2 text-zinc-400 hover:text-brand-black hover:bg-zinc-50 rounded-xl transition-all relative cursor-pointer flex items-center justify-center"
+                title="Choose Theme Preset"
+              >
+                {themeMode === 'light' && <Sun size={17} />}
+                {themeMode === 'dark' && <Moon size={17} />}
+                {themeMode === 'system' && <Monitor size={17} />}
+              </button>
+              {showThemeDropdown && (
+                <div 
+                  id="theme-dropdown-box" 
+                  className="absolute right-0 top-11 w-36 bg-white border border-zinc-100 rounded-2xl shadow-lg py-1.5 z-50 animate-in face-in slide-in-from-top-2 duration-150"
+                >
+                  <div className="px-3 py-1 text-[9px] uppercase tracking-wider font-light text-brand-gray border-b border-zinc-50 mb-1 select-none">
+                    Theme Mode
+                  </div>
+                  {[
+                    { id: 'dark', label: 'Dark Style', icon: Moon },
+                    { id: 'light', label: 'Light Style', icon: Sun },
+                    { id: 'system', label: 'System Sync', icon: Monitor }
+                  ].map(item => {
+                    const ItemIcon = item.icon;
+                    const isSelected = themeMode === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          handleThemeChange(item.id as any);
+                          setShowThemeDropdown(false);
+                        }}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left transition-colors cursor-pointer font-light ${
+                          isSelected ? 'bg-zinc-50 font-medium text-brand-black' : 'text-zinc-650 hover:bg-zinc-50/50'
+                        }`}
+                      >
+                        <ItemIcon size={13} className={isSelected ? 'text-brand-yellow' : 'text-zinc-400'} />
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -394,6 +479,33 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
               </button>
             );
           })}
+
+          {/* Mobile Theme Selector Settings */}
+          <div className="pt-2 pb-1 border-t border-zinc-100 flex flex-col gap-2">
+            <span className="text-[10px] uppercase tracking-wider font-light text-brand-gray px-4">Workspace Theme</span>
+            <div className="flex gap-1 bg-zinc-50 border border-zinc-100 p-1 rounded-2xl mx-2">
+              {[
+                { id: 'dark', label: 'Dark', icon: Moon },
+                { id: 'light', label: 'Light', icon: Sun },
+                { id: 'system', label: 'System', icon: Monitor }
+              ].map(item => {
+                const ItemIcon = item.icon;
+                const isSelected = themeMode === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleThemeChange(item.id as any)}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-light transition-all cursor-pointer ${
+                      isSelected ? 'bg-brand-black text-white font-medium' : 'text-zinc-500 hover:text-zinc-800'
+                    }`}
+                  >
+                    <ItemIcon size={12} className={isSelected ? 'text-brand-yellow' : 'text-zinc-400'} />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           {/* Mobile & Tablet Logout Action Button Item */}
           <button

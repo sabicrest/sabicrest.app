@@ -102,38 +102,38 @@ export default function WorkspaceDirectory({
   );
 
   return (
-    <div id="messaging-directory-view" className="max-w-5xl mx-auto px-4 py-8 select-none">
+    <div id="messaging-directory-view" className="max-w-5xl mx-auto px-4 py-8 select-none text-brand-black dark:text-white">
       <button 
         onClick={onBack} 
-        className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-black transition-colors font-semibold uppercase tracking-wider mb-6 cursor-pointer"
+        className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors font-semibold uppercase tracking-wider mb-6 cursor-pointer"
       >
         <ArrowLeft size={14} /> Back to Secure Chat Hub
       </button>
 
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-light tracking-tight text-brand-black">
-            Who-is-Who <span className="font-semibold text-brand-yellow">on Sabicrest</span>
+          <h2 className="text-2xl font-light tracking-tight text-brand-black dark:text-white">
+            Who-is-Who <span className="font-semibold text-brand-yellow font-sans">on Sabicrest</span>
           </h2>
-          <p className="text-xs text-zinc-500 font-light mt-1">
+          <p className="text-xs text-zinc-500 dark:text-zinc-300 font-light mt-1">
             Coordinate and start secure private direct messaging sessions with other members.
           </p>
         </div>
       </div>
 
       {/* Cordial Cooperation Advisory */}
-      <div className="bg-amber-50/60 border border-brand-yellow/30 p-4 rounded-2xl mb-6 flex items-start gap-3 shadow-2xs">
+      <div className="bg-amber-50/60 dark:bg-amber-950/20 border border-brand-yellow/30 p-4 rounded-2xl mb-6 flex items-start gap-3 shadow-2xs animate-in fade-in duration-300">
         <Sparkles className="text-brand-yellow shrink-0 mt-0.5 animate-pulse" size={16} />
         <div>
-          <h4 className="text-xs font-semibold text-brand-black mb-1">Sabicrest Cordial Communication Advisory</h4>
-          <p className="text-[11px] text-zinc-600 leading-relaxed font-light">
+          <h4 className="text-xs font-semibold text-brand-black dark:text-white mb-1">Sabicrest Cordial Communication Advisory</h4>
+          <p className="text-[11px] text-zinc-650 dark:text-zinc-300 leading-relaxed font-light">
             At Sabicrest, collaboration and design thrive on mutual respect. We kindly invite you to stay cordial, nice, and polite in your language while chatting with any of our members—whether they are a student, trainer, or administrator. Let's make our workspace exceptionally positive, empowering, and respectful!
           </p>
         </div>
       </div>
 
       {/* Filter Button & Search Bar Area */}
-      <div className="bg-zinc-50 border border-zinc-150 rounded-2xl p-4 mb-6 space-y-4">
+      <div className="bg-zinc-50 dark:bg-black/40 dark:backdrop-blur-md border border-zinc-150 dark:border-zinc-800 rounded-2xl p-4 mb-6 space-y-4">
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Search Input */}
           <div className="relative flex-1">
@@ -146,7 +146,7 @@ export default function WorkspaceDirectory({
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full bg-white border border-zinc-200 rounded-xl pl-9 pr-4 py-2 text-xs text-brand-black placeholder-zinc-400 focus:outline-hidden focus:border-brand-yellow font-light shadow-2xs"
+              className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-805 rounded-xl pl-9 pr-4 py-2 text-xs text-brand-black dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-650 focus:outline-hidden focus:border-brand-yellow font-light shadow-2xs"
             />
           </div>
 
@@ -160,7 +160,7 @@ export default function WorkspaceDirectory({
                 setSortOrder('newest');
                 setCurrentPage(1);
               }}
-              className="px-4 py-2 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 hover:text-black rounded-xl text-xs font-semibold cursor-pointer transition-colors"
+              className="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white rounded-xl text-xs font-semibold cursor-pointer transition-colors"
             >
               Clear Filters
             </button>
@@ -168,7 +168,7 @@ export default function WorkspaceDirectory({
         </div>
 
         {/* Categories Row */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-zinc-200/50">
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-zinc-200/50 dark:border-zinc-800">
           <div className="flex flex-wrap gap-1.5 items-center">
             <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider mr-1">Role:</span>
             {['all', 'admin', 'trainer', 'student'].map((role) => (
@@ -180,8 +180,8 @@ export default function WorkspaceDirectory({
                 }}
                 className={`px-3 py-1.5 rounded-full text-[10px] font-semibold transition-all cursor-pointer ${
                   selectedRole === role
-                    ? 'bg-brand-black text-white'
-                    : 'bg-white hover:bg-zinc-100 text-zinc-600 border border-zinc-200'
+                    ? 'bg-brand-black dark:bg-brand-yellow text-white dark:text-brand-black'
+                    : 'bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700'
                 }`}
               >
                 {role === 'all' ? 'All Roles' : role.charAt(0).toUpperCase() + role.slice(1)}
@@ -198,7 +198,7 @@ export default function WorkspaceDirectory({
                   setJoinedFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="bg-white border border-zinc-200 text-[10px] font-semibold rounded-lg px-2 py-1 focus:outline-hidden focus:ring-1 focus:ring-brand-yellow text-zinc-600"
+                className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-[10px] font-semibold rounded-lg px-2 py-1 focus:outline-hidden focus:ring-1 focus:ring-brand-yellow text-zinc-600 dark:text-zinc-300"
               >
                 <option value="all">All Time</option>
                 <option value="recent">Joined Recently</option>
@@ -214,7 +214,7 @@ export default function WorkspaceDirectory({
                   setSortOrder(e.target.value as 'newest' | 'oldest');
                   setCurrentPage(1);
                 }}
-                className="bg-white border border-zinc-200 text-[10px] font-semibold rounded-lg px-2 py-1 focus:outline-hidden focus:ring-1 focus:ring-brand-yellow text-zinc-600"
+                className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-[10px] font-semibold rounded-lg px-2 py-1 focus:outline-hidden focus:ring-1 focus:ring-brand-yellow text-zinc-600 dark:text-zinc-300"
               >
                 <option value="newest">Newest Joined</option>
                 <option value="oldest">Oldest Joined</option>
@@ -235,14 +235,14 @@ export default function WorkspaceDirectory({
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.25, ease: 'easeOut' }}
-              className={`border rounded-3xl p-5 bg-white shadow-2xs hover:shadow-xs transition-all flex flex-col cursor-pointer border-zinc-150 hover:border-zinc-350 ${
-                isExpanded ? 'ring-2 ring-brand-yellow/30 border-zinc-250' : ''
+              className={`border rounded-3xl p-5 bg-white dark:bg-black/75 dark:backdrop-blur-md shadow-2xs hover:shadow-xs transition-all flex flex-col cursor-pointer border-zinc-150 dark:border-zinc-800/80 hover:border-zinc-350 dark:hover:border-zinc-700 ${
+                isExpanded ? 'ring-2 ring-brand-yellow/30 border-zinc-250 dark:border-zinc-650' : ''
               }`}
             >
               {/* Header block details: Avatar, Name, Role badge, Indicator chevron */}
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3 overflow-hidden">
-                  <div className="w-12 h-12 rounded-full overflow-hidden border border-zinc-200 bg-zinc-50 shrink-0 shadow-2xs bg-white">
+                  <div className="w-12 h-12 rounded-full overflow-hidden border border-zinc-200 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-800 shrink-0 shadow-2xs bg-white dark:bg-zinc-950/40">
                     {u.avatar ? (
                       <img src={u.avatar} alt="avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     ) : (
@@ -252,17 +252,17 @@ export default function WorkspaceDirectory({
                     )}
                   </div>
                   <div className="space-y-1 overflow-hidden">
-                    <h4 className="font-semibold text-brand-black text-sm truncate flex items-center gap-1.5">
+                    <h4 className="font-semibold text-brand-black dark:text-white text-sm truncate flex items-center gap-1.5 font-sans">
                       <span>{u.name}</span>
                       {u.verified && <VerifiedBadge />}
                     </h4>
                     <div className="flex flex-wrap items-center gap-1.5 font-light">
                       <span className={`text-[8.5px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                         u.role === 'admin' 
-                          ? 'bg-red-50 text-red-650' 
+                          ? 'bg-red-50 dark:bg-red-955/20 text-red-650 dark:text-red-405' 
                           : u.role === 'trainer' 
-                            ? 'bg-amber-50 text-amber-700' 
-                            : 'bg-zinc-100 text-zinc-650'
+                            ? 'bg-amber-50 dark:bg-amber-550/15 text-amber-700 dark:text-amber-400' 
+                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300'
                       }`}>
                         {u.role}
                       </span>
@@ -303,10 +303,10 @@ export default function WorkspaceDirectory({
 
               {/* Collapsed view drops its other detail properties here */}
               {isExpanded && (
-                <div className="mt-4 pt-4 border-t border-zinc-150 space-y-4 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="mt-4 pt-4 border-t border-zinc-150 dark:border-zinc-800 space-y-4 animate-in fade-in slide-in-from-top-1 duration-150">
                   <div className="space-y-0.5">
                     <span className="text-zinc-400 text-[9px] uppercase font-bold tracking-wider">Email Address</span>
-                    <p className="text-xs text-brand-black font-mono truncate">
+                    <p className="text-xs text-brand-black dark:text-zinc-350 font-mono truncate">
                       {obfuscateEmail(u.email, currentUser.role === 'trainer' || currentUser.role === 'admin')}
                     </p>
                   </div>
@@ -314,11 +314,11 @@ export default function WorkspaceDirectory({
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
                       <span className="text-zinc-400 text-[9px] uppercase font-bold tracking-wider">Status</span>
-                      <p className="text-[11px] text-zinc-600 capitalize font-medium">{u.status || 'Active'}</p>
+                      <p className="text-[11px] text-zinc-600 dark:text-zinc-400 capitalize font-medium">{u.status || 'Active'}</p>
                     </div>
                     <div>
                       <span className="text-zinc-400 text-[9px] uppercase font-bold tracking-wider">Joined Date</span>
-                      <p className="text-[11px] text-zinc-600 font-mono font-medium">{u.joinedDate || '2026-01-01'}</p>
+                      <p className="text-[11px] text-zinc-600 dark:text-zinc-400 font-mono font-medium">{u.joinedDate || '2026-01-01'}</p>
                     </div>
                   </div>
 
@@ -365,11 +365,11 @@ export default function WorkspaceDirectory({
                   )}
 
                   {u.skills && u.skills.length > 0 && (
-                    <div className="pt-2 border-t border-zinc-100/50">
+                    <div className="pt-2 border-t border-zinc-100/50 dark:border-zinc-800">
                       <span className="text-zinc-400 text-[9px] uppercase font-bold tracking-wider block mb-1">Key Competencies</span>
                       <div className="flex flex-wrap gap-1">
                         {u.skills.map((skill, index) => (
-                          <span key={index} className="text-[9px] font-medium px-2 py-0.5 bg-zinc-50 border border-zinc-150 text-zinc-500 rounded-md">
+                          <span key={index} className="text-[9px] font-medium px-2 py-0.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-150 dark:border-zinc-800 text-zinc-500 dark:text-zinc-450 rounded-md">
                             {skill}
                           </span>
                         ))}
@@ -378,9 +378,9 @@ export default function WorkspaceDirectory({
                   )}
 
                   {u.bio && (
-                    <div className="pt-2 border-t border-zinc-100/50">
+                    <div className="pt-2 border-t border-zinc-100/50 dark:border-zinc-800">
                       <span className="text-zinc-400 text-[9px] uppercase font-bold tracking-wider block mb-0.5 animate-pulse">Biography</span>
-                      <p className="text-[10.5px] text-zinc-500 font-light leading-relaxed">
+                      <p className="text-[10.5px] text-zinc-500 dark:text-zinc-400 font-light leading-relaxed">
                         {u.bio.split('||pwd:')[0]}
                       </p>
                     </div>
@@ -393,7 +393,7 @@ export default function WorkspaceDirectory({
                           e.stopPropagation();
                           onSelectUser(u);
                         }}
-                        className="flex-1 py-2 bg-brand-black hover:bg-zinc-900 text-white rounded-xl text-xs font-semibold tracking-wide transition-all uppercase cursor-pointer text-center flex items-center justify-center gap-1.5"
+                        className="flex-1 py-2 bg-brand-black dark:bg-zinc-800 hover:bg-zinc-900 dark:hover:bg-zinc-700 text-white rounded-xl text-xs font-semibold tracking-wide transition-all uppercase cursor-pointer text-center flex items-center justify-center gap-1.5"
                       >
                         <MessageSquare size={13} className="text-brand-yellow" />
                         <span>In-App Chat</span>
@@ -448,22 +448,22 @@ export default function WorkspaceDirectory({
 
       {/* Pagination Controls Block */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 mt-8 pt-4 border-t border-zinc-150">
+        <div className="flex items-center justify-center gap-3 mt-8 pt-4 border-t border-zinc-150 dark:border-zinc-800">
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            className="px-3.5 py-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-semibold hover:text-black transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-3xs"
+            className="px-3.5 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-brand-black dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-3xs"
           >
             Previous
           </button>
-          <span className="text-xs text-zinc-500 font-mono">
-            Page <span className="font-bold text-black">{currentPage}</span> of {totalPages}
-            <span className="text-[10px] text-zinc-400 ml-1.5">({sortedUsers.length} matches)</span>
+          <span className="text-xs text-zinc-500 dark:text-zinc-455 font-mono">
+            Page <span className="font-bold text-black dark:text-zinc-100">{currentPage}</span> of {totalPages}
+            <span className="text-[10px] text-zinc-400 dark:text-zinc-500 ml-1.5">({sortedUsers.length} matches)</span>
           </span>
           <button
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            className="px-3.5 py-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-semibold hover:text-black transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-3xs"
+            className="px-3.5 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-brand-black dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-3xs"
           >
             Next
           </button>

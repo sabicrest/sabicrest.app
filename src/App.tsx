@@ -15,7 +15,7 @@ import Messaging from './components/Messaging';
 import Scheduling from './components/Scheduling';
 import TeamCollaboration from './components/TeamCollaboration';
 import StudentSettings from './components/StudentSettings';
-import { LayoutDashboard, MessageSquare, CalendarDays, Users, ShieldAlert, Settings } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, CalendarDays, Users, ShieldAlert, Settings, Home, BookOpen, FileText, User as UserIcon } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
@@ -33,6 +33,60 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>(() => {
     return localStorage.getItem('sabicrest_active_tab') || 'dashboard';
   });
+
+  const [themeMode, setThemeMode] = useState<'dark' | 'light' | 'system'>(() => {
+    return (localStorage.getItem('sabicrest_theme_mode') as 'dark' | 'light' | 'system') || 'dark';
+  });
+
+  // Keep saved theme mode synchronized and responsive to system preference shifts
+  useEffect(() => {
+    const applyTheme = () => {
+      let active: 'dark' | 'light' = 'dark';
+      if (themeMode === 'system') {
+        const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        active = isSystemDark ? 'dark' : 'light';
+      } else {
+        active = themeMode;
+      }
+
+      const root = document.documentElement;
+      if (active === 'dark') {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+
+      // Sync browser accent theme-color with current mode background
+      let metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (!metaThemeColor) {
+        metaThemeColor = document.createElement('meta');
+        metaThemeColor.setAttribute('name', 'theme-color');
+        document.head.appendChild(metaThemeColor);
+      }
+      metaThemeColor.setAttribute('content', active === 'dark' ? '#0a0a0b' : '#ffffff');
+    };
+
+    applyTheme();
+
+    if (themeMode === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const listener = () => applyTheme();
+      mediaQuery.addEventListener('change', listener);
+      return () => mediaQuery.removeEventListener('change', listener);
+    }
+  }, [themeMode]);
+
+  // Keep saved theme settings updated with standard custom custom-events
+  useEffect(() => {
+    const handleThemeUpdate = () => {
+      const mode = (localStorage.getItem('sabicrest_theme_mode') as 'dark' | 'light' | 'system') || 'dark';
+      setThemeMode(mode);
+    };
+    window.addEventListener('sabicrest-theme-change', handleThemeUpdate);
+    return () => {
+      window.removeEventListener('sabicrest-theme-change', handleThemeUpdate);
+    };
+  }, []);
 
   // Keep saved user session state synchronized with store
   useEffect(() => {
@@ -81,6 +135,53 @@ export default function App() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [activeTab]);
+
+  const [chatCount, setChatCount] = useState(0);
+
+  const loadChatCount = () => {
+    if (!currentUser) return;
+    const allMsgs = db.getMessages();
+    let lastReadMap: Record<string, string> = {};
+    try {
+      const saved = localStorage.getItem('sabicrest_last_read_map');
+      if (saved) {
+        lastReadMap = JSON.parse(saved);
+      }
+    } catch (e) {}
+
+    let unreadTotal = 0;
+    const channels = ['team-general', 'team-collaboration', 'design-showcase', 'technical-support'];
+    channels.forEach(chanId => {
+      const channelMsgs = allMsgs.filter(m => m.channelId === chanId && m.senderId !== currentUser.id);
+      if (channelMsgs.length > 0) {
+        const lastReadId = lastReadMap[`channel-${chanId}`];
+        if (!lastReadId) {
+          unreadTotal += channelMsgs.length;
+        } else {
+          const lastReadMsg = allMsgs.find(m => m.id === lastReadId);
+          if (lastReadMsg) {
+            const lastReadTime = new Date(lastReadMsg.timestamp).getTime();
+            unreadTotal += channelMsgs.filter(m => new Date(m.timestamp).getTime() > lastReadTime).length;
+          } else {
+            unreadTotal += channelMsgs.length;
+          }
+        }
+      }
+    });
+
+    const unreadDMs = allMsgs.filter(m => m.receiverId === currentUser.id && m.senderId !== currentUser.id && m.read !== true);
+    unreadTotal += unreadDMs.length;
+
+    setChatCount(unreadTotal);
+  };
+
+  useEffect(() => {
+    if (currentUser) {
+      loadChatCount();
+      const interval = setInterval(loadChatCount, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [currentUser]);
 
   // Maintain active user state and reflect admin modifications in real-time
   const syncUserState = () => {
@@ -162,11 +263,11 @@ export default function App() {
     switch (currentUser.role) {
       case 'student':
         return [
-          { id: 'dashboard', label: 'Space', icon: LayoutDashboard },
+          { id: 'dashboard', label: 'Home', icon: Home },
+          { id: 'courses', label: 'Courses', icon: BookOpen },
           { id: 'messaging', label: 'Chats', icon: MessageSquare },
-          { id: 'scheduling', label: 'Schedules', icon: CalendarDays },
-          { id: 'collaboration', label: 'Team', icon: Users },
-          { id: 'profile', label: 'Settings', icon: Settings }
+          { id: 'tasks', label: 'Tasks', icon: FileText },
+          { id: 'profile', label: 'Profile', icon: UserIcon }
         ];
       case 'trainer':
         return [
@@ -193,8 +294,10 @@ export default function App() {
   const renderActiveTabContent = () => {
     switch (activeTab) {
       case 'dashboard':
+      case 'courses':
+      case 'tasks':
         if (currentUser.role === 'student') {
-          return <DashboardStudent currentUser={currentUser} onNavigateChange={(tabId) => setActiveTab(tabId)} />;
+          return <DashboardStudent currentUser={currentUser} activeTab={activeTab} onNavigateChange={(tabId) => setActiveTab(tabId)} />;
         } else if (currentUser.role === 'trainer') {
           return <DashboardTrainer currentUser={currentUser} />;
         } else if (currentUser.role === 'admin') {
@@ -223,7 +326,7 @@ export default function App() {
   };
 
   return (
-    <div id="app-viewport-enclosure" className="min-h-screen bg-white pb-14 font-sans text-brand-black relative">
+    <div id="app-viewport-enclosure" className="min-h-screen bg-white pb-24 lg:pb-14 font-sans text-brand-black relative">
       
       {/* Top Header layout */}
       <Navigation
@@ -238,6 +341,69 @@ export default function App() {
       <main id="app-workspace-body" className="pt-16 animate-in fade-in slide-in-from-bottom-2 duration-200">
         {renderActiveTabContent()}
       </main>
+
+      {/* Mobile & Tablet Elegant Sticky Floating Glass Bottom Nav Bar */}
+      {currentUser.role === 'student' && (
+        <div 
+          id="sabicrest-mobile-bottom-nav" 
+          className="lg:hidden fixed bottom-4 left-4 right-4 z-50 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border border-zinc-200/40 dark:border-zinc-800/40 shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)] rounded-2xl flex items-center justify-around px-2"
+        >
+          {[
+            { id: 'dashboard', label: 'Home', icon: Home },
+            { id: 'courses', label: 'Courses', icon: BookOpen },
+            { id: 'messaging', label: 'Chats', icon: MessageSquare, badge: chatCount > 0 ? chatCount : 0 },
+            { id: 'tasks', label: 'Tasks', icon: FileText },
+            { id: 'profile', label: 'Profile', icon: UserIcon },
+          ].map(item => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  if (item.id === 'courses') {
+                    window.dispatchEvent(new CustomEvent('sabicrest-subtab-change', { detail: 'register' }));
+                  } else if (item.id === 'tasks') {
+                    window.dispatchEvent(new CustomEvent('sabicrest-subtab-change', { detail: 'assignments' }));
+                  } else if (item.id === 'dashboard') {
+                    window.dispatchEvent(new CustomEvent('sabicrest-subtab-change', { detail: 'assignments' }));
+                  }
+                }}
+                className="flex-1 flex flex-col items-center justify-center py-2 relative cursor-pointer group transition-all"
+              >
+                {/* Visual active indicator bar on top of icon */}
+                {isActive && (
+                  <span className="absolute top-0 w-8 h-[2px] bg-brand-yellow rounded-full" />
+                )}
+                
+                <div className="relative p-1">
+                  <Icon 
+                    size={20} 
+                    className={`transition-colors ${
+                      isActive 
+                        ? 'text-brand-yellow font-medium scale-105' 
+                        : 'text-zinc-400 group-hover:text-brand-black dark:text-zinc-500'
+                    }`} 
+                  />
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className="absolute -top-1 -right-2 min-w-4 h-4 px-1 bg-brand-yellow text-brand-black text-[9px] font-bold rounded-full flex items-center justify-center shadow-xs">
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
+                <span 
+                  className={`text-[9px] tracking-tight font-light mt-0.5 transition-colors leading-none selection:bg-transparent ${
+                    isActive ? 'text-brand-black dark:text-white font-medium' : 'text-zinc-400 dark:text-zinc-500'
+                  }`}
+                >
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
     </div>
   );

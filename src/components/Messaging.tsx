@@ -619,14 +619,14 @@ export default function Messaging({ currentUser }: MessagingProps) {
   }
 
   return (
-    <div id="messaging-root" className="max-w-7xl mx-auto px-4 py-6 select-none">
-      <div className="rounded-3xl p-[1px] bg-gradient-to-tr from-zinc-300 via-brand-yellow/80 to-zinc-300 shadow-xs">
-        <div id="messaging-layout-grid" className="grid grid-cols-1 md:grid-cols-4 rounded-[calc(1.5rem-1px)] overflow-hidden bg-white min-h-[500px]">
+    <div id="messaging-root" className="max-w-7xl mx-auto px-4 py-6 select-none text-brand-black dark:text-white">
+      <div className="rounded-3xl p-[1px] bg-gradient-to-tr from-zinc-300 via-brand-yellow/80 to-zinc-300 dark:from-zinc-800 dark:via-brand-yellow/40 dark:to-zinc-800 shadow-xs">
+        <div id="messaging-layout-grid" className="grid grid-cols-1 md:grid-cols-4 rounded-[calc(1.5rem-1px)] overflow-hidden bg-white/95 dark:bg-black min-h-[500px]">
         
         {/* Left Sidebar Pane */}
         <div 
           id="messaging-sidebar" 
-          className={`col-span-1 md:col-span-1 border-b md:border-b-0 md:border-r border-brand-yellow/30 md:border-zinc-150 flex-col justify-between bg-zinc-50/40 p-4 shrink-0 ${
+          className={`col-span-1 md:col-span-1 border-b md:border-b-0 md:border-r border-brand-yellow/30 md:border-zinc-150 dark:border-zinc-850 flex-col justify-between bg-zinc-50/40 dark:bg-black p-4 shrink-0 ${
             mobileActiveView !== 'sidebar' ? 'hidden md:flex' : 'flex'
           }`}
         >
@@ -641,13 +641,13 @@ export default function Messaging({ currentUser }: MessagingProps) {
                 placeholder="Search contact or message..."
                 value={dmSearchQuery}
                 onChange={(e) => setDmSearchQuery(e.target.value)}
-                className="w-full bg-white border border-zinc-200 focus:border-brand-black text-[11px] rounded-2xl pl-9 pr-8 py-2 focus:outline-hidden transition-all placeholder:text-zinc-400 font-light shadow-2xs"
+                className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 focus:border-brand-black dark:focus:border-brand-yellow/60 text-[11px] rounded-2xl pl-9 pr-8 py-2 focus:outline-hidden transition-all placeholder:text-zinc-400 font-light shadow-2xs text-brand-black dark:text-white"
               />
               {dmSearchQuery && (
                 <button
                   type="button"
                   onClick={() => setDmSearchQuery('')}
-                  className="absolute right-3 top-2.5 text-zinc-400 hover:text-zinc-650 cursor-pointer"
+                  className="absolute right-3 top-2.5 text-zinc-400 hover:text-zinc-650 dark:hover:text-zinc-300 cursor-pointer"
                   title="Clear search"
                 >
                   <X size={14} />
@@ -664,9 +664,9 @@ export default function Messaging({ currentUser }: MessagingProps) {
                     setChannelsCollapsed(!channelsCollapsed);
                   }
                 }}
-                className="w-full text-left flex items-center justify-between transition-all select-none hover:bg-zinc-150/50 p-2 rounded-xl border border-zinc-200 bg-white cursor-pointer md:hover:bg-transparent md:p-0 md:rounded-none md:border-0 md:bg-transparent md:cursor-default"
+                className="w-full text-left flex items-center justify-between transition-all select-none hover:bg-zinc-150/50 dark:hover:bg-zinc-800/40 p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 cursor-pointer md:hover:bg-transparent md:p-0 md:rounded-none md:border-0 md:bg-transparent md:cursor-default"
               >
-                <h3 className="text-[10px] uppercase font-semibold text-brand-black tracking-wider flex items-center gap-1.5 font-light">
+                <h3 className="text-[10px] uppercase font-semibold text-brand-black dark:text-white tracking-wider flex items-center gap-1.5 font-light">
                   <Users size={12} className="text-zinc-400" /> Shared Channels
                 </h3>
                 <span className="text-zinc-450 md:hidden">
@@ -694,16 +694,16 @@ export default function Messaging({ currentUser }: MessagingProps) {
                         }}
                         className={`w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-center justify-between gap-2 ${
                           isSelected
-                            ? 'bg-brand-black text-white font-medium shadow-xs'
-                            : 'text-zinc-600 hover:bg-zinc-100/60'
+                            ? 'bg-brand-yellow text-brand-black font-semibold shadow-xs'
+                            : 'text-zinc-600 dark:text-white hover:bg-zinc-150/40 dark:hover:bg-zinc-800/40'
                         }`}
                       >
                         <div className="flex items-center gap-2 overflow-hidden">
-                          <span className={isSelected ? 'text-brand-yellow text-xs font-bold' : 'text-zinc-400 text-xs font-bold'}>#</span>
+                          <span className={isSelected ? 'text-brand-black text-xs font-bold' : 'text-zinc-400 dark:text-zinc-500 text-xs font-bold'}>#</span>
                           <span className="truncate">{chan.label}</span>
                         </div>
                         {count > 0 && (
-                          <span className="bg-brand-yellow text-brand-black text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-4 text-center shrink-0 shadow-3xs">
+                          <span className="bg-brand-black text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-4 text-center shrink-0 shadow-3xs">
                             {count}
                           </span>
                         )}
@@ -714,7 +714,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
                   <button
                     type="button"
                     onClick={() => setMessagingSubView('channels')}
-                    className="text-[10px] text-zinc-500 hover:text-brand-black font-semibold cursor-pointer underline hover:no-underline transition-all block mt-2 text-center w-full"
+                    className="text-[10px] text-zinc-500 hover:text-black dark:text-zinc-400 dark:hover:text-white font-semibold cursor-pointer underline hover:no-underline transition-all block mt-2 text-center w-full"
                   >
                     View More Channels
                   </button>
@@ -731,9 +731,9 @@ export default function Messaging({ currentUser }: MessagingProps) {
                     setDmsCollapsed(!dmsCollapsed);
                   }
                 }}
-                className="w-full text-left flex items-center justify-between transition-all select-none hover:bg-zinc-150/50 p-2 rounded-xl border border-zinc-200 bg-white cursor-pointer md:hover:bg-transparent md:p-0 md:rounded-none md:border-0 md:bg-transparent md:cursor-default"
+                 className="w-full text-left flex items-center justify-between transition-all select-none hover:bg-zinc-150/50 p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 cursor-pointer md:hover:bg-transparent md:p-0 md:rounded-none md:border-0 md:bg-transparent md:cursor-default"
               >
-                <h3 className="text-[10px] uppercase font-semibold text-brand-black tracking-wider flex items-center gap-1.5 font-light">
+                <h3 className="text-[10px] uppercase font-semibold text-brand-black dark:text-white tracking-wider flex items-center gap-1.5 font-light font-sans">
                   <UserCheck size={12} className="text-zinc-400" /> Professional DMs
                 </h3>
                 <span className="text-zinc-450 md:hidden">
@@ -753,8 +753,8 @@ export default function Messaging({ currentUser }: MessagingProps) {
                           key={u.id}
                           className={`group w-full p-2 rounded-xl transition-all flex items-center justify-between gap-2 ${
                             isSelected
-                              ? 'bg-brand-black text-white font-medium shadow-xs'
-                              : 'text-zinc-600 hover:bg-zinc-100/60'
+                              ? 'bg-brand-yellow text-brand-black font-semibold shadow-xs'
+                              : 'text-zinc-650 dark:text-white hover:bg-zinc-150/40 dark:hover:bg-zinc-800/40'
                           }`}
                         >
                           <button
@@ -769,7 +769,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
                             }}
                             className="flex-1 flex items-center gap-2 overflow-hidden text-left cursor-pointer"
                           >
-                            <div className="w-5 h-5 rounded-full bg-zinc-200 font-bold overflow-hidden shadow-2xs shrink-0 bg-white">
+                            <div className="w-5 h-5 rounded-full font-bold overflow-hidden shadow-2xs shrink-0 bg-white dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700">
                               {u.avatar ? (
                                 <img src={u.avatar} alt="avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                               ) : (
@@ -783,7 +783,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
                           
                           <div className="flex items-center gap-1.5 shrink-0">
                             {count > 0 && (
-                              <span className="bg-brand-yellow text-brand-black text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-4 text-center shrink-0 shadow-3xs">
+                              <span className="bg-brand-black text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-4 text-center shrink-0 shadow-3xs">
                                 {count}
                               </span>
                             )}
@@ -791,7 +791,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
                               type="button"
                               onClick={(e) => handleHideDm(u.id, e)}
                               className={`opacity-0 group-hover:opacity-100 p-0.5 rounded-md transition-all hover:scale-110 cursor-pointer ${
-                                isSelected ? 'text-zinc-400 hover:text-white' : 'text-zinc-400 hover:text-red-500'
+                                isSelected ? 'text-brand-black/60 hover:text-brand-black' : 'text-zinc-400 hover:text-red-500'
                               }`}
                               title="Hide conversation"
                             >
@@ -810,7 +810,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
                     <button
                       type="button"
                       onClick={() => setDmLimit(prev => prev + 10)}
-                      className="text-[10px] text-brand-yellow hover:text-brand-black font-semibold cursor-pointer underline hover:no-underline transition-all block py-1.5 text-center w-full bg-brand-black/5 hover:bg-brand-yellow/15 rounded-lg mt-1"
+                      className="text-[10px] text-brand-yellow hover:text-brand-black font-semibold cursor-pointer underline hover:no-underline transition-all block py-1.5 text-center w-full bg-brand-black/5 dark:bg-zinc-800/40 hover:bg-brand-yellow/15 rounded-lg mt-1"
                     >
                       Show More DMs (+10)
                     </button>
@@ -819,7 +819,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
                    <button
                     type="button"
                     onClick={() => setMessagingSubView('directory')}
-                    className="text-[10px] text-zinc-500 hover:text-brand-black font-semibold cursor-pointer underline hover:no-underline transition-all block mt-2 text-center w-full"
+                    className="text-[10px] text-zinc-500 hover:text-black dark:text-zinc-400 dark:hover:text-white font-semibold cursor-pointer underline hover:no-underline transition-all block mt-2 text-center w-full"
                   >
                     View Sabicrest Users
                   </button>
@@ -833,27 +833,27 @@ export default function Messaging({ currentUser }: MessagingProps) {
         {/* Dynamic Chat Main Pane */}
         <div 
           id="messaging-main-chat" 
-          className={`col-span-1 md:col-span-3 flex-col justify-between relative ${
+          className={`col-span-1 md:col-span-3 flex flex-col justify-between relative bg-white/90 dark:bg-black md:dark:bg-transparent ${
             mobileActiveView !== 'chat' ? 'hidden md:flex' : 'flex'
           }`}
         >
           
           {/* Active Banner Name */}
-          <div id="chat-header-bar" className="border-b border-brand-yellow/30 md:border-zinc-150 px-6 py-4 bg-white flex items-center justify-between">
+          <div id="chat-header-bar" className="border-b border-brand-yellow/30 md:border-zinc-150 dark:border-zinc-800/80 px-6 py-4 bg-white/30 dark:bg-black flex items-center justify-between text-brand-black dark:text-white">
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setMobileActiveView('sidebar')}
-                className="md:hidden mr-2 p-1 text-zinc-500 hover:text-black transition-colors"
+                className="md:hidden mr-2 p-1 text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
                 title="Back to lists"
               >
                 <ArrowLeft size={16} />
               </button>
-              <h3 className="text-sm font-light tracking-tight text-brand-black">
+              <h3 className="text-sm font-light tracking-tight text-brand-black dark:text-white">
                 <span className="hidden md:inline">Active Hub: </span><span className="font-semibold inline-flex items-center gap-1">{activeDmUser ? activeDmUser.name : `#${activeChannelId === 'team-general' ? 'cohort-general' : activeChannelId === 'team-collaboration' ? 'team-active-horizon' : activeChannelId}`}{activeDmUser?.role === 'trainer' && activeDmUser?.verified && <VerifiedBadge />}</span>
               </h3>
             </div>
-            <span className="text-[10px] text-emerald-500 font-sans flex items-center gap-1 bg-emerald-50/60 px-2 py-0.5 rounded">
+            <span className="text-[10px] text-emerald-550 dark:text-emerald-400 font-sans flex items-center gap-1 bg-emerald-50/60 dark:bg-emerald-950/25 px-2 py-0.5 rounded">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> online
             </span>
           </div>
@@ -863,7 +863,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
             ref={chatStreamRef} 
             id="chat-stream-panel" 
             onScroll={handleScroll}
-            className="flex-1 p-6 space-y-4 overflow-y-auto max-h-[380px] bg-zinc-50/20"
+            className="flex-1 p-6 space-y-4 overflow-y-auto max-h-[380px] bg-zinc-50/20 dark:bg-black/30"
             onMouseMove={(e) => handleTouchMove(e.clientX)}
             onMouseUp={() => { if (draggedMessageId) setDraggedMessageId(null); }}
           >
@@ -927,7 +927,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
 
                     <div className="space-y-1.5 w-full">
                       <div className={`flex items-center gap-2 text-[10px] ${isMine ? 'justify-end' : ''}`}>
-                        <span className="font-medium text-brand-black flex items-center gap-1">{db.getUserById(msg.senderId)?.name || msg.senderName}{(() => {
+                        <span className="font-medium text-brand-black dark:text-white flex items-center gap-1">{db.getUserById(msg.senderId)?.name || msg.senderName}{(() => {
                           const senderUser = db.getUserById(msg.senderId);
                           return senderUser?.role === 'trainer' && senderUser?.verified ? <VerifiedBadge /> : null;
                         })()}</span>
@@ -951,8 +951,8 @@ export default function Messaging({ currentUser }: MessagingProps) {
                       <div
                         className={`p-3.5 rounded-2xl text-xs font-light leading-relaxed font-sans relative ${
                           isMine
-                            ? 'bg-brand-black text-white rounded-tr-none'
-                            : 'bg-white border border-zinc-100 text-brand-black rounded-tl-none'
+                            ? 'bg-brand-black dark:bg-zinc-900 text-white rounded-tr-none border dark:border-zinc-800'
+                            : 'bg-white dark:bg-black border border-zinc-150 dark:border-zinc-850 text-brand-black dark:text-white rounded-tl-none shadow-3xs'
                         }`}
                       >
                         {/* Nested direct reply quote block */}
@@ -961,8 +961,8 @@ export default function Messaging({ currentUser }: MessagingProps) {
                             onClick={() => handleScrollToMessage(msg.replyToId!)}
                             className={`p-2 rounded-xl text-[10.5px] font-light mb-2.5 border-l-2 text-left cursor-pointer transition-colors ${
                               isMine 
-                                ? 'bg-zinc-900 border-brand-yellow text-zinc-300 hover:bg-zinc-800' 
-                                : 'bg-zinc-50 border-brand-yellow text-zinc-500 hover:bg-zinc-100'
+                                ? 'bg-zinc-900 dark:bg-black border-brand-yellow text-zinc-300 dark:text-white hover:bg-zinc-800' 
+                                : 'bg-zinc-50 dark:bg-black border-brand-yellow text-zinc-550 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900'
                             }`}
                           >
                             <div className="flex items-center gap-1 font-semibold mb-0.5">
@@ -981,7 +981,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
                               className={`w-full text-xs p-2 rounded-xl border font-light focus:outline-hidden ${
                                 isMine 
                                   ? 'bg-zinc-900 border-zinc-700 text-white focus:border-brand-yellow' 
-                                  : 'bg-zinc-50 border-zinc-250 text-black focus:border-brand-yellow'
+                                  : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-250 dark:border-zinc-800 text-black dark:text-white focus:border-brand-yellow'
                               }`}
                               rows={2}
                               autoFocus
@@ -1050,8 +1050,8 @@ export default function Messaging({ currentUser }: MessagingProps) {
                                     alreadyVoted
                                       ? 'bg-brand-yellow text-brand-black border border-brand-yellow/30'
                                       : isMine 
-                                        ? 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:bg-zinc-800' 
-                                        : 'bg-zinc-50 border border-zinc-100 text-zinc-500 hover:bg-zinc-100'
+                                        ? 'bg-zinc-900 dark:bg-zinc-950 border border-zinc-800 text-zinc-400 hover:bg-zinc-800' 
+                                        : 'bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700/60 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700'
                                   }`}
                                 >
                                   <span>{emoji}</span>
@@ -1065,14 +1065,14 @@ export default function Messaging({ currentUser }: MessagingProps) {
                         {/* Message Action Options row placed UNDER the message bubble contents (never overflows) */}
                         <div className={`flex flex-wrap items-center gap-3 mt-2.5 pt-2 border-t text-[10px] select-none ${
                           isMine 
-                            ? 'border-white/10 text-zinc-300 justify-end' 
-                            : 'border-zinc-100 text-zinc-400 justify-start'
+                            ? 'border-white/10 dark:border-zinc-700/40 text-zinc-300 justify-end' 
+                            : 'border-zinc-100 dark:border-zinc-800 text-zinc-400 justify-start'
                         }`}>
                           <button
                             type="button"
                             onClick={() => setReplyTo({ id: msg.id, senderName: msg.senderName, content: msg.content })}
                             className={`flex items-center gap-1 hover:text-amber-400 transition-colors cursor-pointer ${
-                              isMine ? 'hover:text-white' : 'hover:text-black'
+                              isMine ? 'hover:text-white' : 'hover:text-black dark:hover:text-zinc-200'
                             }`}
                             title="Reply to message"
                           >
@@ -1096,7 +1096,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
                             {activeEmojiPickerId === msg.id && (
                               <div 
                                 id={`emoji-picker-${msg.id}`}
-                                className={`absolute bottom-6 bg-white border border-zinc-205 rounded-full shadow-lg p-1.5 flex gap-1 z-30 animate-in zoom-in-50 duration-150 ${
+                                className={`absolute bottom-6 bg-white dark:bg-zinc-800 border border-zinc-205 dark:border-zinc-700 rounded-full shadow-lg p-1.5 flex gap-1 z-30 animate-in zoom-in-50 duration-150 ${
                                   isMine ? 'right-0' : 'left-0'
                                 }`}
                               >
@@ -1176,7 +1176,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
 
           {/* Typing indicator bar displaying who is typing right above user text fields */}
           {typingUsers.length > 0 && (
-            <div className="px-6 py-1 text-[10px] text-zinc-400 bg-zinc-50 border-t border-zinc-100 flex items-center gap-1 font-mono italic animate-pulse">
+            <div className="px-6 py-1 text-[10px] text-zinc-400 bg-zinc-50 dark:bg-zinc-950/20 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-1 font-mono italic animate-pulse">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping mr-1"></span>
               {typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
             </div>
@@ -1184,8 +1184,8 @@ export default function Messaging({ currentUser }: MessagingProps) {
 
           {/* Reply Reference Preview Banner bar */}
           {replyTo && (
-            <div className="bg-amber-50/20 border-t border-brand-yellow/30 px-6 py-2 text-xs flex items-center justify-between gap-6">
-              <div className="flex items-center gap-1.5 overflow-hidden text-brand-black text-[11px]">
+            <div className="bg-amber-50/20 dark:bg-zinc-950/40 border-t border-brand-yellow/30 px-6 py-2 text-xs flex items-center justify-between gap-6">
+              <div className="flex items-center gap-1.5 overflow-hidden text-brand-black dark:text-zinc-100 text-[11px]">
                 <Reply size={12} className="text-brand-yellow shrink-0" />
                 <span className="font-semibold shrink-0">Replying to {replyTo.senderName}:</span>
                 <span className="text-zinc-500 truncate lowercase font-mono italic">"{replyTo.content}"</span>
@@ -1234,7 +1234,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
           )}
 
           {/* Secure text submission box */}
-          <form id="secure-input-form" onSubmit={handleSend} className="p-4 border-t border-brand-yellow/30 md:border-zinc-100 bg-white flex gap-2 items-center">
+          <form id="secure-input-form" onSubmit={handleSend} className="p-4 border-t border-brand-yellow/30 md:border-zinc-100 dark:border-zinc-800 bg-white/30 dark:bg-black flex gap-2 items-center">
             
             {/* hidden upload input */}
             <input 
@@ -1249,7 +1249,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="p-3 bg-zinc-50 hover:bg-zinc-150 border border-zinc-100/80 rounded-xl transition-all cursor-pointer text-zinc-500 hover:text-black"
+              className="p-3 bg-zinc-50 dark:bg-black hover:bg-zinc-150 dark:hover:bg-zinc-900 border border-zinc-100/80 dark:border-zinc-800 rounded-xl transition-all cursor-pointer text-zinc-500 dark:text-zinc-300 hover:text-black dark:hover:text-white"
               title="Add Image or File attachment"
             >
               <Paperclip size={13} />
@@ -1260,13 +1260,13 @@ export default function Messaging({ currentUser }: MessagingProps) {
               value={typedMsg}
               onChange={(e) => setTypedMsg(e.target.value)}
               placeholder={attachment ? "Add caption to your attachment..." : "Send a secure message..."}
-              className="flex-1 bg-brand-light border border-zinc-100 rounded-xl px-4 py-3 text-xs font-light focus:outline-hidden focus:border-brand-yellow transition-all"
+              className="flex-1 bg-brand-light dark:bg-black border border-zinc-105 dark:border-zinc-800 rounded-xl px-4 py-3 text-xs text-zinc-805 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-hidden focus:border-brand-yellow dark:focus:border-brand-yellow transition-all"
             />
             
             <button
               id="chat-submit-btn"
               type="submit"
-              className="bg-brand-black hover:bg-zinc-900 text-white p-3 rounded-xl transition-all cursor-pointer flex items-center justify-center shrink-0 focus-ring"
+              className="bg-brand-black dark:bg-zinc-800 hover:bg-zinc-900 dark:hover:bg-zinc-700 text-white p-3 rounded-xl transition-all cursor-pointer flex items-center justify-center shrink-0 focus-ring"
             >
               <Send size={14} className="text-brand-yellow" />
             </button>
@@ -1298,20 +1298,20 @@ export default function Messaging({ currentUser }: MessagingProps) {
       {/* Forward Message modal Dialog */}
       {forwardingMsg && (
         <div id="forward-modal" className="fixed inset-0 bg-brand-black/65 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl border border-zinc-150 p-6 max-w-sm w-full mx-4 shadow-2xl space-y-4">
+          <div className="bg-white dark:bg-black rounded-3xl border border-zinc-150 dark:border-zinc-800 p-6 max-w-sm w-full mx-4 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-brand-black flex items-center gap-1.5 uppercase tracking-wide">
+              <h3 className="text-xs font-bold text-brand-black dark:text-white flex items-center gap-1.5 uppercase tracking-wide">
                 <Share2 size={13} className="text-brand-yellow" /> Forward Message
               </h3>
               <button 
                 onClick={() => setForwardingMsg(null)}
-                className="text-zinc-400 hover:text-black p-1"
+                className="text-zinc-400 hover:text-black dark:hover:text-white p-1"
               >
                 <X size={16} />
               </button>
             </div>
 
-            <div className="bg-zinc-50 border border-zinc-100 p-3 rounded-2xl text-[10.5px] text-zinc-500 font-mono line-clamp-3 italic">
+            <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-805 p-3 rounded-2xl text-[10.5px] text-zinc-500 dark:text-zinc-400 font-mono line-clamp-3 italic">
               "{forwardingMsg.content}"
             </div>
 

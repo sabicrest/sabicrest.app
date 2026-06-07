@@ -296,16 +296,6 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
         
         {/* Settings & Profile form */}
         <div className="lg:col-span-2 bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs space-y-6">
-          <div>
-            <h3 className="text-sm font-semibold tracking-tight text-brand-black mb-1 flex items-center gap-2">
-              <UserIcon size={16} className="text-brand-yellow" />
-              Aesthetic Workspace Settings // <span className="font-light text-zinc-500">Edit Profile</span>
-            </h3>
-            <p className="text-xs text-brand-gray font-light">
-              Configure your display name, digital identifiers, contact handles, and academic background properties. Changes sync back directly in persistent database shards.
-            </p>
-          </div>
-
           <form onSubmit={handleSaveProfile} className="space-y-6">
             
             {/* Custom Photo Avatar Settings */}
