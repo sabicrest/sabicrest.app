@@ -766,7 +766,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
 
   const enrolledCoursesForProg = db.getCurricula().filter(c => 
     c.status === 'approved' && 
-    ((currentUser.enrolledCourseIds || ['c-1']).includes(c.id) || 
+    ((currentUser.enrolledCourseIds || []).includes(c.id) || 
      enrollments.some(e => e.courseId === c.id && e.paymentStatus === 'approved'))
   );
 
@@ -1450,7 +1450,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                   course.category.toLowerCase().includes(coursesSearchQuery.toLowerCase())
                 )
                 .map(course => {
-                const alreadyEnrolled = (currentUser.enrolledCourseIds || ['c-1']).includes(course.id);
+                const alreadyEnrolled = (currentUser.enrolledCourseIds || []).includes(course.id);
                 const coverImage = getCourseImage(course.category, course.title, course.imageUrl);
                 return (
                   <div key={course.id} className="border border-zinc-150 rounded-2xl overflow-hidden hover:shadow-md bg-white hover:border-zinc-300 transition-all duration-300 flex flex-col justify-between group">
@@ -1817,7 +1817,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                 
                 {(() => {
                   const enr = enrollments.find(e => e.courseId === selectedCourse.id);
-                  const isEnrApproved = (currentUser.enrolledCourseIds || ['c-1']).includes(selectedCourse.id) || (enr && enr.paymentStatus === 'approved');
+                  const isEnrApproved = (currentUser.enrolledCourseIds || []).includes(selectedCourse.id) || (enr && enr.paymentStatus === 'approved');
 
                   if (isEnrApproved) {
                     return (

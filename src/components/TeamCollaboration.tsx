@@ -13,28 +13,43 @@ interface TeamCollaborationProps {
 }
 
 export default function TeamCollaboration({ currentUser }: TeamCollaborationProps) {
-  // Ensure we get the team the user belongs to, or load Team Horizon
+  // Ensure we get the team the user belongs to
   const allTeams = db.getTeams() || [];
-  const userTeam = allTeams.find(t => t?.members?.includes(currentUser.id)) || allTeams[0] || {
-    id: 'team-fallback',
-    name: 'General Collaboration Space',
-    projectTitle: 'Sabicrest Core Platform v2',
-    description: 'System-wide joint collaboration note board and task tracker.',
-    members: [currentUser.id],
-    tasks: [
-      { id: 't-fallback-1', title: 'Verify setup environment', assignedTo: currentUser.name, status: 'done' },
-      { id: 't-fallback-2', title: 'Start collaborative session panel', assignedTo: currentUser.name, status: 'todo' }
-    ],
-    sharedNotes: 'Welcome to Sabicrest. Stored securely in cloud workspace storage.'
-  };
+  const userTeam = allTeams.find(t => t?.members?.includes(currentUser.id)) || null;
   
-  const [team, setTeam] = useState<Team>(userTeam);
+  const [team, setTeam] = useState<Team | null>(userTeam);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [taskAssignee, setTaskAssignee] = useState('');
   const [notepadContent, setNotepadContent] = useState(team?.sharedNotes || '');
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const teamMembersDetails = db.getUsers().filter(u => team?.members?.includes(u.id)) || [];
+  if (!team) {
+    return (
+      <div id="team-collab-root" className="py-6 max-w-7xl mx-auto px-4 select-none">
+        
+        {/* Header Panel */}
+        <div id="collab-header" className="border-b border-zinc-150 pb-6 mb-8 dark:border-zinc-805">
+          <h2 className="text-2xl font-light tracking-tight text-brand-black dark:text-white flex items-center gap-2">
+            <Users className="text-brand-yellow font-normal" size={22} />
+            Student <span className="font-semibold">Team Collaboration</span>
+          </h2>
+          <p className="text-xs font-light tracking-wide text-zinc-500 dark:text-zinc-400 uppercase mt-1">
+            Synchronize on joint project tasks, divide task responsibilities, and edit research canvas boards
+          </p>
+        </div>
+
+        <div className="bg-white dark:bg-zinc-950 border border-zinc-150 dark:border-zinc-850 rounded-2xl p-12 text-center text-zinc-400 font-light flex flex-col items-center gap-2 shadow-2xs">
+          <Users size={40} className="text-zinc-300 dark:text-zinc-700 mb-2" />
+          <h3 className="text-sm font-semibold tracking-tight text-brand-black dark:text-zinc-200 uppercase">No Active Team Found</h3>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 font-light max-w-md mx-auto leading-relaxed">
+            You are not currently assigned to any joint collaboration teams in the database. Please contact an Administrator or Trainer to allocate you to a team.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const teamMembersDetails = db.getUsers().filter(u => team.members.includes(u.id)) || [];
 
   const handleToggleTask = (taskId: string) => {
     const updatedTasks = team.tasks.map(task => {

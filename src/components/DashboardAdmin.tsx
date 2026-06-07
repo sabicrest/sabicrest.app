@@ -177,7 +177,7 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
     // Update Student enrolledCourseIds list
     const student = db.getUsers().find(u => u.id === enr.studentId);
     if (student) {
-      const currentEnrolls = student.enrolledCourseIds || ['c-1'];
+      const currentEnrolls = student.enrolledCourseIds || [];
       if (!currentEnrolls.includes(enr.courseId)) {
         const updatedUser: User = {
           ...student,
