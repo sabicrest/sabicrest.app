@@ -280,13 +280,13 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
       <div id="student-settings-header" className="bg-brand-black text-white rounded-3xl p-8 mb-8 relative overflow-hidden shadow-xs">
         <div className="absolute top-0 right-0 w-96 h-96 bg-zinc-800/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
         <div className="relative z-10 space-y-2 max-w-2xl">
-          <span className="text-[10px] uppercase font-mono tracking-widest bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full border border-zinc-700">
+          <span className="text-[10px] uppercase font-mono tracking-widest bg-zinc-800 text-white px-3 py-1 rounded-full border border-zinc-700">
             About me
           </span>
           <h2 className="text-2xl md:text-3xl font-light tracking-tight">
             Account <span className="font-semibold text-brand-yellow">Settings & Profile</span>
           </h2>
-          <p className="text-xs text-zinc-400 font-light leading-relaxed">
+          <p className="text-xs text-white font-light leading-relaxed opacity-95">
             Manage your public Sabicrest design portfolio metadata, upload your photo, connect professional social links (Portfolio/Business website and Mobile), and review cloud activity streams.
           </p>
         </div>

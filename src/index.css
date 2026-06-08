@@ -336,11 +336,28 @@ html.dark [class*="bg-yellow-"] .lucide {
   filter: none !important;
 }
 
-/* Precise high-fidelity shadows, thicker lines, and subtle ambient glows for dark mode icons */
+/* Precise high-fidelity thickness, and no glowing filters or drop shadows as requested */
 html.dark svg.lucide,
 html.dark .lucide {
   stroke-width: 1.95 !important; /* Whiter, thicker lines are automatically more visible on black backgrounds */
-  filter: drop-shadow(0 0px 1.5px rgba(255, 255, 255, 0.35)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+  filter: none !important;
+}
+
+/* Give the bottom navigation bar a thin yellow border line in both light and dark mode */
+#sabicrest-mobile-bottom-nav,
+html.dark #sabicrest-mobile-bottom-nav {
+  border: 1px solid #fbbf24 !important;
+}
+
+/* Ultra fast and tap-active responsive transitions, ensuring snappy user feel without slow delays */
+#sabicrest-mobile-bottom-nav,
+#sabicrest-mobile-bottom-nav *,
+#sabicrest-mobile-bottom-nav button,
+#sabicrest-mobile-bottom-nav div,
+#sabicrest-mobile-bottom-nav svg,
+#sabicrest-mobile-bottom-nav span {
+  transition: all 75ms cubic-bezier(0, 0, 0.2, 1) !important;
+  transition-duration: 75ms !important;
 }
 
 /* Sharp, crystal clear, unblurred navigation icons for mobile and tablet bottom bar */
@@ -349,8 +366,41 @@ html.dark .lucide {
 html.dark #sabicrest-mobile-bottom-nav svg.lucide,
 html.dark #sabicrest-mobile-bottom-nav .lucide {
   filter: none !important;
-  stroke-width: 2.0 !important;
+  stroke-width: 2.2 !important; /* Premium thick lines for maximum sharpness */
   transform: none !important;
+}
+
+/* Make inactive navigation icons to be highly visible brand yellow on dark mode */
+html.dark #sabicrest-mobile-bottom-nav .inactive-nav-item svg.lucide,
+html.dark #sabicrest-mobile-bottom-nav .inactive-nav-item .lucide {
+  color: #fbbf24 !important; /* Premium golden yellow */
+  stroke: #fbbf24 !important;
+  opacity: 1.0 !important;
+}
+
+html.dark #sabicrest-mobile-bottom-nav .inactive-nav-item span {
+  color: #fbbf24 !important;
+  opacity: 0.9 !important;
+  font-weight: 500 !important;
+}
+
+/* Clearer and highly visible golden/yellow button active state for bottom navigation in dark mode - NO WHITE BORDER OR GLOW SHADOW */
+html.dark #sabicrest-mobile-bottom-nav .active-nav-item {
+  background-color: #fbbf24 !important; /* Vivid premium yellow */
+  box-shadow: none !important;
+  border: none !important;
+  transform: scale(1.05) !important;
+}
+
+html.dark #sabicrest-mobile-bottom-nav .active-nav-item svg.lucide,
+html.dark #sabicrest-mobile-bottom-nav .active-nav-item .lucide {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+html.dark #sabicrest-mobile-bottom-nav .active-nav-item span {
+  color: #000000 !important;
+  font-weight: 800 !important;
 }
 
 

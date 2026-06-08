@@ -375,17 +375,17 @@ export default function App() {
                 <div 
                   className={`flex flex-col items-center justify-center py-1 px-3.5 rounded-xl transition-all duration-300 w-full max-w-[76px] h-[85%] ${
                     isActive 
-                      ? 'bg-brand-yellow text-black font-semibold shadow-md shadow-brand-yellow/30 scale-105' 
-                      : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-350 dark:hover:text-white'
+                      ? 'bg-brand-yellow text-black font-semibold scale-105 active-nav-item' 
+                      : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-350 dark:hover:text-white inactive-nav-item'
                   }`}
                 >
                   <div className="relative">
                     <Icon 
-                      size={18} 
+                      size={24} 
                       className={`transition-colors ${
                         isActive 
                           ? 'text-black' 
-                          : 'text-zinc-500 dark:text-white'
+                          : 'text-zinc-500 dark:text-brand-yellow'
                       }`} 
                     />
                     {item.badge !== undefined && item.badge > 0 && (

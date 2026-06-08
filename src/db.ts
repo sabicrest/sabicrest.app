@@ -145,7 +145,133 @@ const INITIAL_USERS: User[] = [
 ];
 const INITIAL_MESSAGES: Message[] = [];
 const INITIAL_EVENTS: ScheduleEvent[] = [];
-const INITIAL_CURRICULA: Curriculum[] = [];
+const INITIAL_CURRICULA: Curriculum[] = [
+  {
+    id: "c-figma-adv",
+    trainerId: "u-trainer-sarah",
+    trainerName: "Sarah Jenkins",
+    title: "Advanced Figma Layouts & Spatial Systems",
+    description: "Master advanced UI design, prototyping, spatial typography systems, design tokens, and components architecture in Figma.",
+    category: "Digital Course",
+    level: "Advanced",
+    durationWeeks: 6,
+    modules: [
+      "Week 1: Advanced Auto Layout and Constraints",
+      "Week 2: Variables & Design Tokens integration",
+      "Week 3: Non-linear Interactive Prototyping",
+      "Week 4: Spatial Grids & UI Typography Scale",
+      "Week 5: Designing for Responsive Interfaces",
+      "Week 6: Creating Multi-platform Design Libraries"
+    ],
+    status: "approved",
+    submittedAt: "2026-06-01T08:00:00Z",
+    approvedAt: "2026-06-02T10:00:00Z",
+    price: 45000,
+    imageUrl: ""
+  },
+  {
+    id: "c-prod-mgmt",
+    trainerId: "u-trainer-sarah",
+    trainerName: "Sarah Jenkins",
+    title: "Digital Product Management & Market Fit",
+    description: "Learn the end-to-end process of launching digital products from roadmap definition, user research, to running wireframe validation cycles.",
+    category: "Digital Course",
+    level: "Intermediate",
+    durationWeeks: 8,
+    modules: [
+      "Week 1: Product Strategy & Market Research",
+      "Week 2: Defining Product Requirement Docs",
+      "Week 3: UX Mapping and User Journeys",
+      "Week 4: MVP Scoping and Agile Frameworks",
+      "Week 5: Product Metric Dashboards",
+      "Week 6: Conversion Rate Optimization",
+      "Week 7: Launch Planning",
+      "Week 8: Growth Loops & Client Retention Strategy"
+    ],
+    status: "approved",
+    submittedAt: "2026-06-02T08:00:00Z",
+    approvedAt: "2026-06-03T10:00:00Z",
+    price: 35000,
+    imageUrl: ""
+  },
+  {
+    id: "c-fullstack-ts",
+    trainerId: "u-trainer-sarah",
+    trainerName: "Sarah Jenkins",
+    title: "Full-Stack Web Development & Cloud Services",
+    description: "An intensive masterclass on TypeScript, React, Vite, Express backends, and deploying scalable apps to global micro-containers.",
+    category: "Digital Course",
+    level: "Advanced",
+    durationWeeks: 12,
+    modules: [
+      "Week 1: Pure TypeScript Deep Dive",
+      "Week 2: Modern React Hooks & Client Routing",
+      "Week 3: Tailwind CSS & Fluid Layout Interfaces",
+      "Week 4: Building Express REST & WebSocket API Servers",
+      "Week 5: Database integration with Postgres & Firestore",
+      "Week 6: Secure User Session Cookies & OAuth 2.0 Flow",
+      "Week 7: Containerization & Docker Architectures",
+      "Week 8: Deploying to Google Cloud Run",
+      "Week 9: Advanced CI/CD GitHub Actions Workflow",
+      "Week 10: App Performance Monitoring & Load Tests",
+      "Week 11: System Scalability Planning",
+      "Week 12: Production-Ready Capstone Submission"
+    ],
+    status: "approved",
+    submittedAt: "2026-06-03T08:00:00Z",
+    approvedAt: "2026-06-04T10:00:00Z",
+    price: 55000,
+    imageUrl: ""
+  },
+  {
+    id: "c-iot-hardware",
+    trainerId: "u-trainer-marcus",
+    trainerName: "Marcus Vance",
+    title: "IoT Hardware & Physical Computing Lab",
+    description: "Hands-on engineering course designing physical microcontrollers, Raspberry Pi routing, and sensors for environment telemetry.",
+    category: "Physical Course",
+    level: "Intermediate",
+    durationWeeks: 10,
+    modules: [
+      "Week 1: Fundamentals of Circuit Board Design",
+      "Week 2: Microcontroller Programming (C++)",
+      "Week 3: Wi-Fi/Bluetooth Network Telemetry integration",
+      "Week 4: Reading Dynamic Sensors & SPI Bus",
+      "Week 5: Industrial Enclosures and CAD modeling",
+      "Week 6: Power Management & Battery Lifetimes",
+      "Week 7: Over-the-air (OTA) Firmware Updates",
+      "Week 8: Cloud SQL Node Databases integration",
+      "Week 9: Final Capstone Prototyping Testing",
+      "Week 10: Manufacturing Lines Preparation"
+    ],
+    status: "approved",
+    submittedAt: "2026-06-04T08:00:00Z",
+    approvedAt: "2026-06-05T10:00:00Z",
+    price: 65000,
+    imageUrl: ""
+  },
+  {
+    id: "c-physical-fab",
+    trainerId: "u-trainer-marcus",
+    trainerName: "Marcus Vance",
+    title: "Physical Prototype Fabrication and Ergonomics",
+    description: "Practical modeling of real ergonomic products, 3D printing parameters, and physical mockups utilizing industrial plastics and components.",
+    category: "Physical Course",
+    level: "Beginner",
+    durationWeeks: 4,
+    modules: [
+      "Week 1: Anthropometrics & Human Factors",
+      "Week 2: 3D CAD modeling with Fusion 360",
+      "Week 3: FDM 3D printing and material tolerances",
+      "Week 4: Post-processing, paint finish, and final assembly"
+    ],
+    status: "approved",
+    submittedAt: "2026-06-05T08:00:00Z",
+    approvedAt: "2026-06-06T10:00:00Z",
+    price: 25000,
+    imageUrl: ""
+  }
+];
 const INITIAL_ASSIGNMENTS: Assignment[] = [];
 const INITIAL_TEAMS: Team[] = [];
 const INITIAL_CERTIFICATES: Certificate[] = [];
@@ -172,6 +298,12 @@ export class AppwriteDatabase {
 
   constructor() {
     // Force reset old mock keys on first run to clean up active browser storage
+    if (localStorage.getItem('sabicrest_clean_v4_courses') !== 'true') {
+      localStorage.removeItem('sc_curricula');
+      localStorage.setItem('sc_curricula', JSON.stringify(INITIAL_CURRICULA));
+      localStorage.setItem('sabicrest_clean_v4_courses', 'true');
+    }
+
     if (localStorage.getItem('sabicrest_clean_v3') !== 'true') {
       localStorage.removeItem('sc_users');
       localStorage.removeItem('sc_messages');
