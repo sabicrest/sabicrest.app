@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { User, Assignment, Certificate, Curriculum, CourseEnrollment } from '../types';
 import { db } from '../db';
 import VerifiedBadge from './VerifiedBadge';
 import { getCourseImage } from '../utils/course';
 import { getQuoteOfTheDay } from '../utils/quotes';
 import { jsPDF } from 'jspdf';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Award, BookOpen, Clock, FileText, CheckCircle2, ChevronRight, Upload, Link, AlertCircle, 
   FileCheck, Printer, Settings, User as UserIcon, Mail, Phone, MapPin, Sliders, Bell, 
@@ -67,7 +68,6 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('All');
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const [coursesLimit, setCoursesLimit] = useState(10);
-  const [isCountdownDropdownOpen, setIsCountdownDropdownOpen] = useState(false);
 
   // Notifications State
   const [studentNotifs, setStudentNotifs] = useState(db.getNotifications().filter(n => n.userId === currentUser.id));
@@ -103,11 +103,18 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
   const [paymentOtp, setPaymentOtp] = useState('');
   const [paystackLogs, setPaystackLogs] = useState<string[]>([]);
 
-  // Sabi Streak States
+  // Live Updates Feed States
   const [studentUser, setStudentUser] = useState<User>(() => db.getUserById(currentUser.id) || currentUser);
-  const [timeLeftStr, setTimeLeftStr] = useState<string>('');
-  const [showPracticeModal, setShowPracticeModal] = useState(false);
-  const [practiceNote, setPracticeNote] = useState('');
+  const [activeUpdateIdx, setActiveUpdateIdx] = useState(0);
+
+  // Standalone Tasks page states
+  const [tasksFilterOpen, setTasksFilterOpen] = useState(false);
+  const [tasksSearchQuery, setTasksSearchQuery] = useState('');
+  const [tasksTrainerFilter, setTasksTrainerFilter] = useState('All');
+  const [tasksStatusFilter, setTasksStatusFilter] = useState('ongoing'); // 'all', 'ongoing', 'graded'
+  const [tasksDateFilter, setTasksDateFilter] = useState('all'); // 'all', 'upcoming', 'overdue'
+  const [tasksLimit, setTasksLimit] = useState(5); // For vertical list view more limit
+  const [selectedTaskDetail, setSelectedTaskDetail] = useState<Assignment | null>(null);
 
   const reloadStudentData = () => {
     setAssignments(db.getAssignments().filter(a => a.studentId === currentUser.id));
@@ -136,48 +143,125 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
     return () => clearInterval(interval);
   }, [currentUser.id]);
 
-  useEffect(() => {
-    const calculateTimeLeft = () => {
-      const dbUser = db.getUserById(currentUser.id) || currentUser;
-      if (!dbUser.streakExpiry) {
-        setTimeLeftStr('--h --m --s');
-        return;
-      }
-      
-      const expiry = new Date(dbUser.streakExpiry).getTime();
-      const now = Date.now();
-      const diff = expiry - now;
-      
-      if (diff <= 0) {
-        if (dbUser.streakCount && dbUser.streakCount > 0 && !dbUser.streakFreezeActive) {
-          const updated = {
-            ...dbUser,
-            streakCount: 0,
-            streakExpiry: undefined
-          };
-          db.updateUser(updated);
-          setStudentUser(updated);
-        }
-        setTimeLeftStr('00h 00m 00s (Fire Out)');
-      } else {
-        const hours = Math.floor(diff / (3600 * 1000));
-        const mins = Math.floor((diff % (3600 * 1000)) / (60 * 1000));
-        const secs = Math.floor((diff % (60 * 1000)) / 1000);
-        
-        let displayStr = `${hours.toString().padStart(2, '0')}h ${mins.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`;
-        if (dbUser.streakFreezeActive) {
-          displayStr = '🧊 FROZEN (Protected)';
-        } else {
-          displayStr += ' left';
-        }
-        setTimeLeftStr(displayStr);
-      }
-    };
+  // Generate live updates using users' first names where appropriate along with Google News updates
+  const liveUpdates = useMemo(() => {
+    const students = db.getUsers().filter(u => u.role === 'student');
+    const getFirst = (name: string) => name.split(' ')[0] || 'A student';
     
-    calculateTimeLeft();
-    const timer = setInterval(calculateTimeLeft, 1000);
+    // Fallback names if database has few students
+    const defaultNames = ['Tobi', 'Amara', 'Musa', 'Ngozi', 'Sani', 'Yinka', 'Chioma', 'Kelechi', 'Femi', 'Aisha'];
+    
+    const studentUpdates: { type: 'join' | 'online' | 'submit'; text: string; category: string }[] = [];
+    
+    students.forEach((st, i) => {
+      const name = getFirst(st.name);
+      if (i % 3 === 0) {
+        studentUpdates.push({
+          type: 'join',
+          text: `${name} just registered for the curriculum cohort.`,
+          category: 'NEW MEMBER'
+        });
+      } else if (i % 3 === 1) {
+        studentUpdates.push({
+          type: 'online',
+          text: `${name} is active and designing spatial layouts in the workspace.`,
+          category: 'ACTIVE NOW'
+        });
+      } else {
+        studentUpdates.push({
+          type: 'submit',
+          text: `${name} successfully uploaded a practice assignment.`,
+          category: 'SUBMISSION'
+        });
+      }
+    });
+    
+    // Populate with fallback names if needed
+    if (studentUpdates.length < 6) {
+      defaultNames.forEach((name, i) => {
+        if (i % 3 === 0) {
+          studentUpdates.push({
+            type: 'join',
+            text: `${name} just registered for the curriculum cohort.`,
+            category: 'NEW MEMBER'
+          });
+        } else if (i % 3 === 1) {
+          studentUpdates.push({
+            type: 'online',
+            text: `${name} is active and designing spatial layouts in the workspace.`,
+            category: 'ACTIVE NOW'
+          });
+        } else {
+          studentUpdates.push({
+            type: 'submit',
+            text: `${name} successfully uploaded a practice assignment.`,
+            category: 'SUBMISSION'
+          });
+        }
+      });
+    }
+
+    // Google News Updates
+    const newsUpdates = [
+      {
+        type: 'news' as const,
+        text: 'Google Maps and Location technology see massive adoption across new West African delivery startups.',
+        category: 'GOOGLE NEWS // TRENDS'
+      },
+      {
+        type: 'news' as const,
+        text: 'Specialized enterprise micro-certificates outperform traditional degrees in global tech hires for 2026.',
+        category: 'GOOGLE NEWS // CAREERS'
+      },
+      {
+        type: 'news' as const,
+        text: 'Vocational business programs in design, bookkeeping, and solar alignment report record-high enrollment.',
+        category: 'GOOGLE NEWS // BUSINESS'
+      },
+      {
+        type: 'news' as const,
+        text: 'Ais-dev environment and full-stack proxies securely isolate critical third-party API keys on the server.',
+        category: 'GOOGLE NEWS // SECURITIES'
+      },
+      {
+        type: 'news' as const,
+        text: 'Agribusiness entrepreneurs transition to soil-to-market direct automation to maximize client margins.',
+        category: 'GOOGLE NEWS // AGRI-TECH'
+      },
+      {
+        type: 'news' as const,
+        text: 'New vocational regulations prioritize portfolio proofs over standard resumes in construction hiring.',
+        category: 'GOOGLE NEWS // INDUSTRY'
+      },
+      {
+        type: 'news' as const,
+        text: 'Professional beauty operations report a 40% growth in high-value online customer bookings.',
+        category: 'GOOGLE NEWS // COMMERCE'
+      }
+    ];
+
+    // Interleave the news items to ensure they make up the majority/mostly news items
+    const combined: { type: 'join' | 'online' | 'submit' | 'news'; text: string; category: string }[] = [];
+    let newsIdx = 0;
+    let userIdx = 0;
+    
+    while (newsIdx < newsUpdates.length || userIdx < studentUpdates.length) {
+      if (newsIdx < newsUpdates.length) combined.push(newsUpdates[newsIdx++]);
+      if (newsIdx < newsUpdates.length) combined.push(newsUpdates[newsIdx++]);
+      if (userIdx < studentUpdates.length) combined.push(studentUpdates[userIdx++]);
+    }
+    
+    return combined;
+  }, []);
+
+  // Automatic Cycler for live updates feed (10 seconds)
+  useEffect(() => {
+    if (liveUpdates.length === 0) return;
+    const timer = setInterval(() => {
+      setActiveUpdateIdx((prev) => (prev + 1) % liveUpdates.length);
+    }, 10000);
     return () => clearInterval(timer);
-  }, [currentUser.id, studentUser.streakExpiry, studentUser.streakFreezeActive]);
+  }, [liveUpdates.length]);
 
   useEffect(() => {
     const handleSearch = (e: any) => {
@@ -249,86 +333,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
     showToast(`[STREAK REFUEL] Assignment submitted! Your Sabi Streak was refueled up to 36 hours! Keep shining!`);
   };
 
-  const handleLogPractice = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!practiceNote.trim() || practiceNote.trim().length < 5) {
-      showToast('[WARNING] Please write a brief practice description of at least 5 characters.');
-      return;
-    }
 
-    const todayStr = new Date().toISOString().split('T')[0];
-    const dbUser = db.getUserById(currentUser.id) || currentUser;
-    const hasLoggedToday = dbUser.lastStreakActivityDate === todayStr;
-    const nextExpiry = new Date();
-    nextExpiry.setHours(nextExpiry.getHours() + 33); // daily logs give 33H timer boost
-
-    const updatedUser: User = {
-      ...dbUser,
-      streakCount: hasLoggedToday ? (dbUser.streakCount || 5) : ((dbUser.streakCount || 5) + 1),
-      streakExpiry: nextExpiry.toISOString(),
-      streakFreezeActive: false,
-      lastStreakActivityDate: todayStr,
-      streakLogs: [
-        {
-          id: 'l-p-' + Math.random().toString(36).substr(2, 6),
-          date: todayStr,
-          type: 'practice',
-          note: practiceNote,
-          timestamp: new Date().toISOString()
-        },
-        ...(dbUser.streakLogs || [])
-      ]
-    };
-
-    await db.updateUser(updatedUser);
-    setStudentUser(updatedUser);
-    setPracticeNote('');
-    setShowPracticeModal(false);
-    setAudioToggle(); // Play native chime logic
-    reloadStudentData();
-    showToast('[STREAK REFUEL] Sabi Streak refueled! Logged daily practice project and filled timer up to 33 hours!');
-  };
-
-  const handleUseStreakFreeze = async () => {
-    const dbUser = db.getUserById(currentUser.id) || currentUser;
-    const currentFreezes = dbUser.streakFreezes !== undefined ? dbUser.streakFreezes : 2;
-    
-    if (currentFreezes <= 0) {
-      showToast('[ERROR] You do not have any Streak Freeze cards remaining.');
-      return;
-    }
-
-    if (dbUser.streakFreezeActive) {
-      showToast('[STREAK FROZEN] Your Sabi Streak is already frozen and protected.');
-      return;
-    }
-
-    const nextExpiry = new Date();
-    nextExpiry.setHours(nextExpiry.getHours() + 48); // freeze protects for 48 hours
-
-    const updatedUser: User = {
-      ...dbUser,
-      streakFreezes: currentFreezes - 1,
-      streakFreezeActive: true,
-      streakExpiry: nextExpiry.toISOString(),
-      streakLogs: [
-        {
-          id: 'l-f-' + Math.random().toString(36).substr(2, 6),
-          date: new Date().toISOString().split('T')[0],
-          type: 'practice',
-          note: 'Activated emergency Streak Freeze card to protect current progress.',
-          timestamp: new Date().toISOString()
-        },
-        ...(dbUser.streakLogs || [])
-      ]
-    };
-
-    await db.updateUser(updatedUser);
-    setStudentUser(updatedUser);
-    setAudioToggle(); // Play native chime logic
-    reloadStudentData();
-    showToast('[STREAK FROZEN] Sabi Streak is now Frozen! Your progress is protected for up to 48 hours.');
-  };
 
   const setAudioToggle = () => {
     try {
@@ -1041,108 +1046,64 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                   {getQuoteOfTheDay()}
                 </p>
               </div>
- 
-              {/* Micro stat-line for Motivation */}
-              <div className="pt-2 sm:pt-4 border-t border-zinc-800/40 dark:border-black/10 flex flex-wrap items-center gap-3 sm:gap-5 text-white/90 dark:text-black/60">
-                <div className="flex items-center gap-1.5 sm:gap-2.5">
-                  <span className="text-[9px] xs:text-[11px] sm:text-xs uppercase font-mono tracking-wider text-white/70 dark:text-black/55 font-medium">Pace</span>
-                  <span className="text-[10.5px] xs:text-xs sm:text-sm font-semibold text-white dark:text-black">4.8h/Day</span>
-                </div>
-                <div className="w-[1px] h-3 sm:h-4 bg-zinc-800 dark:bg-black/10" />
-                <div className="flex items-center gap-1.5 sm:gap-2.5">
-                  <span className="text-[9px] xs:text-[11px] sm:text-xs uppercase font-mono tracking-wider text-white/70 dark:text-black/55 font-medium">Sync</span>
-                  <span className="text-[10.5px] xs:text-xs sm:text-sm font-semibold text-emerald-450 dark:text-emerald-850 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-450 dark:bg-emerald-800 animate-ping shrink-0" /> Live
-                  </span>
-                </div>
-              </div>
             </div>
  
-            {/* Right container: Learning Streak Tracker beside it */}
-            <div className="relative z-10 flex flex-col justify-center items-stretch border-t md:border-t-0 md:border-l border-zinc-805 dark:border-black/10 pt-5 md:pt-0 pl-0 md:pl-6 lg:pl-10">
-              <div className="space-y-4 w-full">
-                <div className="flex flex-row justify-between items-center w-full gap-2">
-                  <h3 className="text-[10px] xs:text-[11px] sm:text-xs md:text-sm uppercase font-mono tracking-widest text-white/90 dark:text-black/65 font-bold flex items-center gap-1.5 select-none font-mono">
-                    <Flame size={14} className="text-brand-yellow animate-pulse shrink-0 fill-brand-yellow" /> SABI STREAK
+            {/* Right container: Live news and activity feed (Mobile-First responsive) */}
+            <div className="relative z-10 flex flex-col justify-center items-stretch border-t md:border-t-0 md:border-l border-zinc-800/40 dark:border-black/10 pt-5 md:pt-0 pl-0 md:pl-6 lg:pl-10">
+              <div id="hero-live-ticker-section" className="space-y-4 w-full h-full flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[10px] xs:text-[11px] sm:text-xs uppercase font-mono tracking-widest text-[#fbbf24] dark:text-orange-400 font-bold flex items-center gap-1.5 select-none">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fbbf24] opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#fbbf24]"></span>
+                    </span>
+                    Live updates
                   </h3>
-                  <span className="text-[10px] xs:text-xs sm:text-sm font-bold text-black bg-gradient-to-r from-brand-yellow via-amber-400 to-amber-500 border border-brand-yellow/45 px-3 py-1 shadow-xs rounded-full shrink-0 flex items-center gap-1 select-none font-mono">
-                    <Flame size={12} className="text-black fill-black shrink-0" /> {studentUser.streakCount ?? 5} Days Core
+                  <span className="text-[8px] xs:text-[9px] font-mono font-bold text-zinc-400 dark:text-neutral-500 tracking-wider">
+                    AUTO-CYCLE // 10S
                   </span>
                 </div>
 
-                {/* Vivid Countdown & Touchpoints Engine */}
-                <div className="bg-zinc-950/85 dark:bg-zinc-50 border border-zinc-800/80 dark:border-zinc-200 p-4 rounded-2xl shadow-md">
-                  {/* Dropdown Header Trigger - visible ONLY on mobile (< md) */}
-                  <button
-                    onClick={() => setIsCountdownDropdownOpen(!isCountdownDropdownOpen)}
-                    className="md:hidden w-full flex items-center justify-between text-left select-none"
-                  >
-                    <span className="flex items-center gap-1.5 uppercase tracking-wide text-[11px] font-mono text-zinc-300 dark:text-zinc-650 font-bold">
-                      <span className="w-2 h-2 rounded-full bg-brand-yellow animate-ping shrink-0" />
-                      Countdown: <span className="text-brand-yellow dark:text-black font-semibold ml-1">{timeLeftStr}</span>
-                    </span>
-                    <ChevronDown size={14} className={`text-brand-yellow dark:text-black transition-transform duration-200 ${isCountdownDropdownOpen ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {/* Dropdown Content - Always visible on desktop (>= md), toggled on mobile (< md) */}
-                  <div className={`${isCountdownDropdownOpen ? 'block mt-3 space-y-3.5 pt-3 border-t border-zinc-800/60 dark:border-zinc-300/60' : 'hidden md:block md:space-y-3.5'}`}>
-                    {/* Header for Desktop - visible only on md and larger */}
-                    <div className="hidden md:flex items-center justify-between text-[11px] font-mono text-zinc-300 dark:text-zinc-650 font-bold border-b border-zinc-800/60 dark:border-zinc-300/60 pb-2">
-                      <span className="flex items-center gap-1.5 uppercase tracking-wide">
-                        <span className="w-2 h-2 rounded-full bg-brand-yellow animate-ping shrink-0" />
-                        Fire Countdown:
-                      </span>
-                      <span className="text-brand-yellow dark:text-black font-mono font-bold text-xs">
-                        {timeLeftStr}
-                      </span>
-                    </div>
-
-                    {/* Sabi Touchpoints motivators */}
-                    <div className="text-[10px] sm:text-[11px] leading-relaxed text-zinc-400 dark:text-zinc-600 font-light space-y-1.5">
-                      <div className="flex items-start gap-1">
-                        <span className="text-brand-yellow font-normal shrink-0">✓</span>
-                        <p>Marked classroom attendance automatically fuels your streak.</p>
-                      </div>
-                      <div className="flex items-start gap-1">
-                        <span className="text-brand-yellow font-normal shrink-0">✓</span>
-                        <p>Practical daily exercises logs and submitted assignments instantly refresh your clock.</p>
-                      </div>
-                    </div>
-
-                    {/* Interactive Button Section */}
-                    <div className="flex flex-col gap-2.5 pt-1">
-                      <button
-                        onClick={() => setShowPracticeModal(true)}
-                        className="w-full bg-gradient-to-r from-brand-yellow via-amber-400 to-amber-500 text-black hover:opacity-90 font-bold tracking-wide uppercase py-2.5 px-3 rounded-xl text-[10px] transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
-                      >
-                        <Flame size={12} className="text-black fill-black" /> Log Project Practice Notes
-                      </button>
-
-                      <div className="flex items-center justify-between gap-2.5">
-                        <button
-                          onClick={handleUseStreakFreeze}
-                          disabled={studentUser.streakFreezeActive || (studentUser.streakFreezes ?? 2) <= 0}
-                          className="flex-1 bg-zinc-800 hover:bg-zinc-750 disabled:bg-zinc-900 disabled:opacity-40 disabled:cursor-not-allowed text-white text-center border border-zinc-700/60 disabled:border-transparent rounded-xl py-2 px-2 text-[9px] font-mono uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1"
-                          title={studentUser.streakFreezeActive ? "Streak is currently frozen" : "Activate freeze card"}
+                <div className="bg-black text-white border border-[#fbbf24] p-4 rounded-2xl min-h-[140px] xs:min-h-[150px] md:h-44 flex flex-col justify-between relative overflow-hidden shadow-lg">
+                  <AnimatePresence mode="wait">
+                    {(() => {
+                      const update = liveUpdates[activeUpdateIdx] || liveUpdates[0];
+                      if (!update) return null;
+                      return (
+                        <motion.div
+                          key={activeUpdateIdx}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -12 }}
+                          transition={{ duration: 0.35, ease: 'easeInOut' }}
+                          className="h-full flex flex-col justify-between"
                         >
-                          <Snowflake size={11} className="text-zinc-300" /> {studentUser.streakFreezeActive ? "Streak is Frozen" : "Use Streak Freeze"}
-                        </button>
-                        
-                        <span className="text-[9.5px] font-mono text-zinc-400 dark:text-zinc-600 whitespace-nowrap bg-zinc-950 dark:bg-zinc-200/50 px-2.5 py-1.5 rounded-lg border border-zinc-800/40 dark:border-zinc-300 select-none flex items-center gap-1">
-                          <Snowflake size={11} className="text-blue-400" /> {studentUser.streakFreezes ?? 2} Freezes Left
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                          <div>
+                            <span className={`text-[8px] xs:text-[9px] font-mono tracking-widest font-bold px-2 py-0.5 rounded-md inline-block ${
+                              update.type === 'news' 
+                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/10' 
+                                : update.type === 'join'
+                                ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/10'
+                                : update.type === 'online'
+                                ? 'bg-amber-400/20 text-[#fbbf24] border border-amber-400/10'
+                                : 'bg-blue-400/20 text-blue-300 border border-blue-400/10'
+                            }`}>
+                              {update.category}
+                            </span>
+                            
+                            <p className="text-[11px] xs:text-xs sm:text-xs md:text-sm text-zinc-100 font-light leading-relaxed mt-2.5 xs:mt-4 line-clamp-3 md:line-clamp-4">
+                              {update.text}
+                            </p>
+                          </div>
 
-                {/* Job priority banner */}
-                <div className="bg-brand-black/45 dark:bg-white border border-brand-yellow/30 dark:border-zinc-150 p-3 rounded-xl flex items-center gap-2.5 shadow-2xs select-none">
-                  <Briefcase size={18} className="text-brand-yellow shrink-0" />
-                  <div className="text-[10px] sm:text-[11px] leading-snug">
-                    <strong className="text-brand-yellow dark:text-black uppercase tracking-wider block font-bold">Elite Career Advantage</strong>
-                    <span className="text-white dark:text-zinc-650 font-light text-[10.5px]/[15px] sm:text-[11.5px]/[16px]">Most consistent high-streak students are given <strong>first priority for elite global jobs</strong>!</span>
-                  </div>
+                          <div className="flex items-center justify-between text-[8px] xs:text-[9px] font-mono text-zinc-400 pt-2 border-t border-zinc-850 mt-2">
+                            <span>PLATFORM NEWS WIRE</span>
+                            <span>{new Date().toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})}</span>
+                          </div>
+                        </motion.div>
+                      );
+                    })()}
+                  </AnimatePresence>
                 </div>
               </div>
             </div>
@@ -1363,21 +1324,112 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
       {/* STANDALONE TASKS/EVALUATION PAGE */}
       {activeTab === 'tasks' && (
         <div id="student-main-content-standalone-tasks" className="space-y-6 animate-in fade-in duration-200">
-          <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-zinc-100 dark:border-zinc-800/60 pb-5">
+          <div className="mb-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4 border-b border-zinc-100 dark:border-zinc-800/60 pb-5">
             <div>
               <h2 className="text-2xl font-light tracking-tight text-brand-black dark:text-white leading-tight">
-                Academic <span className="font-semibold text-brand-yellow">Coursework, Grades & Certificates</span>
+                Tasks & <span className="font-semibold text-brand-yellow">Assignments</span>
               </h2>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-1">
-                Upload your project files, track grades from your Trainers, and print certified joint-verified degrees.
+                See and follow up on tasks and assignments given to you by your past and current trainers.
               </p>
             </div>
-            <button 
-              onClick={() => onNavigateChange('dashboard')} 
-              className="text-xs text-zinc-500 hover:text-black dark:text-zinc-400 dark:hover:text-white font-semibold uppercase tracking-wider cursor-pointer border border-zinc-200 dark:border-zinc-800 px-3.5 py-2 rounded-xl bg-white dark:bg-zinc-900 transition-colors shrink-0 max-w-[140px]"
-            >
-              &larr; Back Home
-            </button>
+            
+            <div className="relative shrink-0 w-full md:w-auto flex flex-col md:items-end gap-2">
+              <button 
+                onClick={() => setTasksFilterOpen(!tasksFilterOpen)} 
+                className="text-xs text-zinc-650 hover:text-black dark:text-zinc-300 dark:hover:text-white font-medium uppercase tracking-wider cursor-pointer border border-zinc-200 dark:border-zinc-800 px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-900 transition-all flex items-center justify-center gap-2 shadow-2xs hover:border-brand-yellow active:scale-95"
+              >
+                <Filter size={14} className="text-brand-yellow" />
+                <span>Filter Tasks & Search</span>
+                <ChevronDown size={14} className={`transition-transform duration-200 ${tasksFilterOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* FILTER PANEL - Dropdown (Closed by default) */}
+              <AnimatePresence>
+                {tasksFilterOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    className="absolute right-0 top-12 z-40 w-full md:w-80 bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800 p-4 rounded-2xl shadow-xl space-y-4 text-left"
+                  >
+                    {/* Course Search Bar */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] uppercase font-mono tracking-wider font-bold text-zinc-400 block">Search Courses / Tasks</label>
+                      <div className="relative">
+                        <Search size={13} className="absolute left-3 top-2.5 text-zinc-400" />
+                        <input 
+                          type="text" 
+                          placeholder="Search title, descriptors, mentors..." 
+                          value={tasksSearchQuery}
+                          onChange={(e) => setTasksSearchQuery(e.target.value)}
+                          className="w-full text-xs bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-855 rounded-xl py-2 pl-8 pr-3 focus:outline-hidden focus:border-brand-yellow text-brand-black dark:text-white font-light"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Past & Present Trainer Filter */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] uppercase font-mono tracking-wider font-bold text-zinc-400 block">Trainer (Past & Present)</label>
+                      <select 
+                        value={tasksTrainerFilter}
+                        onChange={(e) => setTasksTrainerFilter(e.target.value)}
+                        className="w-full text-xs bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-855 rounded-xl py-2 px-3 focus:outline-hidden focus:border-brand-yellow text-brand-black dark:text-white font-light cursor-pointer"
+                      >
+                        <option value="All">All Mentors</option>
+                        {enrolledTrainers.map(tr => (
+                          <option key={tr} value={tr}>{tr}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Deadline date filter */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] uppercase font-mono tracking-wider font-bold text-zinc-400 block">Deadline Date Range</label>
+                      <select 
+                        value={tasksDateFilter}
+                        onChange={(e) => setTasksDateFilter(e.target.value)}
+                        className="w-full text-xs bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-855 rounded-xl py-2 px-3 focus:outline-hidden focus:border-brand-yellow text-brand-black dark:text-white font-light cursor-pointer"
+                      >
+                        <option value="all">All Dates / Deadlines</option>
+                        <option value="upcoming">Upcoming Deadlines</option>
+                        <option value="overdue">Overdue Tasks</option>
+                      </select>
+                    </div>
+
+                    {/* Task Status Filter */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] uppercase font-mono tracking-wider font-bold text-zinc-400 block">Task Status / Phase</label>
+                      <select 
+                        value={tasksStatusFilter}
+                        onChange={(e) => setTasksStatusFilter(e.target.value)}
+                        className="w-full text-xs bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-855 rounded-xl py-2 px-3 focus:outline-hidden focus:border-brand-yellow text-brand-black dark:text-white font-light cursor-pointer"
+                      >
+                        <option value="ongoing">Ongoing & New Tasks (Default)</option>
+                        <option value="graded">Graded / Evaluated</option>
+                        <option value="all">All Task Records</option>
+                      </select>
+                    </div>
+
+                    {/* Micro Reset info */}
+                    <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center text-[9px] text-zinc-450 font-mono">
+                      <span>Filters active</span>
+                      <button 
+                        onClick={() => {
+                          setTasksSearchQuery('');
+                          setTasksTrainerFilter('All');
+                          setTasksDateFilter('all');
+                          setTasksStatusFilter('ongoing');
+                        }}
+                        className="text-indigo-600 dark:text-indigo-400 font-bold uppercase hover:underline"
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
           
           <div id="student-main-content-layout" className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-200">
@@ -1617,94 +1669,6 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                   ))}
                 </div>
               )}
-            </div>
-
-            {/* Sabi Community Streak Leaderboard */}
-            <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs" id="streak-leaderboard-section">
-              <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase mb-4 flex items-center justify-between font-light">
-                <span className="flex items-center gap-1.5"><TrendingUp size={13} className="text-brand-yellow" /> Community Sabi Leaderboard</span>
-                <span className="text-[9px] text-zinc-400 font-mono font-medium">STREAK SORTED</span>
-              </h3>
-
-              <div className="space-y-2.5 font-sans">
-                {(() => {
-                  const leaderboardStudents = db.getUsers()
-                    .filter(u => u.role === 'student')
-                    .sort((a, b) => (b.streakCount ?? 5) - (a.streakCount ?? 5))
-                    .slice(0, 5);
-
-                  return leaderboardStudents.map((st, index) => {
-                    const isSelf = st.id === currentUser.id;
-                    return (
-                      <div
-                        key={st.id}
-                        className={`p-2.5 rounded-xl border flex items-center justify-between transition-all ${
-                          isSelf
-                            ? 'bg-amber-50/50 border-brand-yellow/80 shadow-xs'
-                            : 'bg-zinc-50/30 border-zinc-100'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className={`w-5 h-5 rounded-full flex items-center justify-center font-mono text-[10px] font-bold ${
-                            index === 0 ? 'bg-brand-yellow text-black' : 'bg-zinc-100 text-zinc-500'
-                          }`}>
-                            {index + 1}
-                          </span>
-                          <div className="w-6 h-6 rounded-full bg-brand-black text-white flex items-center justify-center text-[9px] font-bold uppercase select-none">
-                            {st.name.charAt(0)}
-                          </div>
-                          <div className="truncate max-w-[110px]">
-                            <p className={`text-xs truncate leading-tight ${isSelf ? 'font-bold text-brand-black' : 'text-zinc-650 font-semibold'}`}>
-                              {st.name} {isSelf && <span className="text-[9px] text-brand-yellow font-normal font-mono font-bold bg-brand-black px-1.2 ml-0.5 rounded select-none">YOU</span>}
-                            </p>
-                            <p className="text-[9px] text-zinc-400 font-light font-mono leading-none mt-0.5">Top-placed</p>
-                          </div>
-                        </div>
-                        <span className="text-xs font-mono font-bold text-brand-black shrink-0 flex items-center gap-1 select-none">
-                          <Flame size={12} className={index === 0 ? "text-brand-yellow fill-brand-yellow animate-pulse" : "text-zinc-400 fill-zinc-300"} /> {st.streakCount ?? 5} days
-                        </span>
-                      </div>
-                    );
-                  });
-                })()}
-              </div>
-              <p className="text-[9px] text-zinc-400 mt-3 font-light leading-snug select-none flex items-center gap-1">
-                <AlertCircle size={10} className="text-zinc-400 shrink-0" /> Consistency in Sabi activity logs determines leaderboard placement. Keep your fire high!
-              </p>
-            </div>
-
-            {/* Sabi Touchpoint Audit Log History */}
-            <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs" id="practice-logs-history-section">
-              <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase mb-3 flex items-center justify-between font-light">
-                <span className="flex items-center gap-1.5"><FileCheck size={13} className="text-brand-yellow" /> My Sabi Activity Logs</span>
-                <span className="text-[9px] text-indigo-650 font-mono font-bold bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded select-none">Touchpoints</span>
-              </h3>
-              
-              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                {(!studentUser.streakLogs || studentUser.streakLogs.length === 0) ? (
-                  <div className="text-center p-6 text-zinc-400 font-light text-[11px] bg-zinc-50/50 rounded-xl">
-                    No active streak touchpoints recorded yet. Submitting homework or logging daily farm/salon practice creates immutable log entries above.
-                  </div>
-                ) : (
-                  studentUser.streakLogs.map((log) => (
-                    <div key={log.id} className="p-2.5 rounded-xl border border-zinc-100 bg-zinc-50/30 space-y-1 text-[11px] hover:border-zinc-200 transition-all">
-                      <div className="flex items-center justify-between font-mono text-[9px] text-zinc-400">
-                        <span className={`px-1.5 py-0.25 rounded font-bold uppercase shrink-0 select-none ${
-                          log.type === 'attendance'
-                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-100'
-                            : log.type === 'assignment'
-                            ? 'bg-blue-50 text-indigo-850 border border-blue-105'
-                            : 'bg-amber-50 text-amber-800 border border-amber-100'
-                        }`}>
-                          {log.type}
-                        </span>
-                        <span>{log.date}</span>
-                      </div>
-                      <p className="text-[11px] text-zinc-600 font-light leading-relaxed">{log.note}</p>
-                    </div>
-                  ))
-                )}
-              </div>
             </div>
 
             <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs">
@@ -2675,59 +2639,6 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
           </div>
         </div>
       )}
-
-      {/* Sabi Practice Note Daily Logger Modal Overlay */}
-      {showPracticeModal && (
-        <div id="practice-logger-overlay" className="fixed inset-0 bg-zinc-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-55 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col justify-between p-6 space-y-4">
-            <div className="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-3">
-              <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 uppercase font-mono">
-                <Flame size={14} className="text-brand-yellow fill-brand-yellow animate-pulse" /> Sabi Practice Logger
-              </h3>
-              <button
-                onClick={() => setShowPracticeModal(false)}
-                className="text-zinc-400 hover:text-zinc-650 dark:hover:text-zinc-200 p-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-              >
-                <X size={15} />
-              </button>
-            </div>
-
-            <form onSubmit={handleLogPractice} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-500 uppercase font-mono block">Describe what you did today:</label>
-                <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-light leading-snug">
-                  Provide a brief sentence of what you hand-practiced (e.g., mixing formulation on the farm, sterilizing shop tools, sectioning haircut slices, balancing ledger entries).
-                </p>
-                <textarea
-                  value={practiceNote}
-                  onChange={(e) => setPracticeNote(e.target.value)}
-                  placeholder="e.g. Mixed feed for the poultry stock and calibrated the automatic nipple drinkers today on the farm."
-                  required
-                  rows={4}
-                  className="w-full text-xs p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-250 dark:border-zinc-800 rounded-xl focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow focus:outline-hidden leading-relaxed font-light text-zinc-900 dark:text-white"
-                />
-              </div>
-
-              <div className="pt-2 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowPracticeModal(false)}
-                  className="flex-1 py-3 text-xs uppercase tracking-wider bg-zinc-100 hover:bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-750 font-semibold rounded-xl transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-3 text-xs uppercase tracking-wider font-semibold bg-gradient-to-r from-brand-yellow to-amber-500 text-black hover:opacity-95 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1"
-                >
-                  Fuel My Streak <Flame size={12} className="text-black fill-black shrink-0" />
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
