@@ -139,18 +139,18 @@ html.dark .text-zinc-800 {
   color: #e4e4e7 !important;
 }
 html.dark .text-zinc-700 {
-  color: #d4d4d8 !important;
+  color: #71717a !important;
 }
 html.dark .text-zinc-600,
 html.dark .text-zinc-650 {
-  color: #a1a1aa !important;
+  color: #52525b !important;
 }
 html.dark .text-zinc-500 {
-  color: #71717a !important;
+  color: #3f3f46 !important;
 }
 html.dark .text-zinc-450,
 html.dark .text-zinc-400 {
-  color: #52525b !important;
+  color: #27272a !important;
 }
 
 /* Borders */
@@ -225,5 +225,33 @@ html.dark #trainer-stats-row > div,
 html.dark #admin-metrics-row > div {
   border-color: rgba(255, 255, 255, 0.25) !important;
   border-width: 1px !important;
+}
+
+/* Thin, sharp, and highly defined icons */
+svg.lucide,
+.lucide {
+  stroke-width: 1.42 !important;
+  transition: stroke-width 0.2s ease, stroke 0.2s ease;
+}
+
+/* Light mode overrides to make grey texts and icons much darker and more visible */
+:not(html.dark) .text-zinc-300 {
+  color: #4b5563 !important; /* Rich Dark Grey (Zinc-600) */
+}
+:not(html.dark) .text-zinc-400,
+:not(html.dark) .text-zinc-450 {
+  color: #3f3f46 !important; /* Premium Slate Grey (Zinc-750) */
+}
+:not(html.dark) .text-zinc-500 {
+  color: #27272a !important; /* Deep Charcoal (Zinc-800) */
+}
+:not(html.dark) .text-brand-gray {
+  color: #0f0f10 !important; /* Clean rich black */
+}
+
+/* Precise high-fidelity shadows for dark mode icons */
+html.dark svg.lucide,
+html.dark .lucide {
+  filter: drop-shadow(0 0.5px 0.5px rgba(0, 0, 0, 0.25));
 }
 

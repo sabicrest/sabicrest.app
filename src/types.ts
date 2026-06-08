@@ -33,6 +33,22 @@ export interface User {
   useBusinessName?: boolean; // Choose between full name or business name on certs
   trainerSignature?: string; // base64 signature image as CEO/Mentor
   trainerRole?: 'CEO' | 'Mentor'; // Signing role title preference
+  
+  // Custom Sabi Streak Engine metadata for Student roles
+  streakCount?: number;          // Sabi Streak count (days)
+  streakExpiry?: string;         // ISO date when streak expires or drops to 0
+  streakFreezes?: number;        // Count of emergency Streak Freeze cards details (standard = 2)
+  streakFreezeActive?: boolean;  // Is freeze currently active?
+  lastStreakActivityDate?: string; // YYYY-MM-DD
+  streakLogs?: StreakLog[];       // Array of logged practice notes
+}
+
+export interface StreakLog {
+  id: string;
+  date: string;
+  type: 'attendance' | 'practice' | 'assignment';
+  note: string;
+  timestamp: string;
 }
 
 // Secure Message structure with real-time payload encryption flags

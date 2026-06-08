@@ -13,7 +13,7 @@ import {
   BookOpen, FileText, CheckCircle2, Award, ClipboardCheck, Sparkles, Plus, AlertCircle, 
   FileCheck, HelpCircle, Settings, Sliders, Bell, User as UserIcon, Mail, Phone, MapPin, Activity, X, Search, ArrowUpRight,
   Lock, Unlock, Laptop, Tractor, Camera, Check, Play, Upload, Globe, Compass, Shield, MessageSquare, Video as VideoIcon, Hourglass,
-  Volume2, VolumeX, Pencil, ChevronDown, ChevronUp, Eye
+  Volume2, VolumeX, Pencil, ChevronDown, ChevronUp, Eye, Flame
 } from 'lucide-react';
 
 interface DashboardTrainerProps {
@@ -217,6 +217,58 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
     setTimeout(() => {
       setToastMessage(null);
     }, 4500);
+  };
+
+  const handleMarkAttendance = async (studentId: string) => {
+    const studentObj = db.getUserById(studentId);
+    if (!studentObj) {
+      showToast('❌ User profile not found in database.');
+      return;
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const hasAlreadyMarkedToday = (studentObj.streakLogs || []).some(
+      log => log.date === todayStr && log.type === 'attendance'
+    );
+
+    if (hasAlreadyMarkedToday) {
+      showToast(`⚠️ Classroom attendance is already marked today for ${studentObj.name}!`);
+      return;
+    }
+
+    const nextExpiry = new Date();
+    nextExpiry.setHours(nextExpiry.getHours() + 40); // attendance gives a 40H timer top-up/reset
+
+    const updatedUser: User = {
+      ...studentObj,
+      streakCount: (studentObj.streakCount || 5) + 1,
+      streakExpiry: nextExpiry.toISOString(),
+      streakFreezeActive: false,
+      lastStreakActivityDate: todayStr,
+      streakLogs: [
+        {
+          id: 'l-t-' + Math.random().toString(36).substr(2, 6),
+          date: todayStr,
+          type: 'attendance',
+          note: `Attended live classroom lecture with Coach ${currentUser.name} on standard catalog.`,
+          timestamp: new Date().toISOString()
+        },
+        ...(studentObj.streakLogs || [])
+      ]
+    };
+
+    await db.updateUser(updatedUser);
+    
+    // Add student notification
+    db.addNotification({
+      userId: studentId,
+      title: 'Classroom Attendance Marked',
+      message: `${currentUser.name} marked your classroom attendance. Sabi streak timer topped up to 40 hours!`,
+      type: 'grade'
+    });
+
+    showToast(`[ATTENDANCE MARKED] Attendance marked! ${studentObj.name}'s Sabi streak topped-up to 40 hours!`);
+    reloadTrainerData();
   };
 
   const handleSaveTrainerProfile = async (e: React.FormEvent) => {
@@ -773,7 +825,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
 
                 return (
                   <div className="divide-y divide-zinc-100">
-                    {uniqueStudentIds.map(studentId => {
+                    {uniqueStudentIds.map((studentId: any) => {
                       const studentObj = db.getUsers().find(u => u.id === studentId);
                       const studentName = studentObj?.name || assignments.find(a => a.studentId === studentId)?.studentName || 'Student';
                       const studentEmail = studentObj?.email || 'N/A';
@@ -820,6 +872,13 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                             <span className="text-[9px] font-mono bg-amber-50 text-amber-800 border border-amber-100 px-2 py-0.5 rounded">
                               {studentPending.length} Pending
                             </span>
+                            <button
+                              onClick={() => handleMarkAttendance(studentId)}
+                              className="text-[9px] font-mono uppercase font-bold tracking-wide bg-gradient-to-r from-amber-400 to-amber-500 hover:opacity-90 text-black px-2.5 py-1 rounded-md transition-all flex items-center gap-1 cursor-pointer select-none"
+                              title="Mark dynamic live classroom attendance to refuel student's Sabi Streak"
+                            >
+                              <Flame size={9} className="text-black fill-black" /> Attend
+                            </button>
                           </div>
                         </div>
                       );

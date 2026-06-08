@@ -13,7 +13,7 @@ import {
   Award, BookOpen, Clock, FileText, CheckCircle2, ChevronRight, Upload, Link, AlertCircle, 
   FileCheck, Printer, Settings, User as UserIcon, Mail, Phone, MapPin, Sliders, Bell, 
   Compass, Radio, Heart, HelpCircle, Activity, CreditCard, Lock, X, ExternalLink, ShieldCheck, Coins, Search, ArrowUpRight,
-  ChevronDown, ChevronUp, Sparkles
+  TrendingUp, ChevronDown, ChevronUp, Sparkles, Flame, Snowflake, Briefcase, Trophy
 } from 'lucide-react';
 
 interface DashboardStudentProps {
@@ -97,11 +97,22 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
   const [paymentOtp, setPaymentOtp] = useState('');
   const [paystackLogs, setPaystackLogs] = useState<string[]>([]);
 
+  // Sabi Streak States
+  const [studentUser, setStudentUser] = useState<User>(() => db.getUserById(currentUser.id) || currentUser);
+  const [timeLeftStr, setTimeLeftStr] = useState<string>('');
+  const [showPracticeModal, setShowPracticeModal] = useState(false);
+  const [practiceNote, setPracticeNote] = useState('');
+
   const reloadStudentData = () => {
     setAssignments(db.getAssignments().filter(a => a.studentId === currentUser.id));
     setCerts(db.getCertificates().filter(c => c.studentId === currentUser.id));
     setStudentNotifs(db.getNotifications().filter(n => n.userId === currentUser.id));
     setEnrollments(db.getEnrollments().filter(e => e.studentId === currentUser.id));
+    
+    const refreshedUser = db.getUserById(currentUser.id);
+    if (refreshedUser) {
+      setStudentUser(refreshedUser);
+    }
   };
 
   useEffect(() => {
@@ -120,6 +131,49 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
   }, [currentUser.id]);
 
   useEffect(() => {
+    const calculateTimeLeft = () => {
+      const dbUser = db.getUserById(currentUser.id) || currentUser;
+      if (!dbUser.streakExpiry) {
+        setTimeLeftStr('--h --m --s');
+        return;
+      }
+      
+      const expiry = new Date(dbUser.streakExpiry).getTime();
+      const now = Date.now();
+      const diff = expiry - now;
+      
+      if (diff <= 0) {
+        if (dbUser.streakCount && dbUser.streakCount > 0 && !dbUser.streakFreezeActive) {
+          const updated = {
+            ...dbUser,
+            streakCount: 0,
+            streakExpiry: undefined
+          };
+          db.updateUser(updated);
+          setStudentUser(updated);
+        }
+        setTimeLeftStr('00h 00m 00s (Fire Out)');
+      } else {
+        const hours = Math.floor(diff / (3600 * 1000));
+        const mins = Math.floor((diff % (3600 * 1000)) / (60 * 1000));
+        const secs = Math.floor((diff % (60 * 1000)) / 1000);
+        
+        let displayStr = `${hours.toString().padStart(2, '0')}h ${mins.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`;
+        if (dbUser.streakFreezeActive) {
+          displayStr = '🧊 FROZEN (Protected)';
+        } else {
+          displayStr += ' left';
+        }
+        setTimeLeftStr(displayStr);
+      }
+    };
+    
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(timer);
+  }, [currentUser.id, studentUser.streakExpiry, studentUser.streakFreezeActive]);
+
+  useEffect(() => {
     const handleSearch = (e: any) => {
       setDashboardSearchQuery(e.detail || '');
       setCoursesSearchQuery(e.detail || '');
@@ -134,34 +188,157 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
     setSubmitLink(ass.linkUrl || '');
   };
 
-  const handleSubmitAssignmentDraft = (e: React.FormEvent) => {
+  const handleSubmitAssignmentDraft = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeSubmittingAss) return;
 
     setSubmitting(true);
-    setTimeout(() => {
-      const updated: Assignment = {
-        ...activeSubmittingAss,
-        status: 'pending_review',
-        submissionContent: submitText,
-        linkUrl: submitLink,
-        submittedAt: new Date().toISOString()
-      };
+    
+    const todayStr = new Date().toISOString().split('T')[0];
+    const dbUser = db.getUserById(currentUser.id) || currentUser;
+    const hasLoggedToday = dbUser.lastStreakActivityDate === todayStr;
+    const nextExpiry = new Date();
+    nextExpiry.setHours(nextExpiry.getHours() + 36); // assignment submission gives a 36H timer boost
 
-      db.updateAssignment(updated);
-      reloadStudentData();
+    const updatedUser: User = {
+      ...dbUser,
+      streakCount: hasLoggedToday ? (dbUser.streakCount || 5) : ((dbUser.streakCount || 5) + 1),
+      streakExpiry: nextExpiry.toISOString(),
+      streakFreezeActive: false,
+      lastStreakActivityDate: todayStr,
+      streakLogs: [
+        {
+          id: 'l-a-' + Math.random().toString(36).substr(2, 6),
+          date: todayStr,
+          type: 'assignment',
+          note: `Uploaded required homework for "${activeSubmittingAss.title}" to standard catalog.`,
+          timestamp: new Date().toISOString()
+        },
+        ...(dbUser.streakLogs || [])
+      ]
+    };
 
-      // Notification
-      db.addNotification({
-        userId: activeSubmittingAss.trainerId,
-        title: 'New Student Assignment',
-        message: `${currentUser.name} submitted assignment "${activeSubmittingAss.title}" for review.`,
-        type: 'grade'
-      });
+    const updatedAss: Assignment = {
+      ...activeSubmittingAss,
+      status: 'pending_review',
+      submissionContent: submitText,
+      linkUrl: submitLink,
+      submittedAt: new Date().toISOString()
+    };
 
-      setSubmitting(false);
-      setActiveSubmittingAss(null);
-    }, 800);
+    await db.updateAssignment(updatedAss);
+    await db.updateUser(updatedUser);
+    
+    // Notification
+    db.addNotification({
+      userId: activeSubmittingAss.trainerId,
+      title: 'New Student Assignment',
+      message: `${currentUser.name} submitted assignment "${activeSubmittingAss.title}" for review.`,
+      type: 'grade'
+    });
+
+    setSubmitting(false);
+    setActiveSubmittingAss(null);
+    reloadStudentData();
+    showToast(`[STREAK REFUEL] Assignment submitted! Your Sabi Streak was refueled up to 36 hours! Keep shining!`);
+  };
+
+  const handleLogPractice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!practiceNote.trim() || practiceNote.trim().length < 5) {
+      showToast('[WARNING] Please write a brief practice description of at least 5 characters.');
+      return;
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const dbUser = db.getUserById(currentUser.id) || currentUser;
+    const hasLoggedToday = dbUser.lastStreakActivityDate === todayStr;
+    const nextExpiry = new Date();
+    nextExpiry.setHours(nextExpiry.getHours() + 33); // daily logs give 33H timer boost
+
+    const updatedUser: User = {
+      ...dbUser,
+      streakCount: hasLoggedToday ? (dbUser.streakCount || 5) : ((dbUser.streakCount || 5) + 1),
+      streakExpiry: nextExpiry.toISOString(),
+      streakFreezeActive: false,
+      lastStreakActivityDate: todayStr,
+      streakLogs: [
+        {
+          id: 'l-p-' + Math.random().toString(36).substr(2, 6),
+          date: todayStr,
+          type: 'practice',
+          note: practiceNote,
+          timestamp: new Date().toISOString()
+        },
+        ...(dbUser.streakLogs || [])
+      ]
+    };
+
+    await db.updateUser(updatedUser);
+    setStudentUser(updatedUser);
+    setPracticeNote('');
+    setShowPracticeModal(false);
+    setAudioToggle(); // Play native chime logic
+    reloadStudentData();
+    showToast('[STREAK REFUEL] Sabi Streak refueled! Logged daily practice project and filled timer up to 33 hours!');
+  };
+
+  const handleUseStreakFreeze = async () => {
+    const dbUser = db.getUserById(currentUser.id) || currentUser;
+    const currentFreezes = dbUser.streakFreezes !== undefined ? dbUser.streakFreezes : 2;
+    
+    if (currentFreezes <= 0) {
+      showToast('[ERROR] You do not have any Streak Freeze cards remaining.');
+      return;
+    }
+
+    if (dbUser.streakFreezeActive) {
+      showToast('[STREAK FROZEN] Your Sabi Streak is already frozen and protected.');
+      return;
+    }
+
+    const nextExpiry = new Date();
+    nextExpiry.setHours(nextExpiry.getHours() + 48); // freeze protects for 48 hours
+
+    const updatedUser: User = {
+      ...dbUser,
+      streakFreezes: currentFreezes - 1,
+      streakFreezeActive: true,
+      streakExpiry: nextExpiry.toISOString(),
+      streakLogs: [
+        {
+          id: 'l-f-' + Math.random().toString(36).substr(2, 6),
+          date: new Date().toISOString().split('T')[0],
+          type: 'practice',
+          note: 'Activated emergency Streak Freeze card to protect current progress.',
+          timestamp: new Date().toISOString()
+        },
+        ...(dbUser.streakLogs || [])
+      ]
+    };
+
+    await db.updateUser(updatedUser);
+    setStudentUser(updatedUser);
+    setAudioToggle(); // Play native chime logic
+    reloadStudentData();
+    showToast('[STREAK FROZEN] Sabi Streak is now Frozen! Your progress is protected for up to 48 hours.');
+  };
+
+  const setAudioToggle = () => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.12); // A5
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.53);
+    } catch(e) {}
   };
 
   const showToast = (msg: string) => {
@@ -846,53 +1023,74 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
             </div>
  
             {/* Right container: Learning Streak Tracker beside it */}
-            <div className="relative z-10 flex flex-col justify-center items-stretch border-t md:border-t-0 md:border-l border-zinc-800/40 dark:border-black/10 pt-5 md:pt-0 pl-0 md:pl-6 lg:pl-10">
-              <div className="space-y-3 sm:space-y-4 w-full">
+            <div className="relative z-10 flex flex-col justify-center items-stretch border-t md:border-t-0 md:border-l border-zinc-805 dark:border-black/10 pt-5 md:pt-0 pl-0 md:pl-6 lg:pl-10">
+              <div className="space-y-4 w-full">
                 <div className="flex flex-row justify-between items-center w-full gap-2">
-                  <h3 className="text-[9px] xs:text-[11px] sm:text-xs md:text-sm uppercase font-mono tracking-widest text-zinc-400 dark:text-black/65 font-semibold">Streak</h3>
-                  <span className="text-[9px] xs:text-[11px] sm:text-xs md:text-sm font-bold text-brand-yellow dark:text-black font-mono bg-brand-yellow/10 dark:bg-black/10 border border-brand-yellow/30 dark:border-black/20 px-2 py-0.5 sm:px-3 shadow-xs rounded-full shrink-0">
-                    🔥 5 Days
+                  <h3 className="text-[10px] xs:text-[11px] sm:text-xs md:text-sm uppercase font-mono tracking-widest text-zinc-400 dark:text-black/65 font-bold flex items-center gap-1.5 select-none">
+                    <Flame size={14} className="text-brand-yellow animate-pulse shrink-0 fill-brand-yellow" /> SABI STREAK
+                  </h3>
+                  <span className="text-[10px] xs:text-xs sm:text-sm font-bold text-black bg-gradient-to-r from-brand-yellow via-amber-400 to-amber-500 border border-brand-yellow/45 px-3 py-1 shadow-xs rounded-full shrink-0 flex items-center gap-1 select-none font-mono">
+                    <Flame size={12} className="text-black fill-black shrink-0" /> {studentUser.streakCount ?? 5} Days Core
                   </span>
                 </div>
 
-                {/* Calendar/Daily activities visually engaging layout */}
-                <div className="bg-zinc-900/60 dark:bg-black/15 border border-zinc-800/80 dark:border-black/10 p-2 sm:p-4 rounded-xl sm:rounded-2xl space-y-2 sm:space-y-3">
-                  <div className="flex items-center justify-between text-[9px] xs:text-[10px] sm:text-[11px] md:text-xs text-zinc-300 dark:text-black/60 font-mono font-medium">
-                    <span className="truncate">MON - SUN STREAM</span>
-                    <span className="text-brand-yellow dark:text-black font-bold shrink-0">92%</span>
+                {/* Vivid Countdown & Touchpoints Engine */}
+                <div className="bg-zinc-950/85 dark:bg-zinc-50 border border-zinc-800/80 dark:border-zinc-200 p-4 rounded-2xl space-y-3.5 shadow-md">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-zinc-300 dark:text-zinc-650 font-bold border-b border-zinc-800/60 dark:border-zinc-300/60 pb-2">
+                    <span className="flex items-center gap-1.5 uppercase tracking-wide">
+                      <span className="w-2 h-2 rounded-full bg-brand-yellow animate-ping shrink-0" />
+                      Fire Countdown:
+                    </span>
+                    <span className="text-brand-yellow dark:text-black font-mono font-bold text-xs">
+                      {timeLeftStr}
+                    </span>
                   </div>
-                  
-                  <div className="flex justify-between gap-0.5 sm:gap-1">
-                    {[
-                      { name: 'M', active: true, label: 'June 1' },
-                      { name: 'T', active: true, label: 'June 2' },
-                      { name: 'W', active: true, label: 'June 3' },
-                      { name: 'T', active: true, label: 'June 4' },
-                      { name: 'F', active: true, label: 'June 5' },
-                      { name: 'S', active: false, label: 'June 6' },
-                      { name: 'S', active: false, label: 'June 7' },
-                    ].map((day, idx) => (
-                      <div 
-                        key={idx} 
-                        className="flex-1 flex flex-col items-center gap-0.5 p-0.5 rounded-md sm:rounded-lg group/day cursor-pointer hover:bg-zinc-800/40 dark:hover:bg-black/5 transition-colors"
-                        title={`${day.label}: ${day.active ? 'Activity recorded' : 'Rest day'}`}
+
+                  {/* Sabi Touchpoints motivators */}
+                  <div className="text-[10px] sm:text-[11px] leading-relaxed text-zinc-400 dark:text-zinc-600 font-light space-y-1.5">
+                    <div className="flex items-start gap-1">
+                      <span className="text-brand-yellow font-normal shrink-0">✓</span>
+                      <p>Marked classroom attendance automatically fuels your streak.</p>
+                    </div>
+                    <div className="flex items-start gap-1">
+                      <span className="text-brand-yellow font-normal shrink-0">✓</span>
+                      <p>Practical daily exercises logs and submitted assignments instantly refresh your clock.</p>
+                    </div>
+                  </div>
+
+                  {/* Interactive Button Section */}
+                  <div className="flex flex-col gap-2.5 pt-1">
+                    <button
+                      onClick={() => setShowPracticeModal(true)}
+                      className="w-full bg-gradient-to-r from-brand-yellow via-amber-400 to-amber-500 text-black hover:opacity-90 font-bold tracking-wide uppercase py-2.5 px-3 rounded-xl text-[10px] transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+                    >
+                      <Flame size={12} className="text-black fill-black" /> Log Project Practice Notes
+                    </button>
+
+                    <div className="flex items-center justify-between gap-2.5">
+                      <button
+                        onClick={handleUseStreakFreeze}
+                        disabled={studentUser.streakFreezeActive || (studentUser.streakFreezes ?? 2) <= 0}
+                        className="flex-1 bg-zinc-800 hover:bg-zinc-750 disabled:bg-zinc-900 disabled:opacity-40 disabled:cursor-not-allowed text-white text-center border border-zinc-700/60 disabled:border-transparent rounded-xl py-2 px-2 text-[9px] font-mono uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1"
+                        title={studentUser.streakFreezeActive ? "Streak is currently frozen" : "Activate freeze card"}
                       >
-                        <span className="text-[8.5px] xs:text-[10px] sm:text-xs font-mono text-zinc-500 dark:text-black/40 font-bold group-hover/day:text-zinc-300 dark:group-hover/day:text-black">
-                          {day.name}
-                        </span>
-                        <div className={`w-[18px] h-[18px] xs:w-[22px] xs:h-[22px] sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[9px] xs:text-[10px] sm:text-xs transition-all shrink-0 ${
-                          day.active 
-                            ? 'bg-gradient-to-br from-brand-yellow to-amber-500 dark:from-black dark:to-neutral-900 text-black dark:text-brand-yellow font-semibold' 
-                            : 'bg-zinc-800/50 dark:bg-black/5 border border-zinc-700/40 dark:border-black/10 text-zinc-500 dark:text-black/30 group-hover/day:border-zinc-500'
-                        }`}>
-                          {day.active ? '✓' : '•'}
-                        </div>
-                      </div>
-                    ))}
+                        <Snowflake size={11} className="text-zinc-300" /> {studentUser.streakFreezeActive ? "Streak is Frozen" : "Use Streak Freeze"}
+                      </button>
+                      
+                      <span className="text-[9.5px] font-mono text-zinc-400 dark:text-zinc-600 whitespace-nowrap bg-zinc-950 dark:bg-zinc-200/50 px-2.5 py-1.5 rounded-lg border border-zinc-800/40 dark:border-zinc-300 select-none flex items-center gap-1">
+                        <Snowflake size={11} className="text-blue-400" /> {studentUser.streakFreezes ?? 2} Freezes Left
+                      </span>
+                    </div>
                   </div>
-                  <p className="text-[9px] xs:text-[10px] sm:text-[11px] text-zinc-400 dark:text-black/60 font-light leading-snug">
-                    Complete tasks to keep your streak active.
-                  </p>
+                </div>
+
+                {/* Job priority banner */}
+                <div className="bg-brand-black/45 dark:bg-white border border-brand-yellow/30 dark:border-zinc-150 p-3 rounded-xl flex items-center gap-2.5 shadow-2xs select-none">
+                  <Briefcase size={18} className="text-brand-yellow shrink-0" />
+                  <div className="text-[10px] sm:text-[11px] leading-snug">
+                    <strong className="text-brand-yellow dark:text-black uppercase tracking-wider block font-bold">Elite Career Advantage</strong>
+                    <span className="text-zinc-400 dark:text-zinc-600 font-light">Most consistent high-streak students are given <strong>first priority for elite global jobs</strong>!</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1009,8 +1207,8 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
           {/* Horizontally Scrollable Row of Quick Actions */}
           <div className="mb-8">
             <div className="px-1 mb-2.5 flex items-center gap-1.5">
-              <Sparkles size={12} className="text-brand-yellow font-bold" />
-              <span className="text-[10px] uppercase font-bold tracking-widest text-brand-gray dark:text-zinc-400">Quick Navigation Channels</span>
+              <Sparkles size={13} className="text-brand-yellow font-bold" />
+              <span className="text-xs uppercase font-bold tracking-widest text-brand-gray dark:text-zinc-450">Quick Actions</span>
             </div>
             <div className="flex gap-3 overflow-x-auto pb-2 pt-1 px-1 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
               {[
@@ -1056,8 +1254,8 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
           {/* Home Active Courses Progress Hub - High Contrast Isolation */}
           <div className="mt-8 pt-4 border-t border-zinc-100 dark:border-zinc-800">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xs uppercase font-bold tracking-widest text-brand-gray dark:text-zinc-450 flex items-center gap-1.5">
-                <BookOpen size={13} className="text-brand-yellow" /> Active Curriculum Programs
+              <h3 className="text-xs uppercase font-bold tracking-widest text-brand-gray dark:text-zinc-455 flex items-center gap-1.5">
+                <BookOpen size={13} className="text-brand-yellow" /> Active Courses
               </h3>
               <button 
                 onClick={() => onNavigateChange('courses')}
@@ -1367,6 +1565,94 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Sabi Community Streak Leaderboard */}
+            <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs" id="streak-leaderboard-section">
+              <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase mb-4 flex items-center justify-between font-light">
+                <span className="flex items-center gap-1.5"><TrendingUp size={13} className="text-brand-yellow" /> Community Sabi Leaderboard</span>
+                <span className="text-[9px] text-zinc-400 font-mono font-medium">STREAK SORTED</span>
+              </h3>
+
+              <div className="space-y-2.5 font-sans">
+                {(() => {
+                  const leaderboardStudents = db.getUsers()
+                    .filter(u => u.role === 'student')
+                    .sort((a, b) => (b.streakCount ?? 5) - (a.streakCount ?? 5))
+                    .slice(0, 5);
+
+                  return leaderboardStudents.map((st, index) => {
+                    const isSelf = st.id === currentUser.id;
+                    return (
+                      <div
+                        key={st.id}
+                        className={`p-2.5 rounded-xl border flex items-center justify-between transition-all ${
+                          isSelf
+                            ? 'bg-amber-50/50 border-brand-yellow/80 shadow-xs'
+                            : 'bg-zinc-50/30 border-zinc-100'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className={`w-5 h-5 rounded-full flex items-center justify-center font-mono text-[10px] font-bold ${
+                            index === 0 ? 'bg-brand-yellow text-black' : 'bg-zinc-100 text-zinc-500'
+                          }`}>
+                            {index + 1}
+                          </span>
+                          <div className="w-6 h-6 rounded-full bg-brand-black text-white flex items-center justify-center text-[9px] font-bold uppercase select-none">
+                            {st.name.charAt(0)}
+                          </div>
+                          <div className="truncate max-w-[110px]">
+                            <p className={`text-xs truncate leading-tight ${isSelf ? 'font-bold text-brand-black' : 'text-zinc-650 font-semibold'}`}>
+                              {st.name} {isSelf && <span className="text-[9px] text-brand-yellow font-normal font-mono font-bold bg-brand-black px-1.2 ml-0.5 rounded select-none">YOU</span>}
+                            </p>
+                            <p className="text-[9px] text-zinc-400 font-light font-mono leading-none mt-0.5">Top-placed</p>
+                          </div>
+                        </div>
+                        <span className="text-xs font-mono font-bold text-brand-black shrink-0 flex items-center gap-1 select-none">
+                          <Flame size={12} className={index === 0 ? "text-brand-yellow fill-brand-yellow animate-pulse" : "text-zinc-400 fill-zinc-300"} /> {st.streakCount ?? 5} days
+                        </span>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+              <p className="text-[9px] text-zinc-400 mt-3 font-light leading-snug select-none flex items-center gap-1">
+                <AlertCircle size={10} className="text-zinc-400 shrink-0" /> Consistency in Sabi activity logs determines leaderboard placement. Keep your fire high!
+              </p>
+            </div>
+
+            {/* Sabi Touchpoint Audit Log History */}
+            <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs" id="practice-logs-history-section">
+              <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase mb-3 flex items-center justify-between font-light">
+                <span className="flex items-center gap-1.5"><FileCheck size={13} className="text-brand-yellow" /> My Sabi Activity Logs</span>
+                <span className="text-[9px] text-indigo-650 font-mono font-bold bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded select-none">Touchpoints</span>
+              </h3>
+              
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {(!studentUser.streakLogs || studentUser.streakLogs.length === 0) ? (
+                  <div className="text-center p-6 text-zinc-400 font-light text-[11px] bg-zinc-50/50 rounded-xl">
+                    No active streak touchpoints recorded yet. Submitting homework or logging daily farm/salon practice creates immutable log entries above.
+                  </div>
+                ) : (
+                  studentUser.streakLogs.map((log) => (
+                    <div key={log.id} className="p-2.5 rounded-xl border border-zinc-100 bg-zinc-50/30 space-y-1 text-[11px] hover:border-zinc-200 transition-all">
+                      <div className="flex items-center justify-between font-mono text-[9px] text-zinc-400">
+                        <span className={`px-1.5 py-0.25 rounded font-bold uppercase shrink-0 select-none ${
+                          log.type === 'attendance'
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-100'
+                            : log.type === 'assignment'
+                            ? 'bg-blue-50 text-indigo-850 border border-blue-105'
+                            : 'bg-amber-50 text-amber-800 border border-amber-100'
+                        }`}>
+                          {log.type}
+                        </span>
+                        <span>{log.date}</span>
+                      </div>
+                      <p className="text-[11px] text-zinc-600 font-light leading-relaxed">{log.note}</p>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
 
             <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs">
@@ -2181,6 +2467,58 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
               <span>Secured by <strong>Paystack</strong>. PCIDSS-compliant transaction processors</span>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Sabi Practice Note Daily Logger Modal Overlay */}
+      {showPracticeModal && (
+        <div id="practice-logger-overlay" className="fixed inset-0 bg-zinc-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-55 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col justify-between p-6 space-y-4">
+            <div className="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-3">
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 uppercase font-mono">
+                <Flame size={14} className="text-brand-yellow fill-brand-yellow animate-pulse" /> Sabi Practice Logger
+              </h3>
+              <button
+                onClick={() => setShowPracticeModal(false)}
+                className="text-zinc-400 hover:text-zinc-650 dark:hover:text-zinc-200 p-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            <form onSubmit={handleLogPractice} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-zinc-500 uppercase font-mono block">Describe what you did today:</label>
+                <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-light leading-snug">
+                  Provide a brief sentence of what you hand-practiced (e.g., mixing formulation on the farm, sterilizing shop tools, sectioning haircut slices, balancing ledger entries).
+                </p>
+                <textarea
+                  value={practiceNote}
+                  onChange={(e) => setPracticeNote(e.target.value)}
+                  placeholder="e.g. Mixed feed for the poultry stock and calibrated the automatic nipple drinkers today on the farm."
+                  required
+                  rows={4}
+                  className="w-full text-xs p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-250 dark:border-zinc-800 rounded-xl focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow focus:outline-hidden leading-relaxed font-light text-zinc-900 dark:text-white"
+                />
+              </div>
+
+              <div className="pt-2 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowPracticeModal(false)}
+                  className="flex-1 py-3 text-xs uppercase tracking-wider bg-zinc-100 hover:bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-750 font-semibold rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 text-xs uppercase tracking-wider font-semibold bg-gradient-to-r from-brand-yellow to-amber-500 text-black hover:opacity-95 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1"
+                >
+                  Fuel My Streak <Flame size={12} className="text-black fill-black shrink-0" />
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
