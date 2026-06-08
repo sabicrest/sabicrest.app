@@ -346,7 +346,7 @@ export default function App() {
       {currentUser.role === 'student' && (
         <div 
           id="sabicrest-mobile-bottom-nav" 
-          className="lg:hidden fixed bottom-4 left-4 right-4 z-50 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border border-zinc-200/40 dark:border-zinc-800/40 shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)] rounded-2xl flex items-center justify-around px-2"
+          className="lg:hidden fixed bottom-4 left-4 right-4 z-50 h-16 bg-white dark:bg-zinc-950 border border-zinc-200/50 dark:border-zinc-800/60 shadow-[0_8px_32px_rgba(0,0,0,0.12)] rounded-2xl flex items-center justify-around px-2"
         >
           {[
             { id: 'dashboard', label: 'Home', icon: Home },
@@ -370,35 +370,42 @@ export default function App() {
                     window.dispatchEvent(new CustomEvent('sabicrest-subtab-change', { detail: 'assignments' }));
                   }
                 }}
-                className="flex-1 flex flex-col items-center justify-center py-2 relative cursor-pointer group transition-all"
+                className="flex-1 flex items-center justify-center h-full py-1 relative cursor-pointer"
               >
-                {/* Visual active indicator bar on top of icon */}
-                {isActive && (
-                  <span className="absolute top-0 w-8 h-[2px] bg-brand-yellow rounded-full" />
-                )}
-                
-                <div className="relative p-1">
-                  <Icon 
-                    size={20} 
-                    className={`transition-colors ${
-                      isActive 
-                        ? 'text-brand-yellow font-medium scale-105' 
-                        : 'text-zinc-400 group-hover:text-brand-black dark:text-zinc-500'
-                    }`} 
-                  />
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <span className="absolute -top-1 -right-2 min-w-4 h-4 px-1 bg-brand-yellow text-brand-black text-[9px] font-bold rounded-full flex items-center justify-center shadow-xs">
-                      {item.badge}
-                    </span>
-                  )}
-                </div>
-                <span 
-                  className={`text-[9px] tracking-tight font-light mt-0.5 transition-colors leading-none selection:bg-transparent ${
-                    isActive ? 'text-brand-black dark:text-white font-medium' : 'text-zinc-400 dark:text-zinc-500'
+                <div 
+                  className={`flex flex-col items-center justify-center py-1 px-3.5 rounded-xl transition-all duration-300 w-full max-w-[76px] h-[85%] ${
+                    isActive 
+                      ? 'bg-brand-yellow text-black font-semibold shadow-md shadow-brand-yellow/30 scale-105' 
+                      : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-350 dark:hover:text-white'
                   }`}
                 >
-                  {item.label}
-                </span>
+                  <div className="relative">
+                    <Icon 
+                      size={18} 
+                      className={`transition-colors ${
+                        isActive 
+                          ? 'text-black' 
+                          : 'text-zinc-500 dark:text-white'
+                      }`} 
+                    />
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span className={`absolute -top-1.5 -right-2.5 min-w-[15px] h-3.5 px-1 text-[8px] font-extrabold rounded-full flex items-center justify-center shadow-xs border ${
+                        isActive 
+                          ? 'bg-black text-brand-yellow border-brand-yellow/30' 
+                          : 'bg-brand-yellow text-brand-black border-transparent'
+                      }`}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+                  <span 
+                    className={`text-[9px] tracking-tight font-medium mt-0.5 transition-colors leading-none select-none ${
+                      isActive ? 'text-black font-bold' : 'text-zinc-500 dark:text-zinc-350 font-normal'
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                </div>
               </button>
             );
           })}

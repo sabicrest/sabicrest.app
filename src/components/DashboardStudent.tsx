@@ -102,6 +102,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
   const [timeLeftStr, setTimeLeftStr] = useState<string>('');
   const [showPracticeModal, setShowPracticeModal] = useState(false);
   const [practiceNote, setPracticeNote] = useState('');
+  const [isCountdownDropdownOpen, setIsCountdownDropdownOpen] = useState(false);
 
   const reloadStudentData = () => {
     setAssignments(db.getAssignments().filter(a => a.studentId === currentUser.id));
@@ -947,6 +948,36 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
      enrollments.some(e => e.courseId === c.id && e.paymentStatus === 'approved'))
   );
 
+  // Compute actual active topic data from user's dashboard activity dynamically instead of mock indicators
+  let activeTopicTitle = 'Explore Academy';
+  let activeTopicStatus = 'Beginner Track';
+  let activeTopicDesc = 'Propose or request a trainer course to get started.';
+
+  if (enrolledCoursesForProg.length > 0) {
+    const activeCourse = enrolledCoursesForProg[0];
+    activeTopicTitle = activeCourse.title;
+    activeTopicStatus = activeCourse.category || 'Core Curriculum';
+    activeTopicDesc = `Active curriculum with Trainer ${activeCourse.trainerName}.`;
+  } else if (assignments.length > 0) {
+    const latestAss = assignments.find(a => a.status === 'not_submitted') || assignments[0];
+    activeTopicTitle = latestAss.title;
+    activeTopicStatus = latestAss.status === 'graded' ? 'Graded Task' : 'Pending Homework';
+    activeTopicDesc = `Task assigned. Status: ${latestAss.status.replace('_', ' ')}.`;
+  } else if (studentUser.streakLogs && studentUser.streakLogs.length > 0) {
+    const latestLog = studentUser.streakLogs[0];
+    activeTopicTitle = latestLog.note.length > 40 ? latestLog.note.substring(0, 40) + '...' : latestLog.note;
+    activeTopicStatus = latestLog.type === 'practice' ? 'Practice Log' : 'Streak Event';
+    activeTopicDesc = `Activity recorded on ${new Date(latestLog.timestamp || latestLog.date).toLocaleDateString()}.`;
+  } else {
+    // Fallback search of standard database approved courses
+    const allCourses = db.getCurricula().filter(c => c.status === 'approved');
+    if (allCourses.length > 0) {
+      activeTopicTitle = allCourses[0].title;
+      activeTopicStatus = 'Suggested Course';
+      activeTopicDesc = `Join other classmates. Register today!`;
+    }
+  }
+
   return (
     <div id="student-dashboard-root" className="py-6 max-w-7xl mx-auto px-4 select-none">
       
@@ -1035,51 +1066,67 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                 </div>
 
                 {/* Vivid Countdown & Touchpoints Engine */}
-                <div className="bg-zinc-950/85 dark:bg-zinc-50 border border-zinc-800/80 dark:border-zinc-200 p-4 rounded-2xl space-y-3.5 shadow-md">
-                  <div className="flex items-center justify-between text-[11px] font-mono text-zinc-300 dark:text-zinc-650 font-bold border-b border-zinc-800/60 dark:border-zinc-300/60 pb-2">
-                    <span className="flex items-center gap-1.5 uppercase tracking-wide">
+                <div className="bg-zinc-950/85 dark:bg-zinc-50 border border-zinc-800/80 dark:border-zinc-200 p-4 rounded-2xl shadow-md">
+                  {/* Dropdown Header Trigger - visible ONLY on mobile (< md) */}
+                  <button
+                    onClick={() => setIsCountdownDropdownOpen(!isCountdownDropdownOpen)}
+                    className="md:hidden w-full flex items-center justify-between text-left select-none"
+                  >
+                    <span className="flex items-center gap-1.5 uppercase tracking-wide text-[11px] font-mono text-zinc-300 dark:text-zinc-650 font-bold">
                       <span className="w-2 h-2 rounded-full bg-brand-yellow animate-ping shrink-0" />
-                      Fire Countdown:
+                      Countdown: <span className="text-brand-yellow dark:text-black font-semibold ml-1">{timeLeftStr}</span>
                     </span>
-                    <span className="text-brand-yellow dark:text-black font-mono font-bold text-xs">
-                      {timeLeftStr}
-                    </span>
-                  </div>
+                    <ChevronDown size={14} className={`text-brand-yellow dark:text-black transition-transform duration-200 ${isCountdownDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
 
-                  {/* Sabi Touchpoints motivators */}
-                  <div className="text-[10px] sm:text-[11px] leading-relaxed text-zinc-400 dark:text-zinc-600 font-light space-y-1.5">
-                    <div className="flex items-start gap-1">
-                      <span className="text-brand-yellow font-normal shrink-0">✓</span>
-                      <p>Marked classroom attendance automatically fuels your streak.</p>
-                    </div>
-                    <div className="flex items-start gap-1">
-                      <span className="text-brand-yellow font-normal shrink-0">✓</span>
-                      <p>Practical daily exercises logs and submitted assignments instantly refresh your clock.</p>
-                    </div>
-                  </div>
-
-                  {/* Interactive Button Section */}
-                  <div className="flex flex-col gap-2.5 pt-1">
-                    <button
-                      onClick={() => setShowPracticeModal(true)}
-                      className="w-full bg-gradient-to-r from-brand-yellow via-amber-400 to-amber-500 text-black hover:opacity-90 font-bold tracking-wide uppercase py-2.5 px-3 rounded-xl text-[10px] transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
-                    >
-                      <Flame size={12} className="text-black fill-black" /> Log Project Practice Notes
-                    </button>
-
-                    <div className="flex items-center justify-between gap-2.5">
-                      <button
-                        onClick={handleUseStreakFreeze}
-                        disabled={studentUser.streakFreezeActive || (studentUser.streakFreezes ?? 2) <= 0}
-                        className="flex-1 bg-zinc-800 hover:bg-zinc-750 disabled:bg-zinc-900 disabled:opacity-40 disabled:cursor-not-allowed text-white text-center border border-zinc-700/60 disabled:border-transparent rounded-xl py-2 px-2 text-[9px] font-mono uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1"
-                        title={studentUser.streakFreezeActive ? "Streak is currently frozen" : "Activate freeze card"}
-                      >
-                        <Snowflake size={11} className="text-zinc-300" /> {studentUser.streakFreezeActive ? "Streak is Frozen" : "Use Streak Freeze"}
-                      </button>
-                      
-                      <span className="text-[9.5px] font-mono text-zinc-400 dark:text-zinc-600 whitespace-nowrap bg-zinc-950 dark:bg-zinc-200/50 px-2.5 py-1.5 rounded-lg border border-zinc-800/40 dark:border-zinc-300 select-none flex items-center gap-1">
-                        <Snowflake size={11} className="text-blue-400" /> {studentUser.streakFreezes ?? 2} Freezes Left
+                  {/* Dropdown Content - Always visible on desktop (>= md), toggled on mobile (< md) */}
+                  <div className={`${isCountdownDropdownOpen ? 'block mt-3 space-y-3.5 pt-3 border-t border-zinc-800/60 dark:border-zinc-300/60' : 'hidden md:block md:space-y-3.5'}`}>
+                    {/* Header for Desktop - visible only on md and larger */}
+                    <div className="hidden md:flex items-center justify-between text-[11px] font-mono text-zinc-300 dark:text-zinc-650 font-bold border-b border-zinc-800/60 dark:border-zinc-300/60 pb-2">
+                      <span className="flex items-center gap-1.5 uppercase tracking-wide">
+                        <span className="w-2 h-2 rounded-full bg-brand-yellow animate-ping shrink-0" />
+                        Fire Countdown:
                       </span>
+                      <span className="text-brand-yellow dark:text-black font-mono font-bold text-xs">
+                        {timeLeftStr}
+                      </span>
+                    </div>
+
+                    {/* Sabi Touchpoints motivators */}
+                    <div className="text-[10px] sm:text-[11px] leading-relaxed text-zinc-400 dark:text-zinc-600 font-light space-y-1.5">
+                      <div className="flex items-start gap-1">
+                        <span className="text-brand-yellow font-normal shrink-0">✓</span>
+                        <p>Marked classroom attendance automatically fuels your streak.</p>
+                      </div>
+                      <div className="flex items-start gap-1">
+                        <span className="text-brand-yellow font-normal shrink-0">✓</span>
+                        <p>Practical daily exercises logs and submitted assignments instantly refresh your clock.</p>
+                      </div>
+                    </div>
+
+                    {/* Interactive Button Section */}
+                    <div className="flex flex-col gap-2.5 pt-1">
+                      <button
+                        onClick={() => setShowPracticeModal(true)}
+                        className="w-full bg-gradient-to-r from-brand-yellow via-amber-400 to-amber-500 text-black hover:opacity-90 font-bold tracking-wide uppercase py-2.5 px-3 rounded-xl text-[10px] transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+                      >
+                        <Flame size={12} className="text-black fill-black" /> Log Project Practice Notes
+                      </button>
+
+                      <div className="flex items-center justify-between gap-2.5">
+                        <button
+                          onClick={handleUseStreakFreeze}
+                          disabled={studentUser.streakFreezeActive || (studentUser.streakFreezes ?? 2) <= 0}
+                          className="flex-1 bg-zinc-800 hover:bg-zinc-750 disabled:bg-zinc-900 disabled:opacity-40 disabled:cursor-not-allowed text-white text-center border border-zinc-700/60 disabled:border-transparent rounded-xl py-2 px-2 text-[9px] font-mono uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1"
+                          title={studentUser.streakFreezeActive ? "Streak is currently frozen" : "Activate freeze card"}
+                        >
+                          <Snowflake size={11} className="text-zinc-300" /> {studentUser.streakFreezeActive ? "Streak is Frozen" : "Use Streak Freeze"}
+                        </button>
+                        
+                        <span className="text-[9.5px] font-mono text-zinc-400 dark:text-zinc-600 whitespace-nowrap bg-zinc-950 dark:bg-zinc-200/50 px-2.5 py-1.5 rounded-lg border border-zinc-800/40 dark:border-zinc-300 select-none flex items-center gap-1">
+                          <Snowflake size={11} className="text-blue-400" /> {studentUser.streakFreezes ?? 2} Freezes Left
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1154,13 +1201,13 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                 </div>
               </div>
               <div className="text-sm xs:text-base sm:text-xl md:text-2xl lg:text-[26px] font-semibold tracking-tight text-brand-black dark:text-white truncate leading-tight">
-                {enrolledCoursesForProg.length > 0 ? enrolledCoursesForProg[0].title : 'Spatial UI Typography'}
+                {activeTopicTitle}
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2 mt-3 sm:mt-4">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[9px] xs:text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-400 font-bold font-mono uppercase tracking-wider">Active Module</span>
+                <span className="text-[9px] xs:text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-400 font-bold font-mono uppercase tracking-wider">{activeTopicStatus}</span>
               </div>
-              <p className="text-[9.5px]/[14px] xs:text-[11px]/[16px] sm:text-xs md:text-sm text-zinc-500 dark:text-zinc-400 font-light mt-2 sm:mt-3">Current active weekly tracker state.</p>
+              <p className="text-[9.5px]/[14px] xs:text-[11px]/[16px] sm:text-xs md:text-sm text-zinc-500 dark:text-zinc-400 font-light mt-2 sm:mt-3">{activeTopicDesc}</p>
             </div>
 
             {/* Card 4: Grade History */}

@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600&family=JetBrains+Mono:wght@100;200;300;400;500&display=swap');
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Outfit", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
@@ -121,53 +123,96 @@ html.dark .bg-zinc-950\/60 {
   background-color: rgba(0, 0, 0, 0.8) !important;
 }
 
-/* Text Colors */
-html.dark .text-brand-black {
-  color: #f4f4f5 !important;
-}
-html.dark .text-black {
+/* Text Colors - All texts in dark mode become beautifully white unless explicitly yellow or green, or contained in yellow backgrounds/buttons */
+html.dark :is(body, div, span, p, h1, h2, h3, h4, h5, h6, label, li, a, th, td, strong, em, input, textarea, select, button):not(
+  .text-brand-yellow,
+  .text-brand-yellow *,
+  [class*="text-yellow-"],
+  [class*="text-yellow-"] *,
+  [class*="text-amber-"],
+  [class*="text-amber-"] *,
+  .text-emerald-500,
+  .text-emerald-400,
+  [class*="text-green-"],
+  [class*="text-emerald-"],
+  .bg-brand-yellow,
+  .bg-brand-yellow *,
+  [class*="bg-yellow-"],
+  [class*="bg-yellow-"] *,
+  [class*="bg-amber-"],
+  [class*="bg-amber-"] *,
+  [id*="hero-banner"],
+  [id*="hero-banner"] *,
+  .bg-amber-400 *,
+  .bg-yellow-400 *
+) {
   color: #ffffff !important;
 }
-html.dark .text-zinc-950 {
-  color: #ffffff !important;
-}
-html.dark .text-zinc-900 {
-  color: #f4f4f5 !important;
-}
+
+/* Ensure individual Tailwind utility class text selectors under html.dark are also white, to avoid conflict */
+html.dark .text-brand-black,
+html.dark .text-black,
+html.dark .text-zinc-950,
+html.dark .text-zinc-900,
+html.dark .text-zinc-850,
 html.dark .text-zinc-805,
-html.dark .text-zinc-800 {
-  color: #e4e4e7 !important;
-}
-html.dark .text-zinc-700 {
-  color: #71717a !important;
-}
+html.dark .text-zinc-800,
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-zinc-750,
+html.dark .text-zinc-705,
+html.dark .text-zinc-700,
+html.dark .text-gray-700,
+html.dark .text-zinc-650,
 html.dark .text-zinc-600,
-html.dark .text-zinc-650 {
-  color: #52525b !important;
-}
-html.dark .text-zinc-500 {
-  color: #3f3f46 !important;
-}
+html.dark .text-gray-600,
+html.dark .text-zinc-550,
+html.dark .text-zinc-500,
+html.dark .text-gray-500,
+html.dark .text-zinc-455,
 html.dark .text-zinc-450,
-html.dark .text-zinc-400 {
-  color: #27272a !important;
+html.dark .text-zinc-400,
+html.dark .text-gray-400,
+html.dark .text-zinc-350,
+html.dark .text-zinc-300,
+html.dark .text-gray-300 {
+  color: #ffffff !important;
+}
+
+/* Keep yellow and green text markers vibrant in dark mode as requested */
+html.dark .text-brand-yellow,
+html.dark [class*="text-brand-yellow"],
+html.dark [class*="text-yellow-"],
+html.dark [class*="text-amber-"] {
+  color: #fbbf24 !important; /* Premium golden yellow */
+}
+html.dark .text-emerald-500,
+html.dark .text-emerald-400,
+html.dark [class*="text-green-"],
+html.dark [class*="text-emerald-"] {
+  color: #34d399 !important; /* Beautiful status green */
 }
 
 /* Borders */
 html.dark .border-zinc-50 {
-  border-color: #1e1e21 !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
 }
 html.dark .border-zinc-100 {
-  border-color: #222225 !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
 }
 html.dark .border-zinc-150 {
-  border-color: #27272a !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
 }
 html.dark .border-zinc-200 {
-  border-color: #2d2d31 !important;
+  border-color: rgba(255, 255, 255, 0.38) !important;
 }
 html.dark .border-zinc-300 {
-  border-color: #3f3f46 !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+html.dark .border-zinc-400,
+html.dark .border-gray-200,
+html.dark .border-gray-300 {
+  border-color: rgba(255, 255, 255, 0.55) !important;
 }
 
 /* Component Overrides to match aesthetics */
@@ -227,31 +272,85 @@ html.dark #admin-metrics-row > div {
   border-width: 1px !important;
 }
 
-/* Thin, sharp, and highly defined icons */
+/* Thin, sharp, and highly defined icons, slightly larger for beautiful readability */
 svg.lucide,
 .lucide {
-  stroke-width: 1.42 !important;
-  transition: stroke-width 0.2s ease, stroke 0.2s ease;
+  stroke-width: 1.55 !important;
+  transform: scale(1.18);
+  transform-origin: center;
+  transition: stroke-width 0.2s ease, stroke 0.2s ease, transform 0.2s ease;
 }
 
 /* Light mode overrides to make grey texts and icons much darker and more visible */
 :not(html.dark) .text-zinc-300 {
   color: #4b5563 !important; /* Rich Dark Grey (Zinc-600) */
 }
+:not(html.dark) .text-zinc-350,
+:not(html.dark) .text-zinc-355 {
+  color: #4b5563 !important;
+}
 :not(html.dark) .text-zinc-400,
-:not(html.dark) .text-zinc-450 {
+:not(html.dark) .text-zinc-450,
+:not(html.dark) .text-zinc-455 {
   color: #3f3f46 !important; /* Premium Slate Grey (Zinc-750) */
 }
-:not(html.dark) .text-zinc-500 {
+:not(html.dark) .text-zinc-500,
+:not(html.dark) .text-zinc-550 {
   color: #27272a !important; /* Deep Charcoal (Zinc-800) */
 }
 :not(html.dark) .text-brand-gray {
-  color: #0f0f10 !important; /* Clean rich black */
+  color: #0d0d0e !important; /* Clean rich black */
 }
 
-/* Precise high-fidelity shadows for dark mode icons */
+/* Ensure dark mode text inside gold/yellow accents, banners, and buttons always remains highly visible with solid dark text */
+html.dark .bg-brand-yellow,
+html.dark .bg-brand-yellow *,
+html.dark [class*="bg-brand-yellow"],
+html.dark [class*="bg-brand-yellow"] *,
+html.dark button[class*="bg-brand-yellow"],
+html.dark button[class*="bg-brand-yellow"] *,
+html.dark [id*="hero-banner"],
+html.dark [id*="hero-banner"] *,
+html.dark .bg-gradient-to-r.from-brand-yellow *,
+html.dark .bg-gradient-to-r.via-amber-400 *,
+html.dark [class*="from-brand-yellow"] *,
+html.dark .text-brand-black.bg-brand-yellow,
+html.dark .text-black.bg-brand-yellow,
+html.dark [class*="bg-yellow-"]:not([class*="/"]),
+html.dark [class*="bg-yellow-"]:not([class*="/"]) *,
+html.dark [class*="bg-amber-"]:not([class*="/"]):not([class*="bg-amber-50"]),
+html.dark [class*="bg-amber-"]:not([class*="/"]):not([class*="bg-amber-50"]) * {
+  color: #0f0f10 !important;
+}
+
+/* Ensure brand-yellow layout icons are also perfectly black instead of glowing white inside hero banners and yellow backgrounds */
+html.dark [id*="hero-banner"] svg.lucide,
+html.dark [id*="hero-banner"] .lucide,
+html.dark .bg-brand-yellow svg.lucide,
+html.dark .bg-brand-yellow .lucide,
+html.dark [class*="bg-brand-yellow"] svg.lucide,
+html.dark [class*="bg-brand-yellow"] .lucide,
+html.dark [class*="bg-yellow-"] svg.lucide,
+html.dark [class*="bg-yellow-"] .lucide {
+  stroke: #0f0f10 !important;
+  filter: none !important;
+}
+
+/* Precise high-fidelity shadows, thicker lines, and subtle ambient glows for dark mode icons */
 html.dark svg.lucide,
 html.dark .lucide {
-  filter: drop-shadow(0 0.5px 0.5px rgba(0, 0, 0, 0.25));
+  stroke-width: 1.95 !important; /* Whiter, thicker lines are automatically more visible on black backgrounds */
+  filter: drop-shadow(0 0px 1.5px rgba(255, 255, 255, 0.35)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
 }
+
+/* Sharp, crystal clear, unblurred navigation icons for mobile and tablet bottom bar */
+#sabicrest-mobile-bottom-nav svg.lucide,
+#sabicrest-mobile-bottom-nav .lucide,
+html.dark #sabicrest-mobile-bottom-nav svg.lucide,
+html.dark #sabicrest-mobile-bottom-nav .lucide {
+  filter: none !important;
+  stroke-width: 2.0 !important;
+  transform: none !important;
+}
+
 
