@@ -15,7 +15,7 @@ import {
   Award, BookOpen, Clock, FileText, CheckCircle2, ChevronRight, Upload, Link, AlertCircle, 
   FileCheck, Printer, Settings, User as UserIcon, Mail, Phone, MapPin, Sliders, Bell, 
   Compass, Radio, Heart, HelpCircle, Activity, CreditCard, Lock, X, ExternalLink, ShieldCheck, Coins, Search, ArrowUpRight,
-  TrendingUp, ChevronDown, ChevronUp, Sparkles, Flame, Snowflake, Briefcase, Trophy
+  TrendingUp, ChevronDown, ChevronUp, Sparkles, Flame, Snowflake, Briefcase, Trophy, Filter, List
 } from 'lucide-react';
 
 interface DashboardStudentProps {
@@ -958,6 +958,61 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
      enrollments.some(e => e.courseId === c.id && e.paymentStatus === 'approved'))
   );
 
+  const enrolledTrainers = useMemo(() => {
+    const trainers = enrolledCoursesForProg.map(c => c.trainerName);
+    return Array.from(new Set(trainers.filter(Boolean)));
+  }, [enrolledCoursesForProg]);
+
+  const sortedEnrolledCourses = useMemo(() => {
+    return [...enrolledCoursesForProg]
+      .sort((a, b) => a.title.localeCompare(b.title))
+      .slice(0, 10);
+  }, [enrolledCoursesForProg]);
+
+  const tasksPageAssignments = useMemo(() => {
+    let result = [...assignments];
+
+    // Filter by Trainer from past & present (using trainerName)
+    if (tasksTrainerFilter !== 'All') {
+      result = result.filter(ass => {
+        const course = db.getCurricula().find(c => c.id === ass.courseId);
+        return course?.trainerName === tasksTrainerFilter;
+      });
+    }
+
+    // Filter by Status / Phase
+    if (tasksStatusFilter === 'ongoing') {
+      result = result.filter(ass => ass.status === 'not_submitted' || ass.status === 'pending_review');
+    } else if (tasksStatusFilter === 'graded') {
+      result = result.filter(ass => ass.status === 'graded');
+    }
+
+    // Filter by Deadline Date Range
+    if (tasksDateFilter === 'upcoming') {
+      const nowStr = new Date().toISOString().split('T')[0];
+      result = result.filter(ass => ass.dueDate >= nowStr);
+    } else if (tasksDateFilter === 'overdue') {
+      const nowStr = new Date().toISOString().split('T')[0];
+      result = result.filter(ass => ass.dueDate < nowStr && ass.status === 'not_submitted');
+    }
+
+    // Filter by course search bar / query
+    if (tasksSearchQuery.trim()) {
+      const q = tasksSearchQuery.toLowerCase();
+      result = result.filter(ass => {
+        const course = db.getCurricula().find(c => c.id === ass.courseId);
+        return ass.title.toLowerCase().includes(q) || 
+               ass.description.toLowerCase().includes(q) ||
+               (course?.title || '').toLowerCase().includes(q);
+      });
+    }
+
+    // Sort: "keep the latest or ongoing/new tasks on default load every time they load the page"
+    result.sort((a, b) => b.dueDate.localeCompare(a.dueDate));
+
+    return result;
+  }, [assignments, tasksTrainerFilter, tasksStatusFilter, tasksDateFilter, tasksSearchQuery]);
+
   // Compute actual active topic data from user's dashboard activity dynamically instead of mock indicators
   let activeTopicTitle = 'Explore Academy';
   let activeTopicStatus = 'Beginner Track';
@@ -1046,16 +1101,14 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                   {getQuoteOfTheDay()}
                 </p>
               </div>
-            </div>
- 
             {/* Right container: Live news and activity feed (Mobile-First responsive) */}
             <div className="relative z-10 flex flex-col justify-center items-stretch border-t md:border-t-0 md:border-l border-zinc-800/40 dark:border-black/10 pt-5 md:pt-0 pl-0 md:pl-6 lg:pl-10">
               <div id="hero-live-ticker-section" className="space-y-4 w-full h-full flex flex-col justify-between">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-[10px] xs:text-[11px] sm:text-xs uppercase font-mono tracking-widest text-[#fbbf24] dark:text-orange-400 font-bold flex items-center gap-1.5 select-none">
+                  <h3 className="text-[10px] xs:text-[11px] sm:text-xs uppercase font-mono tracking-widest text-brand-black dark:text-zinc-200 font-bold flex items-center gap-1.5 select-none">
                     <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fbbf24] opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#fbbf24]"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-yellow opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-yellow"></span>
                     </span>
                     Live updates
                   </h3>
@@ -1064,7 +1117,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                   </span>
                 </div>
 
-                <div className="bg-black text-white border border-[#fbbf24] p-4 rounded-2xl min-h-[140px] xs:min-h-[150px] md:h-44 flex flex-col justify-between relative overflow-hidden shadow-lg">
+                <div className="bg-black text-white border border-brand-yellow p-4 rounded-2xl min-h-[140px] xs:min-h-[150px] md:h-44 flex flex-col justify-between relative overflow-hidden shadow-lg">
                   <AnimatePresence mode="wait">
                     {(() => {
                       const update = liveUpdates[activeUpdateIdx] || liveUpdates[0];
@@ -1085,7 +1138,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                                 : update.type === 'join'
                                 ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/10'
                                 : update.type === 'online'
-                                ? 'bg-amber-400/20 text-[#fbbf24] border border-amber-400/10'
+                                ? 'bg-amber-400/20 text-brand-yellow border border-amber-400/10'
                                 : 'bg-blue-400/20 text-blue-300 border border-blue-400/10'
                             }`}>
                               {update.category}
@@ -1104,7 +1157,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                       );
                     })()}
                   </AnimatePresence>
-                </div>
+                </div>               </div>
               </div>
             </div>
           </div>
@@ -1452,13 +1505,13 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                 </div>
               </div>
 
-              {enrolledCoursesForProg.length === 0 ? (
+              {sortedEnrolledCourses.length === 0 ? (
                 <div className="text-center p-6 text-zinc-500 bg-zinc-50 rounded-xl text-xs font-light">
                   You are not currently enrolled in any active curricula. Head over to the <strong className="text-brand-black cursor-pointer underline font-medium font-semibold" onClick={() => setActiveSubTab('register')}>Register Courses</strong> tab to join classes.
                 </div>
               ) : (
                 <div className="space-y-5">
-                  {enrolledCoursesForProg.map(course => {
+                  {sortedEnrolledCourses.map(course => {
                     const courseTasks = assignments.filter(a => a.courseId === course.id);
                     const gradedTasks = courseTasks.filter(a => a.status === 'graded');
                     const hasAssignments = courseTasks.length > 0;
@@ -1468,7 +1521,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                     const completionPercent = hasAssignments ? Math.round((gradedTasks.length / courseTasks.length) * 100) : (isFullyGraduated ? 100 : 0);
 
                     return (
-                      <div key={course.id} className="border border-zinc-100 rounded-xl p-4 md:p-5 bg-zinc-50/20 hover:bg-white transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div key={course.id} className="border border-zinc-105 rounded-xl p-4 md:p-5 bg-zinc-50/20 hover:bg-white transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         
                         <div className="space-y-3 flex-1 w-full">
                           <div className="flex items-center gap-3">
@@ -1481,7 +1534,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                               />
                             </div>
                             <div>
-                              <h4 className="text-xs font-bold text-brand-black truncate max-w-[280px] md:max-w-[360px] leading-tight">
+                              <h4 className="text-xs font-bold text-brand-black truncate max-w-[280px] md:max-w-[360px] leading-tight font-semibold">
                                 {course.title}
                               </h4>
                               <p className="text-[10px] text-zinc-400 font-mono">
@@ -1495,7 +1548,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                               <span className="text-zinc-500 font-light flex items-center gap-1">
                                 {hasAssignments ? (
                                   <>
-                                    <span className="font-semibold">{gradedTasks.length} of {courseTasks.length}</span> assignments evaluated
+                                    <span className="font-semibold text-brand-black">{gradedTasks.length} of {courseTasks.length}</span> assignments evaluated
                                   </>
                                 ) : (
                                   <span className="text-amber-600 font-medium flex items-center gap-1">
@@ -1564,73 +1617,86 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
               )}
             </div>
 
+            {/* Vertical Tasks Lists Format */}
             <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs">
-              <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase mb-4 flex items-center gap-1.5 font-light">
-                <FileCheck size={13} className="text-brand-yellow" /> Course Assignments & Grades
-              </h3>
+              <div className="flex items-center justify-between gap-1.5 mb-4 border-b border-zinc-100 pb-3">
+                <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase flex items-center gap-1.5 font-bold">
+                  <List size={13} className="text-brand-yellow" /> Tasks & Assignments Ledger
+                </h3>
+                <span className="text-[10px] font-mono text-zinc-400 bg-zinc-50 px-2 py-0.5 rounded">
+                  Showing {Math.min(tasksPageAssignments.length, tasksLimit)} of {tasksPageAssignments.length}
+                </span>
+              </div>
 
               <div className="space-y-4">
-                {filteredAssignments.map(ass => {
-                  const isNotSubmit = ass.status === 'not_submitted';
-                  const isPending = ass.status === 'pending_review';
-                  const isGraded = ass.status === 'graded';
+                {tasksPageAssignments.length === 0 ? (
+                  <div className="text-center py-10 text-zinc-400 font-light text-xs bg-zinc-50/50 rounded-xl leading-relaxed">
+                    No active tasks match your filters. Click filter settings to view graded or overdue assignments.
+                  </div>
+                ) : (
+                  tasksPageAssignments.slice(0, tasksLimit).map(ass => {
+                    const isNotSubmit = ass.status === 'not_submitted';
+                    const isPending = ass.status === 'pending_review';
+                    const isGraded = ass.status === 'graded';
+                    const hasDraft = ass.submissionContent || ass.linkUrl;
 
-                  return (
-                    <div key={ass.id} className="border border-zinc-50 rounded-xl p-4 hover:border-zinc-100 transition-all">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-2">
-                        <div className="space-y-0.5">
-                          <span className={`text-[9px] font-mono uppercase px-2 py-0.5 rounded font-medium ${
-                            isGraded ? 'bg-emerald-50 text-emerald-800' :
-                            isPending ? 'bg-amber-100 text-amber-900' : 'bg-zinc-100 text-zinc-600'
-                          }`}>
-                            {ass.status.replace('_', ' ')}
-                          </span>
-                          <h4 className="text-sm font-light tracking-tight text-brand-black">{ass.title}</h4>
-                        </div>
-
-                        {/* Grade highlights */}
-                        {isGraded && (
-                          <div className="flex items-center gap-1.5 bg-zinc-50 border border-zinc-100 px-3 py-1 rounded-xl shrink-0">
-                            <span className="text-lg font-bold text-brand-black">{ass.grade}</span>
-                            <span className="text-[10px] text-zinc-400 font-mono">({ass.points}/{ass.maxPoints} pts)</span>
+                    return (
+                      <div 
+                        key={ass.id} 
+                        onClick={() => setSelectedTaskDetail(ass)}
+                        className="group border border-zinc-50 hover:border-brand-yellow rounded-xl p-4 transition-all cursor-pointer bg-zinc-50/10 hover:bg-zinc-50/30 shadow-2xs hover:shadow-xs"
+                      >
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-2">
+                          <div className="space-y-0.5">
+                            <span className={`text-[9px] font-mono uppercase px-2 py-0.5 rounded font-bold tracking-brand inline-block ${
+                              isGraded ? 'bg-emerald-50 text-emerald-800' :
+                              isPending ? 'bg-amber-100 text-amber-900' : 'bg-zinc-100 text-zinc-650'
+                            }`}>
+                              {ass.status.replace('_', ' ')}
+                            </span>
+                            <h4 className="text-sm font-semibold tracking-tight text-brand-black group-hover:text-brand-yellow transition-colors mt-1">
+                              {ass.title}
+                            </h4>
                           </div>
-                        )}
-                      </div>
 
-                      <p className="text-xs text-brand-gray font-light leading-relaxed mb-4">{ass.description}</p>
-                      
-                      {ass.feedback && (
-                        <div className="bg-zinc-50 border-l-2 border-brand-yellow rounded-xl p-3 text-[11px] font-light text-zinc-600 mb-4 italic">
-                          <strong>Tutor Feedback:</strong> "{ass.feedback}"
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between pt-3 border-t border-zinc-50">
-                        <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-light">
-                          <Clock size={11} /> Due Date: {ass.dueDate}
+                          {/* Grade highlight status */}
+                          {isGraded && (
+                            <div className="flex items-center gap-1.5 bg-zinc-50 border border-zinc-100 px-3 py-1 rounded-xl shrink-0">
+                              <span className="text-lg font-extrabold text-brand-black">{ass.grade}</span>
+                              <span className="text-[10px] text-zinc-400 font-mono">({ass.points}/{ass.maxPoints} pts)</span>
+                            </div>
+                          )}
                         </div>
 
-                        {isNotSubmit ? (
-                          <button
-                            id={`submit-trigger-${ass.id}`}
-                            onClick={() => handleOpenSubmission(ass)}
-                            className="flex items-center gap-1.5 bg-brand-yellow hover:bg-brand-yellow-hover text-brand-black rounded-xl text-[10px] tracking-wide uppercase px-3.5 py-2 font-medium cursor-pointer shadow-xs focus-ring transition-colors"
-                          >
-                            <Upload size={11} /> Submit Assignment
-                          </button>
-                        ) : (
-                          <button
-                            id={`resubmit-trigger-${ass.id}`}
-                            onClick={() => handleOpenSubmission(ass)}
-                            className="text-[10px] font-medium text-brand-gray hover:text-brand-black transition-colors pointer-events-auto"
-                          >
-                            View Submitted Work
-                          </button>
-                        )}
+                        <p className="text-xs text-brand-gray font-light leading-relaxed mb-4 line-clamp-2">
+                          {ass.description}
+                        </p>
+
+                        <div className="flex items-center justify-between pt-3 border-t border-zinc-50/80">
+                          <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-light">
+                            <Clock size={11} className="text-brand-yellow" /> Due Date: {ass.dueDate}
+                          </div>
+
+                          <span className="text-[10px] font-semibold text-brand-black group-hover:text-amber-600 transition-colors uppercase tracking-wider flex items-center gap-0.5">
+                            {isGraded ? 'Review Feedback' : hasDraft ? 'Click to Continue' : 'Click to Start'} &rarr;
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
+
+                {/* Vertical tasks stream View More text link */}
+                {tasksPageAssignments.length > tasksLimit && (
+                  <div className="text-center pt-3 border-t border-zinc-100">
+                    <button 
+                      onClick={() => setTasksLimit(prev => prev + 10)}
+                      className="text-xs font-semibold uppercase tracking-wider text-zinc-650 hover:text-brand-yellow font-sans hover:underline cursor-pointer"
+                    >
+                      View More
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -2008,6 +2074,121 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
 
             <div className="text-[9px] font-mono text-zinc-300 uppercase tracking-wide border-t border-zinc-50 pt-4 text-center">
               Sabicrest Workspace Secure Portal
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Selected Task Details Modal Popup */}
+      {selectedTaskDetail && (
+        <div id="task-detail-modal" className="fixed inset-0 bg-brand-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-805 w-full max-w-xl rounded-2xl shadow-2xl p-6 md:p-8 animate-in zoom-in-95 duration-150 flex flex-col justify-between overflow-y-auto max-h-[90vh]">
+            
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="flex items-start justify-between border-b border-zinc-100 dark:border-zinc-800/80 pb-4">
+                <div className="space-y-1">
+                  <span className="text-[10px] uppercase font-mono tracking-widest text-brand-yellow font-bold">
+                    Assignment Brief
+                  </span>
+                  <h3 className="text-lg font-bold text-brand-black dark:text-white leading-snug">
+                    {selectedTaskDetail.title}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setSelectedTaskDetail(null)}
+                  className="text-zinc-400 hover:text-brand-black dark:hover:text-white font-semibold text-2xl cursor-pointer p-1"
+                >
+                  &times;
+                </button>
+              </div>
+
+              {/* Course Meta */}
+              {(() => {
+                const course = db.getCurricula().find(c => c.id === selectedTaskDetail.courseId);
+                return (
+                  <div className="flex flex-wrap items-center gap-3 text-xs bg-zinc-50 dark:bg-zinc-955 p-3.5 rounded-xl border border-zinc-100 dark:border-zinc-850">
+                    <BookOpen size={14} className="text-brand-yellow shrink-0" />
+                    <div className="flex-1 min-w-[200px]">
+                      <p className="font-semibold text-brand-black dark:text-zinc-200 leading-tight">
+                        {course?.title || 'Standalone Curricula'}
+                      </p>
+                      <p className="text-[10px] text-zinc-400">
+                        Mentor: {course?.trainerName || selectedTaskDetail.trainerId} • Due: {selectedTaskDetail.dueDate}
+                      </p>
+                    </div>
+                    <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded font-bold ${
+                      selectedTaskDetail.status === 'graded' ? 'bg-emerald-50 text-emerald-805 dark:bg-emerald-950/50 dark:text-emerald-400' :
+                      selectedTaskDetail.status === 'pending_review' ? 'bg-amber-50 text-amber-900 dark:bg-amber-950/50 dark:text-amber-400' :
+                      'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'
+                    }`}>
+                      {selectedTaskDetail.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                );
+              })()}
+
+              {/* Description */}
+              <div className="space-y-1.5">
+                <h4 className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 block font-bold">Project Details & Objectives</h4>
+                <div className="text-xs text-zinc-650 dark:text-zinc-300 leading-relaxed font-light whitespace-pre-line bg-zinc-50/45 dark:bg-zinc-950/10 p-4 rounded-xl border border-zinc-100/50 dark:border-zinc-800">
+                  {selectedTaskDetail.description}
+                </div>
+              </div>
+
+              {/* Feedback Section (if evaluated) */}
+              {selectedTaskDetail.feedback && (
+                <div className="bg-amber-50/10 border-l-2 border-brand-yellow p-4 rounded-xl space-y-1">
+                  <h5 className="text-[10px] uppercase font-mono tracking-widest text-brand-yellow font-bold">Tutor Review & Comments</h5>
+                  <p className="text-xs text-zinc-700 dark:text-zinc-300 font-light italic leading-relaxed">
+                    "{selectedTaskDetail.feedback}"
+                  </p>
+                </div>
+              )}
+
+              {/* Submission Information if submitted */}
+              {(selectedTaskDetail.submissionContent || selectedTaskDetail.linkUrl) && (
+                <div className="bg-zinc-50/60 dark:bg-zinc-950/40 p-4 rounded-xl border border-zinc-100 dark:border-zinc-800/60 text-xs space-y-1.5">
+                  <h5 className="text-[10px] uppercase font-mono tracking-wider text-zinc-400 font-bold">Your Saved Content</h5>
+                  {selectedTaskDetail.linkUrl && (
+                    <p className="truncate text-indigo-650 dark:text-indigo-450">
+                      <strong>Link URL:</strong> <a href={selectedTaskDetail.linkUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">{selectedTaskDetail.linkUrl}</a>
+                    </p>
+                  )}
+                  {selectedTaskDetail.submissionContent && (
+                    <p className="text-zinc-650 dark:text-zinc-400 line-clamp-3 italic">
+                      "{(selectedTaskDetail.submissionContent || '').substring(0, 150)}..."
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-8 pt-4 border-t border-zinc-105 dark:border-zinc-800/80 flex flex-wrap items-center justify-end gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => setSelectedTaskDetail(null)}
+                className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-xl text-xs font-semibold cursor-pointer tracking-wide"
+              >
+                Close
+              </button>
+
+              {selectedTaskDetail.status !== 'graded' && (
+                <button
+                  type="button"
+                  id="modal-continue-submission-btn"
+                  onClick={() => {
+                    handleOpenSubmission(selectedTaskDetail);
+                    setSelectedTaskDetail(null);
+                  }}
+                  className="px-5 py-2 bg-brand-yellow hover:bg-[#E5A910] text-brand-black font-semibold rounded-xl text-xs uppercase tracking-wider transition-all shadow-2xs cursor-pointer flex items-center gap-1.5"
+                >
+                  {(selectedTaskDetail.submissionContent || selectedTaskDetail.linkUrl) ? 'Continue Task' : 'Start Task'}
+                  <ChevronRight size={13} />
+                </button>
+              )}
             </div>
 
           </div>
