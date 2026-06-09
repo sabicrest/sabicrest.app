@@ -1640,20 +1640,37 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                     const isGraded = ass.status === 'graded';
                     const hasDraft = ass.submissionContent || ass.linkUrl;
 
+                    const isDueSoon = (() => {
+                      if (ass.status !== 'not_submitted') return false;
+                      const dueTime = new Date(`${ass.dueDate}T23:59:59`).getTime();
+                      const nowTime = new Date().getTime();
+                      const diffHours = (dueTime - nowTime) / (1000 * 60 * 60);
+                      return diffHours > 0 && diffHours <= 24;
+                    })();
+
                     return (
                       <div 
                         key={ass.id} 
                         onClick={() => setSelectedTaskDetail(ass)}
-                        className="group border border-zinc-50 hover:border-brand-yellow rounded-xl p-4 transition-all cursor-pointer bg-zinc-50/10 hover:bg-zinc-50/30 shadow-2xs hover:shadow-xs"
+                        className={`group border rounded-xl p-4 transition-all cursor-pointer bg-zinc-50/10 hover:bg-zinc-50/30 shadow-2xs hover:shadow-xs ${
+                          isDueSoon ? 'border-rose-300 hover:border-rose-500' : 'border-zinc-50 hover:border-brand-yellow'
+                        }`}
                       >
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-2">
                           <div className="space-y-0.5">
-                            <span className={`text-[9px] font-mono uppercase px-2 py-0.5 rounded font-bold tracking-brand inline-block ${
-                              isGraded ? 'bg-emerald-50 text-emerald-800' :
-                              isPending ? 'bg-amber-100 text-amber-900' : 'bg-zinc-100 text-zinc-650'
-                            }`}>
-                              {ass.status.replace('_', ' ')}
-                            </span>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={`text-[9px] font-mono uppercase px-2 py-0.5 rounded font-bold tracking-brand inline-block ${
+                                isGraded ? 'bg-emerald-50 text-emerald-800' :
+                                isPending ? 'bg-amber-100 text-amber-900' : 'bg-zinc-100 text-zinc-650'
+                              }`}>
+                                {ass.status.replace('_', ' ')}
+                              </span>
+                              {isDueSoon && (
+                                <span className="text-[9px] font-mono uppercase px-2 py-0.5 rounded font-extrabold tracking-wide inline-flex items-center gap-1 bg-rose-50 text-rose-600 border border-rose-100 animate-pulse">
+                                  ⚠️ Due in &lt;24 hrs
+                                </span>
+                              )}
+                            </div>
                             <h4 className="text-sm font-semibold tracking-tight text-brand-black group-hover:text-brand-yellow transition-colors mt-1">
                               {ass.title}
                             </h4>
@@ -1673,11 +1690,16 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                         </p>
 
                         <div className="flex items-center justify-between pt-3 border-t border-zinc-50/80">
-                          <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-light">
-                            <Clock size={11} className="text-brand-yellow" /> Due Date: {ass.dueDate}
+                          <div className="flex items-center gap-1 text-[10px] font-light">
+                            <Clock size={11} className={isDueSoon ? "text-rose-500 animate-pulse" : "text-brand-yellow"} />
+                            <span className={isDueSoon ? "text-rose-600 font-semibold animate-pulse" : "text-zinc-400"}>
+                              Due Date: {ass.dueDate} {isDueSoon && "(Urgent)"}
+                            </span>
                           </div>
 
-                          <span className="text-[10px] font-semibold text-brand-black group-hover:text-amber-600 transition-colors uppercase tracking-wider flex items-center gap-0.5">
+                          <span className={`text-[10px] font-semibold uppercase tracking-wider flex items-center gap-0.5 ${
+                            isDueSoon ? 'text-rose-600 group-hover:text-rose-700 font-bold' : 'text-brand-black group-hover:text-amber-600'
+                          } transition-colors`}>
                             {isGraded ? 'Review Feedback' : hasDraft ? 'Click to Continue' : 'Click to Start'} &rarr;
                           </span>
                         </div>
@@ -2107,24 +2129,43 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
               {/* Course Meta */}
               {(() => {
                 const course = db.getCurricula().find(c => c.id === selectedTaskDetail.courseId);
+                const isDueSoon = (() => {
+                  if (selectedTaskDetail.status !== 'not_submitted') return false;
+                  const dueTime = new Date(`${selectedTaskDetail.dueDate}T23:59:59`).getTime();
+                  const nowTime = new Date().getTime();
+                  const diffHours = (dueTime - nowTime) / (1000 * 60 * 60);
+                  return diffHours > 0 && diffHours <= 24;
+                })();
+
                 return (
-                  <div className="flex flex-wrap items-center gap-3 text-xs bg-zinc-50 dark:bg-zinc-955 p-3.5 rounded-xl border border-zinc-100 dark:border-zinc-850">
-                    <BookOpen size={14} className="text-brand-yellow shrink-0" />
-                    <div className="flex-1 min-w-[200px]">
-                      <p className="font-semibold text-brand-black dark:text-zinc-200 leading-tight">
-                        {course?.title || 'Standalone Curricula'}
-                      </p>
-                      <p className="text-[10px] text-zinc-400">
-                        Mentor: {course?.trainerName || selectedTaskDetail.trainerId} • Due: {selectedTaskDetail.dueDate}
-                      </p>
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center gap-3 text-xs bg-zinc-50 dark:bg-zinc-955 p-3.5 rounded-xl border border-zinc-100 dark:border-zinc-850">
+                      <BookOpen size={14} className="text-brand-yellow shrink-0" />
+                      <div className="flex-1 min-w-[200px]">
+                        <p className="font-semibold text-brand-black dark:text-zinc-200 leading-tight">
+                          {course?.title || 'Standalone Curricula'}
+                        </p>
+                        <p className="text-[10px] text-zinc-400">
+                          Mentor: {course?.trainerName || selectedTaskDetail.trainerId} • Due: {selectedTaskDetail.dueDate}
+                        </p>
+                      </div>
+                      <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded font-bold ${
+                        selectedTaskDetail.status === 'graded' ? 'bg-emerald-50 text-emerald-805 dark:bg-emerald-950/50 dark:text-emerald-400' :
+                        selectedTaskDetail.status === 'pending_review' ? 'bg-amber-50 text-amber-900 dark:bg-amber-950/50 dark:text-amber-400' :
+                        'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'
+                      }`}>
+                        {selectedTaskDetail.status.replace('_', ' ')}
+                      </span>
                     </div>
-                    <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded font-bold ${
-                      selectedTaskDetail.status === 'graded' ? 'bg-emerald-50 text-emerald-805 dark:bg-emerald-950/50 dark:text-emerald-400' :
-                      selectedTaskDetail.status === 'pending_review' ? 'bg-amber-50 text-amber-900 dark:bg-amber-950/50 dark:text-amber-400' :
-                      'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'
-                    }`}>
-                      {selectedTaskDetail.status.replace('_', ' ')}
-                    </span>
+
+                    {isDueSoon && (
+                      <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-905 rounded-xl p-3 flex items-center gap-2.5 text-xs text-rose-600 dark:text-rose-400 animate-pulse">
+                        <Clock size={15} className="shrink-0" />
+                        <span className="font-medium">
+                          <strong>Urgent:</strong> This task is due within the next 24 hours. Start or continue your submission to meet the deadline!
+                        </span>
+                      </div>
+                    )}
                   </div>
                 );
               })()}
