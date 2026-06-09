@@ -403,4 +403,36 @@ html.dark #sabicrest-mobile-bottom-nav .active-nav-item span {
   font-weight: 800 !important;
 }
 
+/* --- LIVE UPDATES INNER CARD COLOR RESTORATION --- */
+/* The general dark mode rule forces all items in student-hero-banner to be dark, but the Live Updates card inside the ticker section is a black background card, so we must restore white and colored text visibility there. */
+html.dark #student-hero-banner #hero-live-ticker-section div.bg-black,
+html.dark #student-hero-banner #hero-live-ticker-section div.bg-black * {
+  color: #ffffff !important;
+}
+
+html.dark #student-hero-banner #hero-live-ticker-section div.bg-black p {
+  color: #f4f4f5 !important; /* text-zinc-100 equivalent */
+}
+
+html.dark #student-hero-banner #hero-live-ticker-section div.bg-black span.text-emerald-300 {
+  color: #6ee7b7 !important; /* text-emerald-300 equivalent */
+}
+
+html.dark #student-hero-banner #hero-live-ticker-section div.bg-black span.text-indigo-300 {
+  color: #a5b4fc !important; /* text-indigo-300 equivalent */
+}
+
+html.dark #student-hero-banner #hero-live-ticker-section div.bg-black span.text-brand-yellow {
+  color: #fbbf24 !important; /* text-brand-yellow equivalent */
+}
+
+html.dark #student-hero-banner #hero-live-ticker-section div.bg-black span.text-blue-300 {
+  color: #93c5fd !important; /* text-blue-300 equivalent */
+}
+
+html.dark #student-hero-banner #hero-live-ticker-section div.bg-black span.text-zinc-400 {
+  color: #a1a1aa !important; /* text-zinc-400 equivalent */
+}
+
+
 
