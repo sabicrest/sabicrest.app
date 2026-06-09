@@ -382,6 +382,7 @@ export default function App() {
                   <div className="relative">
                     <Icon 
                       size={24} 
+                      strokeWidth={1.5}
                       className={`transition-colors ${
                         isActive 
                           ? 'text-black' 
