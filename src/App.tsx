@@ -343,18 +343,26 @@ export default function App() {
       </main>
 
       {/* Mobile & Tablet Elegant Sticky Floating Glass Bottom Nav Bar */}
-      {currentUser.role === 'student' && (
+      {(currentUser.role === 'student' || currentUser.role === 'trainer') && (
         <div 
           id="sabicrest-mobile-bottom-nav" 
           className="lg:hidden fixed bottom-4 left-4 right-4 z-50 h-16 bg-white dark:bg-zinc-950 border border-zinc-200/50 dark:border-zinc-800/60 shadow-[0_8px_32px_rgba(0,0,0,0.12)] rounded-2xl flex items-center justify-around px-2"
         >
-          {[
-            { id: 'dashboard', label: 'Home', icon: Home },
-            { id: 'courses', label: 'Courses', icon: BookOpen },
-            { id: 'messaging', label: 'Chats', icon: MessageSquare, badge: chatCount > 0 ? chatCount : 0 },
-            { id: 'tasks', label: 'Tasks', icon: FileText },
-            { id: 'profile', label: 'Profile', icon: UserIcon },
-          ].map(item => {
+          {(currentUser.role === 'student'
+            ? [
+                { id: 'dashboard', label: 'Home', icon: Home },
+                { id: 'courses', label: 'Courses', icon: BookOpen },
+                { id: 'messaging', label: 'Chats', icon: MessageSquare, badge: chatCount > 0 ? chatCount : 0 },
+                { id: 'tasks', label: 'Tasks', icon: FileText },
+                { id: 'profile', label: 'Profile', icon: UserIcon },
+              ]
+            : [
+                { id: 'dashboard', label: 'Space', icon: LayoutDashboard },
+                { id: 'messaging', label: 'Chats', icon: MessageSquare, badge: chatCount > 0 ? chatCount : 0 },
+                { id: 'scheduling', label: 'Schedules', icon: CalendarDays },
+                { id: 'profile', label: 'Settings', icon: Settings },
+              ]
+          ).map(item => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
@@ -362,12 +370,14 @@ export default function App() {
                 key={item.id}
                 onClick={() => {
                   setActiveTab(item.id);
-                  if (item.id === 'courses') {
-                    window.dispatchEvent(new CustomEvent('sabicrest-subtab-change', { detail: 'register' }));
-                  } else if (item.id === 'tasks') {
-                    window.dispatchEvent(new CustomEvent('sabicrest-subtab-change', { detail: 'assignments' }));
-                  } else if (item.id === 'dashboard') {
-                    window.dispatchEvent(new CustomEvent('sabicrest-subtab-change', { detail: 'assignments' }));
+                  if (currentUser.role === 'student') {
+                    if (item.id === 'courses') {
+                      window.dispatchEvent(new CustomEvent('sabicrest-subtab-change', { detail: 'register' }));
+                    } else if (item.id === 'tasks') {
+                      window.dispatchEvent(new CustomEvent('sabicrest-subtab-change', { detail: 'assignments' }));
+                    } else if (item.id === 'dashboard') {
+                      window.dispatchEvent(new CustomEvent('sabicrest-subtab-change', { detail: 'assignments' }));
+                    }
                   }
                 }}
                 className="flex-1 flex items-center justify-center h-full py-1 relative cursor-pointer"

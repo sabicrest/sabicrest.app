@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { User, Assignment, Curriculum } from '../types';
 import { db } from '../db';
 import VerifiedBadge from './VerifiedBadge';
@@ -14,8 +14,9 @@ import {
   BookOpen, FileText, CheckCircle2, Award, ClipboardCheck, Sparkles, Plus, AlertCircle, 
   FileCheck, HelpCircle, Settings, Sliders, Bell, User as UserIcon, Mail, Phone, MapPin, Activity, X, Search, ArrowUpRight,
   Lock, Unlock, Laptop, Tractor, Camera, Check, Play, Upload, Globe, Compass, Shield, MessageSquare, Video as VideoIcon, Hourglass,
-  Volume2, VolumeX, Pencil, ChevronDown, ChevronUp, Eye, Flame
+  Volume2, VolumeX, Pencil, ChevronDown, ChevronUp, Eye, Flame, Clock
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface DashboardTrainerProps {
   currentUser: User;
@@ -103,6 +104,129 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
   const [assigningInProgress, setAssigningInProgress] = useState(false);
   const [dashboardSearchQuery, setDashboardSearchQuery] = useState('');
   const [coursesSearchQuery, setCoursesSearchQuery] = useState('');
+
+  // Active live update index for rotating student dashboard style activity banner
+  const [activeUpdateIdx, setActiveUpdateIdx] = useState(0);
+
+  // Generate live updates using users' first names where appropriate along with Google News updates
+  const liveUpdates = useMemo(() => {
+    const students = db.getUsers().filter(u => u.role === 'student');
+    const getFirst = (name: string) => name.split(' ')[0] || 'A student';
+    
+    // Fallback names if database has few students
+    const defaultNames = ['Tobi', 'Amara', 'Musa', 'Ngozi', 'Sani', 'Yinka', 'Chioma', 'Kelechi', 'Femi', 'Aisha'];
+    
+    const studentUpdates: { type: 'join' | 'online' | 'submit'; text: string; category: string }[] = [];
+    
+    students.forEach((st, i) => {
+      const name = getFirst(st.name);
+      if (i % 3 === 0) {
+        studentUpdates.push({
+          type: 'join',
+          text: `${name} just registered for the curriculum cohort.`,
+          category: 'NEW MEMBER'
+        });
+      } else if (i % 3 === 1) {
+        studentUpdates.push({
+          type: 'online',
+          text: `${name} is active and designing spatial layouts in the workspace.`,
+          category: 'ACTIVE NOW'
+        });
+      } else {
+        studentUpdates.push({
+          type: 'submit',
+          text: `${name} successfully uploaded a practice assignment.`,
+          category: 'SUBMISSION'
+        });
+      }
+    });
+    
+    // Populate with fallback names if needed
+    if (studentUpdates.length < 6) {
+      defaultNames.forEach((name, i) => {
+        if (i % 3 === 0) {
+          studentUpdates.push({
+            type: 'join',
+            text: `${name} just registered for the curriculum cohort.`,
+            category: 'NEW MEMBER'
+          });
+        } else if (i % 3 === 1) {
+          studentUpdates.push({
+            type: 'online',
+            text: `${name} is active and designing spatial layouts in the workspace.`,
+            category: 'ACTIVE NOW'
+          });
+        } else {
+          studentUpdates.push({
+            type: 'submit',
+            text: `${name} successfully uploaded a practice assignment.`,
+            category: 'SUBMISSION'
+          });
+        }
+      });
+    }
+
+    // Google News Updates
+    const newsUpdates = [
+      {
+        type: 'news' as const,
+        text: 'Google Maps and Location technology see massive adoption across new West African delivery startups.',
+        category: 'GOOGLE NEWS // TRENDS'
+      },
+      {
+        type: 'news' as const,
+        text: 'Specialized enterprise micro-certificates outperform traditional degrees in global tech hires for 2026.',
+        category: 'GOOGLE NEWS // CAREERS'
+      },
+      {
+        type: 'news' as const,
+        text: 'Vocational business programs in design, bookkeeping, and solar alignment report record-high enrollment.',
+        category: 'GOOGLE NEWS // BUSINESS'
+      },
+      {
+        type: 'news' as const,
+        text: 'Ais-dev environment and full-stack proxies securely isolate critical third-party API keys on the server.',
+        category: 'GOOGLE NEWS // SECURITIES'
+      },
+      {
+        type: 'news' as const,
+        text: 'Agribusiness entrepreneurs transition to soil-to-market direct automation to maximize client margins.',
+        category: 'GOOGLE NEWS // AGRI-TECH'
+      },
+      {
+        type: 'news' as const,
+        text: 'New vocational regulations prioritize portfolio proofs over standard resumes in construction hiring.',
+        category: 'GOOGLE NEWS // INDUSTRY'
+      },
+      {
+        type: 'news' as const,
+        text: 'Professional beauty operations report a 40% growth in high-value online customer bookings.',
+        category: 'GOOGLE NEWS // COMMERCE'
+      }
+    ];
+
+    // Interleave the news items to ensure they make up the majority/mostly news items
+    const combined: { type: 'join' | 'online' | 'submit' | 'news'; text: string; category: string }[] = [];
+    let newsIdx = 0;
+    let userIdx = 0;
+    
+    while (newsIdx < newsUpdates.length || userIdx < studentUpdates.length) {
+      if (newsIdx < newsUpdates.length) combined.push(newsUpdates[newsIdx++]);
+      if (newsIdx < newsUpdates.length) combined.push(newsUpdates[newsIdx++]);
+      if (userIdx < studentUpdates.length) combined.push(studentUpdates[userIdx++]);
+    }
+    
+    return combined;
+  }, []);
+
+  // Automatic Cycler for live updates feed (10 seconds)
+  useEffect(() => {
+    if (liveUpdates.length === 0) return;
+    const timer = setInterval(() => {
+      setActiveUpdateIdx((prev) => (prev + 1) % liveUpdates.length);
+    }, 10000);
+    return () => clearInterval(timer);
+  }, [liveUpdates.length]);
 
   // Interactive Trainer Verification Portal Step State
   const [showVerificationPortal, setShowVerificationPortal] = useState(false);
@@ -561,57 +685,130 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
   return (
     <div id="trainer-dashboard-root" className="py-6 max-w-7xl mx-auto px-4 select-none">
       
-      {/* Header Banner - Upgraded to match Settings aesthetics */}
-      <div id="trainer-hero-banner" className="bg-brand-black dark:bg-brand-yellow text-white dark:text-black rounded-3xl p-8 mb-8 relative overflow-hidden shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border border-transparent dark:border-white">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-zinc-800/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
-        <div className="relative z-10 space-y-2 max-w-2xl">
-          <span className="text-[10px] uppercase font-mono tracking-widest bg-zinc-800 dark:bg-black/10 text-white dark:text-black px-3 py-1 rounded-full border border-zinc-700 dark:border-black/20">
-            Welcome back
-          </span>
-          <h2 className="text-2xl md:text-3xl font-light tracking-tight flex items-center gap-1.5 flex-wrap text-white dark:text-black">
-            Trainer dashboard // <span className="font-semibold text-brand-yellow dark:text-black">{currentUser.name}</span>
-            {currentUser.verified && <VerifiedBadge />}
-          </h2>
-          <p className="text-xs text-white dark:text-black/85 font-light leading-relaxed opacity-95">
-            {getQuoteOfTheDay()}
-          </p>
+      {/* Header Banner - Upgraded to match Student Dashboard Aesthetics */}
+      <div id="trainer-hero-banner" className="bg-gradient-to-br from-zinc-950 via-zinc-900 to-black dark:bg-brand-yellow dark:from-brand-yellow dark:via-brand-yellow dark:to-brand-yellow text-white dark:text-black rounded-3xl p-5 xs:p-7 md:p-10 mb-8 relative overflow-hidden border border-zinc-800/40 dark:border-white shadow-xl grid grid-cols-1 md:grid-cols-[13fr_7fr] gap-5 md:gap-10 items-stretch">
+        {/* Glow effect & subtle brand highlights */}
+        <div className="absolute -top-32 -right-32 w-80 h-80 bg-brand-yellow/10 rounded-full blur-3xl pointer-events-none dark:hidden" />
+        <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-amber-50/5 rounded-full blur-3xl pointer-events-none dark:hidden" />
+        <div className="absolute right-12 top-4 w-[2px] h-20 bg-gradient-to-b from-brand-yellow/40 to-transparent dark:from-black/10 blur-[1px] pointer-events-none" />
+        <div className="absolute right-24 bottom-4 w-[2px] h-12 bg-gradient-to-t from-amber-500/30 to-transparent dark:from-black/15 blur-[1.5px] pointer-events-none dark:hidden" />
+        
+        {/* Left container: greeting and actions */}
+        <div className="relative z-10 flex flex-col justify-between space-y-5">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-3">
+              <span className="text-[9px] xs:text-[11px] sm:text-xs font-mono tracking-widest uppercase bg-zinc-805/85 dark:bg-black/10 text-brand-yellow dark:text-black px-2 py-0.5 sm:px-3 sm:py-1 rounded-md border border-zinc-700/60 dark:border-black/20 flex items-center gap-1 shrink-0 font-bold">
+                <Sparkles size={10} className="text-brand-yellow dark:text-black animate-pulse" /> Welcome back
+              </span>
+              <span className="text-[9px] xs:text-[11px] sm:text-xs font-mono tracking-widest uppercase bg-zinc-805/50 dark:bg-black/5 text-white dark:text-black/85 px-2 py-0.5 sm:px-3 sm:py-1 rounded-md border border-zinc-800 dark:border-black/10 flex items-center gap-1 shrink-0 font-bold">
+                ⭐ {trainerRole}
+              </span>
+            </div>
+            
+            <h2 className="text-[28px] xs:text-[36px] sm:text-[44px] md:text-5xl lg:text-6xl font-light tracking-tight pr-1 leading-tight break-words text-white dark:text-black">
+              Hello,{' '}
+              <span className="font-semibold text-brand-yellow dark:text-black bg-gradient-to-r from-brand-yellow via-amber-400 to-amber-300 dark:from-black dark:to-neutral-900 bg-clip-text text-transparent dark:bg-none">
+                {currentUser.name}
+              </span>
+              {currentUser.verified && <VerifiedBadge />}
+            </h2>
+            
+            <p className="text-[11px]/[15px] xs:text-[13px]/[18px] sm:text-sm md:text-base text-white dark:text-black/85 font-light leading-relaxed max-w-xl opacity-95">
+              {getQuoteOfTheDay()}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5 pt-2">
+            <button
+              id="assign-assignment-trigger"
+              onClick={() => setShowAssignModal(true)}
+              className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-850 text-white border border-zinc-805 dark:border-black/10 rounded-xl py-2.5 px-4 text-xs font-light tracking-wide uppercase transition-all cursor-pointer shadow-xs focus-ring"
+            >
+              <Plus size={14} className="text-zinc-400 font-normal" /> Assign Student Assignment
+            </button>
+
+            <button
+              id="propose-curriculum-trigger"
+              onClick={() => {
+                if (!currentUser.verified) {
+                  setShowVerificationPortal(true);
+                  showToast("Verification Required! Complete the 3 interactive cards to unlock course proposals.");
+                } else {
+                  setShowCurriculumModal(true);
+                }
+              }}
+              className={`flex items-center gap-2 rounded-xl py-2.5 px-4 text-xs font-semibold tracking-wide uppercase transition-all cursor-pointer shadow-xs focus-ring ${
+                currentUser.verified 
+                  ? 'bg-brand-yellow hover:bg-amber-405 text-brand-black dark:bg-black dark:text-brand-yellow dark:hover:bg-neutral-900'
+                  : 'bg-zinc-800 hover:bg-zinc-705 text-zinc-300 border border-zinc-700 dark:bg-black/20 dark:text-black dark:border-black/10'
+              }`}
+            >
+              {currentUser.verified ? (
+                <>
+                  <Plus size={14} className="font-semibold" /> Propose Curriculum
+                </>
+              ) : (
+                <>
+                  <Lock size={14} className="text-brand-yellow dark:text-black font-semibold" /> Get Verified
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
-        <div className="relative z-10 flex flex-wrap items-center gap-2 shrink-0">
-          <button
-            id="assign-assignment-trigger"
-            onClick={() => setShowAssignModal(true)}
-            className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 rounded-xl py-2.5 px-4 text-xs font-light tracking-wide uppercase transition-all cursor-pointer shadow-xs focus-ring"
-          >
-            <Plus size={14} className="text-zinc-400 font-normal" /> Assign Student Assignment
-          </button>
+        {/* Right container: Live news and activity feed (Mobile-First responsive) */}
+        <div className="relative z-10 flex flex-col justify-center items-stretch border-t md:border-t-0 md:border-l border-zinc-800/40 dark:border-black/10 pt-5 md:pt-0 pl-0 md:pl-6 lg:pl-10">
+          <div id="hero-live-ticker-section" className="space-y-4 w-full h-full flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[10px] xs:text-[11px] sm:text-xs uppercase font-mono tracking-widest text-brand-black dark:text-zinc-900 font-bold flex items-center gap-1.5 select-none">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-yellow opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-yellow"></span>
+                </span>
+                Live updates
+              </h3>
+              <span className="text-[8px] xs:text-[9px] font-mono font-bold text-zinc-400 dark:text-neutral-500 tracking-wider">
+                AUTO-CYCLE // 10S
+              </span>
+            </div>
 
-          <button
-            id="propose-curriculum-trigger"
-            onClick={() => {
-              if (!currentUser.verified) {
-                setShowVerificationPortal(true);
-                showToast("Verification Required! Complete the 3 interactive cards to unlock course proposals.");
-              } else {
-                setShowCurriculumModal(true);
-              }
-            }}
-            className={`flex items-center gap-2 rounded-xl py-2.5 px-4 text-xs font-semibold tracking-wide uppercase transition-all cursor-pointer shadow-xs focus-ring ${
-              currentUser.verified 
-                ? 'bg-brand-yellow hover:bg-amber-400 text-brand-black'
-                : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'
-            }`}
-          >
-            {currentUser.verified ? (
-              <>
-                <Plus size={14} className="text-brand-black font-semibold" /> Propose Curriculum
-              </>
-            ) : (
-              <>
-                <Lock size={14} className="text-brand-yellow font-semibold" /> Get Verified
-              </>
-            )}
-          </button>
+            <div id="live-updates-inner-card" className="bg-black text-white border border-brand-yellow p-4 rounded-2xl min-h-[140px] xs:min-h-[150px] md:h-44 flex flex-col justify-between relative overflow-hidden shadow-lg">
+              <AnimatePresence mode="wait">
+                {(() => {
+                  const update = liveUpdates[activeUpdateIdx] || liveUpdates[0];
+                  if (!update) return null;
+                  return (
+                    <motion.div
+                      key={activeUpdateIdx}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -12 }}
+                      transition={{ duration: 0.35, ease: 'easeInOut' }}
+                      className="h-full flex flex-col justify-between"
+                    >
+                      <div>
+                        <span className={`text-[8px] xs:text-[9px] font-mono tracking-widest font-bold px-2 py-0.5 rounded-md inline-block ${
+                          update.type === 'news' 
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/10' 
+                            : update.type === 'join'
+                            ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/10'
+                            : update.type === 'online'
+                            ? 'bg-amber-400/20 text-brand-yellow border border-amber-400/10'
+                            : 'bg-blue-400/20 text-blue-300 border border-blue-400/10'
+                        }`}>
+                          {update.category}
+                        </span>
+                        
+                        <p className="text-[11px] xs:text-xs sm:text-xs md:text-sm text-zinc-105 font-light leading-relaxed mt-2.5 xs:mt-4 line-clamp-3 md:line-clamp-4">
+                          {update.text}
+                        </p>
+                      </div>
+                    </motion.div>
+                  );
+                })()}
+              </AnimatePresence>
+            </div>
+          </div>
         </div>
       </div>
 
