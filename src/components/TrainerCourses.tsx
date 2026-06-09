@@ -8,7 +8,8 @@ import { User, Curriculum, CourseEnrollment } from '../types';
 import { db } from '../db';
 import { 
   BookOpen, Plus, Search, Sparkles, Filter, ChevronDown, CheckCircle2, AlertCircle, XCircle, Clock,
-  DollarSign, Users, Award, BookOpenCheck, ChevronUp, FileText, Sliders, Camera, Upload, X, ArrowUpRight, Check
+  DollarSign, Users, Award, BookOpenCheck, ChevronUp, FileText, Sliders, Camera, Upload, X, ArrowUpRight, Check,
+  Calendar, Lock, Unlock, Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -22,6 +23,16 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
   const [enrollments, setEnrollments] = useState<CourseEnrollment[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'pending' | 'rejected'>('all');
+
+  // Tab control state
+  const [currentTab, setCurrentTab] = useState<'courses' | 'roster'>('courses');
+
+  // Cohort & Roster filters state
+  const [rosterSearch, setRosterSearch] = useState('');
+  const [rosterCourseFilter, setRosterCourseFilter] = useState<string>('all');
+  const [rosterStatusFilter, setRosterStatusFilter] = useState<'all' | 'active' | 'completed'>('all');
+  const [rosterDateFilter, setRosterDateFilter] = useState<string>(''); // YYYY-MM-DD
+  const [cohortStartDateInput, setCohortStartDateInput] = useState<Record<string, string>>({});
 
   // Interactive detail accordions
   const [expandedSyllabusId, setExpandedSyllabusId] = useState<string | null>(null);
@@ -85,6 +96,142 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
 
     // Notify of success and refresh state
     loadData();
+  };
+
+  // Activate cohort start date (requires min 1 active student registered)
+  const handleActivateCohort = (courseId: string, selectedDate: string) => {
+    if (!selectedDate) {
+      alert("Please select a start date before activating the cohort.");
+      return;
+    }
+    const course = courses.find(c => c.id === courseId);
+    if (!course) return;
+
+    // Verify there is at least one active student
+    const approvedCount = getApprovedStudentsCount(courseId);
+    if (approvedCount < 1) {
+      alert("Cannot activate cohort. A cohort must have at least 1 registered and approved student before starting.");
+      return;
+    }
+
+    const updated: Curriculum = {
+      ...course,
+      cohortStartDate: selectedDate
+    };
+    db.updateCurriculum(updated);
+    
+    db.addNotification({
+      userId: currentUser.id,
+      title: 'Cohort Start Date Set',
+      message: `The official cohort start date for "${course.title}" has been activated on ${selectedDate}.`,
+      type: 'curriculum'
+    });
+
+    loadData();
+  };
+
+  // Toggle completion status for registered student
+  const handleToggleStudentCompletion = (enr: CourseEnrollment) => {
+    const isNowCompleted = !enr.completed;
+    const updated: CourseEnrollment = {
+      ...enr,
+      completed: isNowCompleted,
+      completedAt: isNowCompleted ? new Date().toISOString() : undefined
+    };
+    db.updateEnrollment(updated);
+
+    db.addNotification({
+      userId: enr.studentId,
+      title: isNowCompleted ? 'Course Cohort Completed!' : 'Cohort Progress Re-opened',
+      message: isNowCompleted 
+        ? `Congratulations! ${currentUser.name} marked your attendance and coursework for "${enr.courseTitle}" as successfully completed.`
+        : `Your progress status for "${enr.courseTitle}" has been updated by the instructor.`,
+      type: 'grade'
+    });
+
+    loadData();
+  };
+
+  // Process early 65% draw out of 85% within 48 hours of starting
+  const handleProcessEarlyDraw = (courseId: string) => {
+    const course = courses.find(c => c.id === courseId);
+    if (!course) return;
+
+    const updated: Curriculum = {
+      ...course,
+      earlyDrawProcessed: true
+    };
+    db.updateCurriculum(updated);
+
+    db.addNotification({
+      userId: currentUser.id,
+      title: '65% Early Payout Processed',
+      message: `Successfully processed an early draw of 65% course fee (₦${(course.price * 0.65).toLocaleString()}) for tech cohort "${course.title}".`,
+      type: 'system'
+    });
+
+    loadData();
+  };
+
+  // Process full pay draw (full 85% or remaining 20% balance) within 48 hours of ending
+  const handleProcessFullDraw = (courseId: string) => {
+    const course = courses.find(c => c.id === courseId);
+    if (!course) return;
+
+    const updated: Curriculum = {
+      ...course,
+      fullDrawProcessed: true
+    };
+    db.updateCurriculum(updated);
+
+    db.addNotification({
+      userId: currentUser.id,
+      title: 'Full Payout Balance Processed',
+      message: `Successfully accessed the full remaining payout balance of ₦${(course.price * (course.earlyDrawProcessed ? 0.20 : 0.85)).toLocaleString()} for "${course.title}".`,
+      type: 'system'
+    });
+
+    loadData();
+  };
+
+  // Utility to compute timeline dates & hour differences for payout windows
+  const getCohortTimeline = (course: Curriculum) => {
+    if (!course.cohortStartDate) return null;
+    const start = new Date(course.cohortStartDate);
+    const durationWeeks = course.durationWeeks || 8;
+    const durationMs = durationWeeks * 7 * 24 * 3600 * 1000;
+    const end = new Date(start.getTime() + durationMs);
+    const now = new Date();
+
+    const startFormatted = start.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    const endFormatted = end.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+    const hoursSinceStart = (now.getTime() - start.getTime()) / (3600 * 1000);
+    const hoursSinceEnd = (now.getTime() - end.getTime()) / (3600 * 1000);
+
+    const hasBegun = hoursSinceStart >= 0;
+    const hasEnded = hoursSinceEnd >= 0;
+
+    // Early draw window: within 48 hours after begins
+    const earlyDrawOpen = hasBegun && hoursSinceStart <= 48;
+    const earlyHoursLeft = earlyDrawOpen ? Math.max(0, 48 - hoursSinceStart) : 0;
+
+    // Full draw window: within 48 hours after ends
+    const fullDrawOpen = hasEnded && hoursSinceEnd <= 48;
+    const fullHoursLeft = fullDrawOpen ? Math.max(0, 48 - hoursSinceEnd) : 0;
+
+    return {
+      startFormatted,
+      endFormatted,
+      hasBegun,
+      hasEnded,
+      earlyDrawOpen,
+      earlyHoursLeft,
+      fullDrawOpen,
+      fullHoursLeft,
+      hoursSinceStart,
+      hoursSinceEnd
+    };
   };
 
   // Syllabus list helpers
@@ -257,37 +404,60 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
         </div>
       </div>
 
-      {/* Metrics Section: Elegant grid made fully mobile-first */}
+      {/* Metrics Section: Elegant grid made fully mobile-first and clickable */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {/* Total Courses Metric */}
-        <div className="bg-zinc-50/50 border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800/60 p-3 h-24 rounded-2xl flex flex-col justify-between">
+        <button 
+          onClick={() => {
+            setCurrentTab('courses');
+            setStatusFilter('all');
+          }}
+          className="text-left w-full bg-zinc-50/50 border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800/60 p-3 h-24 rounded-2xl flex flex-col justify-between hover:bg-zinc-100/80 dark:hover:bg-zinc-850/60 transition-all active:scale-[0.98] cursor-pointer"
+        >
           <BookOpenCheck size={16} className="text-zinc-400 dark:text-zinc-500" />
           <div>
-            <div className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono uppercase tracking-wide">Courses Created</div>
+            <div className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono uppercase tracking-wide flex items-center gap-1">Courses Created <ArrowUpRight size={10} className="stroke-[1.5]" /></div>
             <div className="text-lg font-semibold text-neutral-900 dark:text-zinc-50">{totalCourses}</div>
           </div>
-        </div>
+        </button>
 
         {/* Live Courses Metric */}
-        <div className="bg-zinc-50/50 border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800/60 p-3 h-24 rounded-2xl flex flex-col justify-between">
+        <button 
+          onClick={() => {
+            setCurrentTab('courses');
+            setStatusFilter('approved');
+          }}
+          className="text-left w-full bg-zinc-50/50 border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800/60 p-3 h-24 rounded-2xl flex flex-col justify-between hover:bg-zinc-100/80 dark:hover:bg-zinc-850/60 transition-all active:scale-[0.98] cursor-pointer"
+        >
           <Award size={16} className="text-emerald-500" />
           <div>
-            <div className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono uppercase tracking-wide">Approved / Live</div>
+            <div className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono uppercase tracking-wide flex items-center gap-1">Approved / Live <ArrowUpRight size={10} className="stroke-[1.5]" /></div>
             <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">{approvedCourses}</div>
           </div>
-        </div>
+        </button>
 
         {/* Students Enrolled Metric */}
-        <div className="bg-zinc-50/50 border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800/60 p-3 h-24 rounded-2xl flex flex-col justify-between">
+        <button 
+          onClick={() => {
+            setCurrentTab('roster');
+            setRosterStatusFilter('all');
+          }}
+          className="text-left w-full bg-zinc-50/50 border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800/60 p-3 h-24 rounded-2xl flex flex-col justify-between hover:bg-zinc-100/80 dark:hover:bg-zinc-850/60 transition-all active:scale-[0.98] cursor-pointer"
+        >
           <Users size={16} className="text-indigo-500" />
           <div>
-            <div className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono uppercase tracking-wide">Students Active</div>
+            <div className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono uppercase tracking-wide flex items-center gap-1">Students Active <ArrowUpRight size={10} className="stroke-[1.5]" /></div>
             <div className="text-lg font-semibold text-indigo-600 dark:text-indigo-400">{totalStudentsEnrolled}</div>
           </div>
-        </div>
+        </button>
 
         {/* Projected Revenue Metric - Gross Payout details */}
-        <div className="bg-amber-50/20 border border-amber-100/60 dark:bg-zinc-900 dark:border-zinc-800/60 p-3 h-auto rounded-3xl flex flex-col justify-between space-y-1 select-none">
+        <button 
+          onClick={() => {
+            setCurrentTab('roster');
+          }}
+          className="text-left w-full bg-amber-50/20 border border-amber-100/60 dark:bg-zinc-900 dark:border-zinc-800/60 p-3 h-auto rounded-2xl flex flex-col justify-between space-y-1 hover:bg-amber-50/40 dark:hover:bg-zinc-850/60 transition-all active:scale-[0.98] cursor-pointer select-none"
+        >
           <div className="flex items-center justify-between">
             <DollarSign size={16} className="text-amber-600 dark:text-brand-yellow" />
             <span className="text-[8px] bg-amber-100/60 text-amber-800 dark:bg-amber-950/40 dark:text-brand-yellow font-mono px-1.5 py-0.5 rounded uppercase leading-none font-bold">Trainer 85%</span>
@@ -302,286 +472,644 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
               Total Cohort Gross: ₦{totalCohortsEligiblePriceSum.toLocaleString()}
             </p>
           </div>
-        </div>
+        </button>
       </div>
 
-      {/* Control filters panel - highly touch and mobile optimized */}
-      <div className="space-y-3">
-        {/* Search tool block */}
-        <div className="relative">
-          <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search size={14} className="text-zinc-400" />
-          </span>
-          <input
-            type="text"
-            placeholder="Search matching course title, summary..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full text-xs font-light bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl pl-9 pr-4 py-2.5 outline-hidden focus:border-brand-yellow/80"
-          />
-        </div>
+      {/* Tab control headers */}
+      <div className="flex border-b border-zinc-100 dark:border-zinc-900 pb-px">
+        <button
+          onClick={() => setCurrentTab('courses')}
+          className={`flex-1 sm:flex-initial text-center sm:text-left flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+            currentTab === 'courses'
+              ? 'border-neutral-900 text-neutral-900 dark:border-brand-yellow dark:text-brand-yellow font-bold'
+              : 'border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200'
+          }`}
+        >
+          <Sliders size={14} /> My Course Proposals & Curricula
+        </button>
+        <button
+          onClick={() => setCurrentTab('roster')}
+          className={`flex-1 sm:flex-initial text-center sm:text-left flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+            currentTab === 'roster'
+              ? 'border-neutral-900 text-neutral-900 dark:border-brand-yellow dark:text-brand-yellow font-bold'
+              : 'border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200'
+          }`}
+        >
+          <Users size={14} /> Cohort History & Roster Audits
+        </button>
+          {currentTab === 'courses' ? (
+        <>
+          {/* Control filters panel - highly touch and mobile optimized */}
+          <div className="space-y-3">
+            {/* Search tool block */}
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search size={14} className="text-zinc-400" />
+              </span>
+              <input
+                type="text"
+                placeholder="Search matching course title, summary..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full text-xs font-light bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl pl-9 pr-4 py-2.5 outline-hidden focus:border-brand-yellow/80"
+              />
+            </div>
 
-        {/* Filter Scrollable Hub Pills */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none scroll-smooth">
-          {[
-            { id: 'all', label: 'All Courses' },
-            { id: 'approved', label: 'Active/Live' },
-            { id: 'pending', label: 'Pending Review' },
-            { id: 'rejected', label: 'Review Alerts' }
-          ].map(pill => (
-            <button
-              key={pill.id}
-              onClick={() => setStatusFilter(pill.id as any)}
-              className={`text-[11px] font-medium tracking-wide uppercase px-3.5 py-2 rounded-xl border shrink-0 transition-colors cursor-pointer ${
-                statusFilter === pill.id
-                  ? 'bg-neutral-900 border-neutral-900 text-white dark:bg-brand-yellow dark:text-neutral-950 dark:border-brand-yellow font-semibold'
-                  : 'bg-white border-zinc-100 text-zinc-500 hover:bg-zinc-50 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-400'
-              }`}
-            >
-              {pill.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Main interactive Courses Feed stream */}
-      <div className="space-y-4">
-        {filteredCourses.length === 0 ? (
-          <div className="border border-dashed border-zinc-200 dark:border-zinc-850 rounded-2xl px-6 py-12 text-center bg-zinc-50/25">
-            <AlertCircle className="mx-auto text-zinc-300 dark:text-zinc-650" size={32} />
-            <h3 className="text-xs font-semibold text-neutral-800 dark:text-zinc-300 mt-2">No matching curriculum elements found</h3>
-            <p className="text-[11px] text-zinc-400 mt-1 max-w-xs mx-auto">
-              Propose a new lesson path using the "Propose" action above.
-            </p>
+            {/* Filter Scrollable Hub Pills */}
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none scroll-smooth">
+              {[
+                { id: 'all', label: 'All Courses' },
+                { id: 'approved', label: 'Active/Live' },
+                { id: 'pending', label: 'Pending Review' },
+                { id: 'rejected', label: 'Review Alerts' }
+              ].map(pill => (
+                <button
+                  key={pill.id}
+                  onClick={() => setStatusFilter(pill.id as any)}
+                  className={`text-[11px] font-medium tracking-wide uppercase px-3.5 py-2 rounded-xl border shrink-0 transition-colors cursor-pointer ${
+                    statusFilter === pill.id
+                      ? 'bg-neutral-900 border-neutral-900 text-white dark:bg-brand-yellow dark:text-neutral-950 dark:border-brand-yellow font-semibold'
+                      : 'bg-white border-zinc-100 text-zinc-500 hover:bg-zinc-50 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-400'
+                  }`}
+                >
+                  {pill.label}
+                </button>
+              ))}
+            </div>
           </div>
-        ) : (
-          filteredCourses.map(col => {
-            const courseEnrollments = enrollments.filter(e => e.courseId === col.id);
-            const verifiedStudents = courseEnrollments.filter(e => e.paymentStatus === 'approved');
-            const pendingVerifyStudents = courseEnrollments.filter(e => e.paymentStatus === 'pending_verification');
 
-            return (
-              <div 
-                key={col.id}
-                className="bg-white border border-zinc-100 dark:bg-zinc-950 dark:border-zinc-900 rounded-2xl overflow-hidden shadow-xs border-l-4 border-l-black dark:border-l-brand-yellow active:scale-[0.99] transition-transform"
-              >
-                {/* Course Header card info component */}
-                <div className="p-4 sm:p-5 flex flex-col md:flex-row gap-4 items-stretch md:items-center">
-                  
-                  {/* Backdrop or Image */}
-                  <div className="w-full md:w-36 h-28 shrink-0 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-zinc-150/40 dark:border-zinc-850 relative">
-                    {col.imageUrl ? (
-                      <img 
-                        src={col.imageUrl} 
-                        alt="Course cover" 
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center bg-neutral-900 text-zinc-300 gap-1">
-                        <BookOpen size={20} className="text-zinc-500" />
-                        <span className="text-[9px] font-mono tracking-widest text-zinc-400">TEMPLATE</span>
+          {/* Main interactive Courses Feed stream */}
+          <div className="space-y-4">
+            {filteredCourses.length === 0 ? (
+              <div className="border border-dashed border-zinc-200 dark:border-zinc-850 rounded-2xl px-6 py-12 text-center bg-zinc-50/25">
+                <AlertCircle className="mx-auto text-zinc-300 dark:text-zinc-650" size={32} />
+                <h3 className="text-xs font-semibold text-neutral-800 dark:text-zinc-300 mt-2">No matching curriculum elements found</h3>
+                <p className="text-[11px] text-zinc-400 mt-1 max-w-xs mx-auto">
+                  Propose a new lesson path using the "Propose" action above.
+                </p>
+              </div>
+            ) : (
+              filteredCourses.map(col => {
+                const courseEnrollments = enrollments.filter(e => e.courseId === col.id);
+                const verifiedStudents = courseEnrollments.filter(e => e.paymentStatus === 'approved');
+                const pendingVerifyStudents = courseEnrollments.filter(e => e.paymentStatus === 'pending_verification');
+
+                return (
+                  <div 
+                    key={col.id}
+                    className="bg-white border border-zinc-100 dark:bg-zinc-950 dark:border-zinc-900 rounded-2xl overflow-hidden shadow-xs border-l-4 border-l-black dark:border-l-brand-yellow active:scale-[0.99] transition-transform"
+                  >
+                    {/* Course Header card info component */}
+                    <div className="p-4 sm:p-5 flex flex-col md:flex-row gap-4 items-stretch md:items-center">
+                      
+                      {/* Backdrop or Image */}
+                      <div className="w-full md:w-36 h-28 shrink-0 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-zinc-150/40 dark:border-zinc-850 relative">
+                        {col.imageUrl ? (
+                          <img 
+                            src={col.imageUrl} 
+                            alt="Course cover" 
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center bg-neutral-900 text-zinc-300 gap-1">
+                            <BookOpen size={20} className="text-zinc-500" />
+                            <span className="text-[9px] font-mono tracking-widest text-zinc-400">TEMPLATE</span>
+                          </div>
+                        )}
+                        <span className="absolute bottom-2 left-2 text-[9px] font-mono font-medium tracking-wide bg-neutral-900/85 backdrop-blur-xs text-white px-2 py-0.5 rounded">
+                          ₦{col.price?.toLocaleString()}
+                        </span>
+                      </div>
+
+                      {/* Text Description fields */}
+                      <div className="flex-1 space-y-2 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[9px] font-mono text-zinc-455 dark:text-zinc-555 uppercase bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 px-2 py-0.5 rounded">
+                              {col.category}
+                            </span>
+                            
+                            {col.status === 'approved' && (
+                              <span className="text-[9px] font-mono uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 flex items-center gap-1 font-semibold">
+                                <span className="h-1 w-1 bg-emerald-500 rounded-full animate-ping"></span> Live/Approved
+                              </span>
+                            )}
+                            {col.status === 'pending' && (
+                              <span className="text-[9px] font-mono uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-semibold animate-pulse">
+                                Pending Review
+                              </span>
+                            )}
+                            {col.status === 'rejected' && (
+                              <span className="text-[9px] font-mono uppercase px-2 py-0.5 rounded-full bg-red-50 text-red-600 font-semibold">
+                                Needs Updates
+                              </span>
+                            )}
+                          </div>
+
+                          <h3 className="text-sm font-semibold text-neutral-900 dark:text-zinc-50 tracking-tight mt-1">
+                            {col.title}
+                          </h3>
+                          
+                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-light mt-0.5 leading-snug line-clamp-2">
+                            {col.description}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-4 text-[10px] text-zinc-400 dark:text-zinc-550 pt-1 font-mono">
+                          <span>{col.durationWeeks} Weeks</span>
+                          <span>•</span>
+                          <span>{col.level}</span>
+                          <span>•</span>
+                          <span className="text-neutral-950 dark:text-zinc-550 font-semibold">{courseEnrollments.length} Registrations</span>
+                        </div>
+                      </div>
+
+                      {/* Actions column panel */}
+                      <div className="flex items-center gap-2 md:flex-col md:justify-center md:items-stretch md:min-w-28 pt-2 md:pt-0 border-t md:border-t-0 md:border-l border-zinc-50 dark:border-zinc-900 md:pl-4">
+                        <button
+                          onClick={() => handleTriggerEdit(col)}
+                          className="flex-1 md:w-full bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-100 dark:border-zinc-800 py-1.5 px-3 rounded-lg text-[10px] uppercase font-semibold text-neutral-800 dark:text-zinc-300 transition-colors cursor-pointer"
+                        >
+                          Configure
+                        </button>
+                      </div>
+                    </div>
+
+                    {col.status === 'rejected' && col.rejectionReason && (
+                      <div className="bg-red-50/50 border-t border-red-50 p-3 flex items-start gap-2 text-xs text-red-700 font-light leading-relaxed">
+                        <AlertCircle size={14} className="shrink-0 text-red-500 mt-0.5" />
+                        <div>
+                          <span className="font-semibold font-mono text-[10px] uppercase">Rejection Reason:</span> "{col.rejectionReason}" - please refine elements and submit again.
+                        </div>
                       </div>
                     )}
-                    <span className="absolute bottom-2 left-2 text-[9px] font-mono font-medium tracking-wide bg-neutral-900/85 backdrop-blur-xs text-white px-2 py-0.5 rounded">
-                      ₦{col.price?.toLocaleString()}
-                    </span>
-                  </div>
 
-                  {/* Text Description fields */}
-                  <div className="flex-1 space-y-2 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[9px] font-mono text-zinc-450 dark:text-zinc-550 uppercase bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 px-2 py-0.5 rounded">
-                          {col.category}
-                        </span>
-                        
-                        {col.status === 'approved' && (
-                          <span className="text-[9px] font-mono uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 flex items-center gap-1 font-semibold">
-                            <span className="h-1 w-1 bg-emerald-500 rounded-full animate-ping"></span> Live/Approved
+                    {/* Grid list of Collapsible Accordion drawers (folded sections) under each course */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 border-t border-zinc-55 dark:border-zinc-900/80 bg-zinc-50/30 dark:bg-zinc-950/20">
+                      
+                      {/* Section A: Syllabus Folding Drawer */}
+                      <div className="border-b md:border-b-0 md:border-r border-zinc-55 dark:border-zinc-900/80">
+                        <button
+                          onClick={() => setExpandedSyllabusId(expandedSyllabusId === col.id ? null : col.id)}
+                          className="w-full flex items-center justify-between p-3.5 hover:bg-zinc-50 dark:hover:bg-zinc-900/30 transition-colors select-none cursor-pointer"
+                        >
+                          <span className="text-[10px] uppercase tracking-wide font-mono font-bold text-zinc-500 flex items-center gap-1.5">
+                            <Sliders size={12} className="text-zinc-400" />
+                            Syllabus modules ({col.modules?.length || 0})
                           </span>
-                        )}
-                        {col.status === 'pending' && (
-                          <span className="text-[9px] font-mono uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-semibold animate-pulse">
-                            Pending Review
-                          </span>
-                        )}
-                        {col.status === 'rejected' && (
-                          <span className="text-[9px] font-mono uppercase px-2 py-0.5 rounded-full bg-red-50 text-red-600 font-semibold">
-                            Needs Updates
-                          </span>
-                        )}
+                          <ChevronDown 
+                            size={14} 
+                            className={`text-zinc-400 transition-transform ${expandedSyllabusId === col.id ? 'rotate-180' : ''}`} 
+                          />
+                        </button>
+
+                        <AnimatePresence>
+                          {expandedSyllabusId === col.id && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.18, ease: 'easeOut' }}
+                              className="overflow-hidden"
+                            >
+                              <div className="p-3 bg-white border-t border-zinc-55 dark:bg-zinc-950/40 dark:border-zinc-900">
+                                <div className="space-y-1 max-h-48 overflow-y-auto scrollbar-thin">
+                                  {(col.modules || []).map((mod, mi) => (
+                                    <div key={mi} className="text-[11px] font-mono text-zinc-500 dark:text-zinc-450 bg-zinc-50/70 dark:bg-zinc-900/50 p-2 rounded-lg flex items-start gap-1.5 leading-snug">
+                                      <span className="text-[10px] text-brand-yellow font-bold shrink-0">W{mi + 1}</span>
+                                      <span>{mod}</span>
+                                    </div>
+                                  ))}
+                                  {(!col.modules || col.modules.length === 0) && (
+                                    <div className="text-[10px] text-zinc-400 font-mono text-center py-4">No syllabus modules compiled.</div>
+                                  )}
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
 
-                      <h3 className="text-sm font-semibold text-neutral-900 dark:text-zinc-50 tracking-tight mt-1">
-                        {col.title}
-                      </h3>
-                      
-                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-light mt-0.5 leading-snug line-clamp-2">
-                        {col.description}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-4 text-[10px] text-zinc-400 dark:text-zinc-550 pt-1 font-mono">
-                      <span>{col.durationWeeks} Weeks</span>
-                      <span>•</span>
-                      <span>{col.level}</span>
-                      <span>•</span>
-                      <span className="text-neutral-950 dark:text-zinc-550 font-semibold">{courseEnrollments.length} Registrations</span>
-                    </div>
-                  </div>
-
-                  {/* Actions column panel */}
-                  <div className="flex items-center gap-2 md:flex-col md:justify-center md:items-stretch md:min-w-28 pt-2 md:pt-0 border-t md:border-t-0 md:border-l border-zinc-50 dark:border-zinc-900 md:pl-4">
-                    <button
-                      onClick={() => handleTriggerEdit(col)}
-                      className="flex-1 md:w-full bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-100 dark:border-zinc-800 py-1.5 px-3 rounded-lg text-[10px] uppercase font-semibold text-neutral-800 dark:text-zinc-300 transition-colors cursor-pointer"
-                    >
-                      Configure
-                    </button>
-                  </div>
-                </div>
-
-                {col.status === 'rejected' && col.rejectionReason && (
-                  <div className="bg-red-50/50 border-t border-red-50 p-3 flex items-start gap-2 text-xs text-red-700 font-light leading-relaxed">
-                    <AlertCircle size={14} className="shrink-0 text-red-500 mt-0.5" />
-                    <div>
-                      <span className="font-semibold font-mono text-[10px] uppercase">Rejection Reason:</span> "{col.rejectionReason}" - please refine elements and submit again.
-                    </div>
-                  </div>
-                )}
-
-                {/* Grid list of Collapsible Accordion drawers (folded sections) under each course */}
-                <div className="grid grid-cols-1 md:grid-cols-2 border-t border-zinc-55 dark:border-zinc-900/80 bg-zinc-50/30 dark:bg-zinc-950/20">
-                  
-                  {/* Section A: Syllabus Folding Drawer */}
-                  <div className="border-b md:border-b-0 md:border-r border-zinc-55 dark:border-zinc-900/80">
-                    <button
-                      onClick={() => setExpandedSyllabusId(expandedSyllabusId === col.id ? null : col.id)}
-                      className="w-full flex items-center justify-between p-3.5 hover:bg-zinc-50 dark:hover:bg-zinc-900/30 transition-colors select-none cursor-pointer"
-                    >
-                      <span className="text-[10px] uppercase tracking-wide font-mono font-bold text-zinc-500 flex items-center gap-1.5">
-                        <Sliders size={12} className="text-zinc-400" />
-                        Syllabus modules ({col.modules?.length || 0})
-                      </span>
-                      <ChevronDown 
-                        size={14} 
-                        className={`text-zinc-400 transition-transform ${expandedSyllabusId === col.id ? 'rotate-180' : ''}`} 
-                      />
-                    </button>
-
-                    <AnimatePresence>
-                      {expandedSyllabusId === col.id && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.18, ease: 'easeOut' }}
-                          className="overflow-hidden"
+                      {/* Section B: Registered Students Folding Drawer */}
+                      <div>
+                        <button
+                          onClick={() => setExpandedStudentsId(expandedStudentsId === col.id ? null : col.id)}
+                          className="w-full flex items-center justify-between p-3.5 hover:bg-zinc-50 dark:hover:bg-zinc-900/30 transition-colors select-none cursor-pointer"
                         >
-                          <div className="p-3 bg-white border-t border-zinc-55 dark:bg-zinc-950/40 dark:border-zinc-900">
-                            <div className="space-y-1 max-h-48 overflow-y-auto scrollbar-thin">
-                              {(col.modules || []).map((mod, mi) => (
-                                <div key={mi} className="text-[11px] font-mono text-zinc-500 dark:text-zinc-450 bg-zinc-50/70 dark:bg-zinc-900/50 p-2 rounded-lg flex items-start gap-1.5 leading-snug">
-                                  <span className="text-[10px] text-brand-yellow font-bold shrink-0">W{mi + 1}</span>
-                                  <span>{mod}</span>
-                                </div>
-                              ))}
-                              {(!col.modules || col.modules.length === 0) && (
-                                <div className="text-[10px] text-zinc-400 font-mono text-center py-4">No syllabus modules compiled.</div>
-                              )}
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Section B: Registered Students Folding Drawer */}
-                  <div>
-                    <button
-                      onClick={() => setExpandedStudentsId(expandedStudentsId === col.id ? null : col.id)}
-                      className="w-full flex items-center justify-between p-3.5 hover:bg-zinc-50 dark:hover:bg-zinc-900/30 transition-colors select-none cursor-pointer"
-                    >
-                      <span className="text-[10px] uppercase tracking-wide font-mono font-bold text-zinc-500 flex items-center gap-1.5">
-                        <Users size={12} className="text-indigo-500" />
-                        Enrolled Cohort ({courseEnrollments.length})
-                        {pendingVerifyStudents.length > 0 && (
-                          <span className="text-[8px] bg-amber-500 text-white rounded-full h-4 min-w-4 flex items-center justify-center font-bold px-1 animate-pulse">
-                            {pendingVerifyStudents.length} Needs Verification
+                          <span className="text-[10px] uppercase tracking-wide font-mono font-bold text-zinc-500 flex items-center gap-1.5">
+                            <Users size={12} className="text-indigo-500" />
+                            Enrolled Cohort ({courseEnrollments.length})
+                            {pendingVerifyStudents.length > 0 && (
+                              <span className="text-[8px] bg-amber-500 text-white rounded-full h-4 min-w-4 flex items-center justify-center font-bold px-1 animate-pulse">
+                                {pendingVerifyStudents.length} Needs Verification
+                              </span>
+                            )}
                           </span>
-                        )}
-                      </span>
-                      <ChevronDown 
-                        size={14} 
-                        className={`text-zinc-400 transition-transform ${expandedStudentsId === col.id ? 'rotate-180' : ''}`} 
-                      />
-                    </button>
+                          <ChevronDown 
+                            size={14} 
+                            className={`text-zinc-400 transition-transform ${expandedStudentsId === col.id ? 'rotate-180' : ''}`} 
+                          />
+                        </button>
 
-                    <AnimatePresence>
-                      {expandedStudentsId === col.id && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.18, ease: 'easeOut' }}
-                          className="overflow-hidden"
-                        >
-                          <div className="p-3 bg-white border-t border-zinc-55 dark:bg-zinc-950/40 dark:border-zinc-900">
-                            <div className="space-y-1.5 max-h-48 overflow-y-auto scrollbar-thin">
-                              {courseEnrollments.map((studentEnr) => (
-                                <div 
-                                  key={studentEnr.id}
-                                  className="border border-zinc-100 dark:border-zinc-900 bg-zinc-50/50 dark:bg-zinc-900/30 p-2.5 rounded-xl flex items-center justify-between gap-3 flex-wrap"
-                                >
-                                  <div>
-                                    <div className="text-[11px] font-semibold text-neutral-900 dark:text-zinc-50">{studentEnr.studentName}</div>
-                                    <div className="text-[9px] text-zinc-400 font-mono">{studentEnr.studentEmail}</div>
-                                    <div className="text-[9px] text-zinc-400 font-mono">Paid: ₦{studentEnr.amount?.toLocaleString()} ({studentEnr.paymentReference || 'Direct Transfer'})</div>
-                                  </div>
-
-                                  <div className="flex items-center gap-2">
-                                    {studentEnr.paymentStatus === 'approved' ? (
-                                      <span className="text-[10px] text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-1 rounded-full font-mono flex items-center gap-0.5 font-semibold">
-                                        <Check size={10} className="stroke-[2.5]" /> Approved
-                                      </span>
-                                    ) : studentEnr.paymentStatus === 'pending_verification' ? (
-                                      <div className="flex items-center gap-1.5">
-                                        <span className="text-[9px] text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-2 py-1 rounded-full font-mono font-semibold animate-pulse">
-                                          Transfer Review
-                                        </span>
-                                        <button
-                                          onClick={() => handleVerifyStudentPayment(studentEnr)}
-                                          className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[9px] font-bold uppercase tracking-wide px-2 py-1 transition-colors cursor-pointer"
-                                        >
-                                          Approve
-                                        </button>
+                        <AnimatePresence>
+                          {expandedStudentsId === col.id && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.18, ease: 'easeOut' }}
+                              className="overflow-hidden"
+                            >
+                              <div className="p-3 bg-white border-t border-zinc-55 dark:bg-zinc-950/40 dark:border-zinc-900">
+                                <div className="space-y-1.5 max-h-48 overflow-y-auto scrollbar-thin">
+                                  {courseEnrollments.map((studentEnr) => (
+                                    <div 
+                                      key={studentEnr.id}
+                                      className="border border-zinc-100 dark:border-zinc-900 bg-zinc-50/50 dark:bg-zinc-900/30 p-2.5 rounded-xl flex items-center justify-between gap-3 flex-wrap"
+                                    >
+                                      <div>
+                                        <div className="text-[11px] font-semibold text-neutral-900 dark:text-zinc-50">{studentEnr.studentName}</div>
+                                        <div className="text-[9px] text-zinc-400 font-mono">{studentEnr.studentEmail}</div>
+                                        <div className="text-[9px] text-zinc-400 font-mono">Paid: ₦{studentEnr.amount?.toLocaleString()} ({studentEnr.paymentReference || 'Direct Transfer'})</div>
                                       </div>
-                                    ) : (
-                                      <span className="text-[9px] text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full font-mono font-semibold">
-                                        {studentEnr.paymentStatus}
-                                      </span>
-                                    )}
-                                  </div>
+
+                                      <div className="flex items-center gap-2">
+                                        {studentEnr.paymentStatus === 'approved' ? (
+                                          <span className="text-[10px] text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-1 rounded-full font-mono flex items-center gap-0.5 font-semibold">
+                                            <Check size={10} className="stroke-[2.5]" /> Approved
+                                          </span>
+                                        ) : studentEnr.paymentStatus === 'pending_verification' ? (
+                                          <div className="flex items-center gap-1.5">
+                                            <span className="text-[9px] text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-2 py-1 rounded-full font-mono font-semibold animate-pulse">
+                                              Transfer Review
+                                            </span>
+                                            <button
+                                              onClick={() => handleVerifyStudentPayment(studentEnr)}
+                                              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[9px] font-bold uppercase tracking-wide px-2 py-1 transition-colors cursor-pointer"
+                                            >
+                                              Approve
+                                            </button>
+                                          </div>
+                                        ) : (
+                                          <span className="text-[9px] text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full font-mono font-semibold">
+                                            {studentEnr.paymentStatus}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                  {courseEnrollments.length === 0 && (
+                                    <div className="text-[10px] text-zinc-450 font-mono text-center py-4 italic">No course enrollment history available yet.</div>
+                                  )}
                                 </div>
-                              ))}
-                              {courseEnrollments.length === 0 && (
-                                <div className="text-[10px] text-zinc-450 font-mono text-center py-4 italic">No course enrollment history available yet.</div>
-                              )}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                    </div>
+
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </>
+      ) : (
+        /* Roster & Cohort History Control Panel */
+        <div id="trainer-roster-control-panel" className="space-y-6">
+          {/* Controls Filters Card */}
+          <div className="bg-zinc-50/50 border border-zinc-100 dark:bg-zinc-900/40 dark:border-zinc-800 p-4 rounded-2xl space-y-3">
+            <div className="text-[11px] font-bold text-neutral-900 dark:text-zinc-50 uppercase tracking-wider flex items-center gap-1.5 border-b border-zinc-100 dark:border-zinc-850 pb-2">
+              <Filter size={13} className="text-zinc-400" /> Roster Filters & Cohort Date Settings
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              {/* Search input */}
+              <div className="col-span-1">
+                <label className="block text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1 font-mono">Student Search</label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                    <Search size={12} className="text-zinc-400" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Search name or email..."
+                    value={rosterSearch}
+                    onChange={(e) => setRosterSearch(e.target.value)}
+                    className="w-full text-xs bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg pl-8 pr-2.5 py-1.5 focus:outline-hidden"
+                  />
+                </div>
+              </div>
+
+              {/* Course Selection */}
+              <div className="col-span-1">
+                <label className="block text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1 font-mono">Select Cohort</label>
+                <select
+                  value={rosterCourseFilter}
+                  onChange={(e) => setRosterCourseFilter(e.target.value)}
+                  className="w-full text-xs bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 outline-hidden"
+                >
+                  <option value="all">All Cohorts</option>
+                  {courses.filter(c => c.status === 'approved').map(c => (
+                    <option key={c.id} value={c.id}>{c.title}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Completion Status Filter */}
+              <div className="col-span-1">
+                <label className="block text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1 font-mono">Progress Status</label>
+                <select
+                  value={rosterStatusFilter}
+                  onChange={(e) => setRosterStatusFilter(e.target.value as any)}
+                  className="w-full text-xs bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 outline-hidden"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="active">⏳ In Training (Active)</option>
+                  <option value="completed">✓ Completed (Graduated)</option>
+                </select>
+              </div>
+
+              {/* Date Filter */}
+              <div className="col-span-1">
+                <label className="block text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1 font-mono">Cohort Start Month/Day</label>
+                <div className="flex gap-1.5">
+                  <input
+                    type="date"
+                    value={rosterDateFilter}
+                    onChange={(e) => setRosterDateFilter(e.target.value)}
+                    className="flex-1 text-xs bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1 focus:outline-hidden"
+                  />
+                  {rosterDateFilter && (
+                    <button
+                      onClick={() => setRosterDateFilter('')}
+                      className="bg-zinc-250 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-neutral-850 dark:text-zinc-300 px-2 rounded-lg text-xs font-bold cursor-pointer"
+                    >
+                      &times;
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Roster list grouping logic */}
+          <div className="space-y-4">
+            {courses.filter(c => c.status === 'approved' && (rosterCourseFilter === 'all' || c.id === rosterCourseFilter) && (!rosterDateFilter || (c.cohortStartDate && c.cohortStartDate.includes(rosterDateFilter)))).length === 0 ? (
+              <div className="border border-dashed border-zinc-200 dark:border-zinc-850 rounded-2xl p-8 text-center bg-zinc-50/20">
+                <Calendar className="mx-auto text-zinc-350" size={28} />
+                <h4 className="text-xs font-semibold text-neutral-800 dark:text-zinc-300 mt-2">No active cohorts match selected filters</h4>
+                <p className="text-[10px] text-zinc-450 mt-1">Please adjust course select dropdown or date calendars.</p>
+              </div>
+            ) : (
+              courses.filter(c => c.status === 'approved' && (rosterCourseFilter === 'all' || c.id === rosterCourseFilter) && (!rosterDateFilter || (c.cohortStartDate && c.cohortStartDate.includes(rosterDateFilter)))).map(col => {
+                const approvedRoster = enrollments.filter(e => {
+                  const matchesSearch = e.studentName.toLowerCase().includes(rosterSearch.toLowerCase()) || 
+                                        e.studentEmail.toLowerCase().includes(rosterSearch.toLowerCase());
+                  const matchesStatus = rosterStatusFilter === 'all' || 
+                                        (rosterStatusFilter === 'completed' && e.completed) ||
+                                        (rosterStatusFilter === 'active' && !e.completed);
+                  return e.courseId === col.id && e.paymentStatus === 'approved' && matchesSearch && matchesStatus;
+                });
+
+                const totalRegistrations = getApprovedStudentsCount(col.id);
+                const timeline = getCohortTimeline(col);
+
+                return (
+                  <div key={col.id} className="bg-white border border-zinc-150 dark:bg-zinc-950 dark:border-zinc-900 rounded-3xl overflow-hidden shadow-2xs">
+                    
+                    {/* Cohort Header Card Info */}
+                    <div className="p-4 sm:p-5 bg-zinc-50/40 dark:bg-zinc-900/10 border-b border-zinc-100 dark:border-zinc-900 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-amber-800 bg-amber-50 dark:bg-amber-955/40 px-2 py-0.5 rounded-sm">
+                            {col.category}
+                          </span>
+                          <span className="text-[9px] font-mono text-zinc-450 dark:text-zinc-500 bg-zinc-100 dark:bg-zinc-900 px-2 py-0.5 rounded-sm">
+                            {col.level}
+                          </span>
+                          <span className="text-[9px] font-mono text-zinc-500 bg-zinc-100 dark:bg-zinc-900 px-2 py-0.5 rounded-sm font-semibold">
+                            Capped (Max 5 Students): {totalRegistrations}/5
+                          </span>
+                        </div>
+                        <h3 className="text-sm font-bold text-neutral-900 dark:text-zinc-50 tracking-tight mt-1">
+                          {col.title}
+                        </h3>
+                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-light mt-0.5">
+                          {col.durationWeeks} Weeks Cohort Program • Proposal Fee: <strong className="font-mono text-neutral-850 dark:text-zinc-200">₦{(col.price || 0).toLocaleString()}</strong>
+                        </p>
+                      </div>
+
+                      {/* Cohort Date Setting and Activation Status Button */}
+                      <div className="w-full md:w-auto pt-2 md:pt-0">
+                        {!col.cohortStartDate ? (
+                          <div className="bg-amber-50/40 border border-amber-100/60 p-2 rounded-xl flex items-center justify-between gap-3 text-xs w-full min-w-[260px]">
+                            <div>
+                              <div className="text-[8px] font-bold text-amber-800 uppercase font-mono tracking-wide">Awaiting Activation</div>
+                              <div className="text-[9px] text-zinc-505 leading-none">Min 1 paid student registration needed</div>
+                            </div>
+                            
+                            {totalRegistrations >= 1 ? (
+                              <div className="flex gap-1 items-center">
+                                <input
+                                  type="date"
+                                  min="2026-01-01"
+                                  id={`date-activate-${col.id}`}
+                                  value={cohortStartDateInput[col.id] || ''}
+                                  onChange={(e) => setCohortStartDateInput(prev => ({ ...prev, [col.id]: e.target.value }))}
+                                  className="text-[10px] bg-white border border-zinc-250 dark:border-zinc-800 rounded px-1.5 py-1 outline-hidden"
+                                />
+                                <button
+                                  onClick={() => handleActivateCohort(col.id, cohortStartDateInput[col.id])}
+                                  className="bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-brand-yellow dark:text-neutral-950 px-2.5 py-1 rounded text-[10px] font-bold uppercase transition-colors cursor-pointer"
+                                >
+                                  Activate
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-[9px] text-zinc-400 font-mono flex items-center gap-0.5 bg-zinc-100 px-2 py-1 rounded-sm leading-none">
+                                <Lock size={10} /> Locked
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 p-2.5 rounded-xl text-right">
+                            <span className="text-[9px] text-emerald-800 dark:text-emerald-450 font-mono uppercase bg-emerald-100/40 dark:bg-emerald-950 px-2 py-0.5 rounded font-bold">
+                              ✓ Cohort Active
+                            </span>
+                            <div className="text-[10px] text-zinc-550 mt-1 leading-tight font-mono">
+                              Start: <span className="font-semibold text-neutral-850 dark:text-zinc-200">{timeline?.startFormatted}</span> <br />
+                              Graduation: <span className="font-semibold text-neutral-850 dark:text-zinc-200">{timeline?.endFormatted}</span>
                             </div>
                           </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Timeline Financial Payout Access System inside each Activated Cohort block */}
+                    {col.cohortStartDate && timeline && (
+                      <div className="bg-zinc-50/40 border-b border-zinc-100 dark:bg-zinc-950 dark:border-zinc-900/60 p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        
+                        {/* Payout Phase 1: Early Draw 65% out of 85% within 48 hours is possible */}
+                        <div className="border border-zinc-200/60 p-3 bg-white rounded-2xl flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-center justify-between text-[10px] uppercase font-mono tracking-wider font-semibold text-zinc-450">
+                              <span>Phase 1: Early Draw (65% share)</span>
+                              <span className="text-amber-600 dark:text-brand-yellow font-bold">₦{(col.price * 0.65).toLocaleString()}</span>
+                            </div>
+                            <p className="text-[10px] text-zinc-500 mt-1 leading-normal font-light">
+                              Trainers can draw 65% out of the 85% course fee within 48 hours after the cohort begins.
+                            </p>
+                          </div>
+
+                          <div className="mt-3 font-sans">
+                            {col.earlyDrawProcessed ? (
+                              <div className="w-full bg-emerald-50 text-emerald-700 rounded-lg py-1.5 px-3 text-center text-[10px] font-semibold flex items-center justify-center gap-1 leading-tight">
+                                <Check size={11} className="stroke-[2.5]" /> 65% Pay Share Processed
+                              </div>
+                            ) : timeline.earlyDrawOpen ? (
+                              <div className="space-y-1">
+                                <button
+                                  onClick={() => handleProcessEarlyDraw(col.id)}
+                                  className="w-full bg-amber-500 hover:bg-amber-600 dark:bg-brand-yellow dark:text-neutral-950 text-neutral-950 rounded-lg py-1.5 px-3 text-center text-[10px] font-bold uppercase transition-colors cursor-pointer"
+                                >
+                                  Process 65% Early Draw (₦{(col.price * 0.65).toLocaleString()})
+                                </button>
+                                <div className="text-[8.5px] text-amber-600 dark:text-brand-yellow font-mono text-center flex items-center justify-center gap-1">
+                                  <Clock size={10} className="animate-spin" /> Early draw open window: {timeline.earlyHoursLeft.toFixed(1)} hrs left!
+                                </div>
+                              </div>
+                            ) : !timeline.hasBegun ? (
+                              <div className="w-full bg-zinc-100 text-zinc-400 rounded-lg py-1.5 px-3 text-center text-[10px] font-semibold cursor-not-allowed leading-tight flex items-center justify-center gap-1 select-none">
+                                <Lock size={10} /> Locked until Cohort Start Date ({(new Date(col.cohortStartDate).toLocaleDateString() === new Date().toLocaleDateString() ? "Scheduled Today" : "Awaiting set-day")})
+                              </div>
+                            ) : (
+                              <div className="w-full bg-zinc-100 text-zinc-400 dark:bg-zinc-900 rounded-lg py-1.5 px-3 text-center text-[10px] font-semibold leading-tight flex items-center justify-center gap-1 select-none">
+                                <XCircle size={10} className="text-zinc-400" /> Early Draw Window Closed (48h elapsed)
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Payout Phase 2: Full payout access details within 48 hours after end */}
+                        <div className="border border-zinc-200/60 p-3 bg-white rounded-2xl flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-center justify-between text-[10px] uppercase font-mono tracking-wider font-semibold text-zinc-455">
+                              <span>Phase 2: End Balance (Remaining Pay)</span>
+                              <span className="text-emerald-600 font-bold">₦{(col.price * (col.earlyDrawProcessed ? 0.20 : 0.85)).toLocaleString()}</span>
+                            </div>
+                            <p className="text-[10px] text-zinc-500 mt-1 leading-normal font-light">
+                              Access full or remaining balance within 48 hours after cohort ends (ends on {timeline.endFormatted}).
+                            </p>
+                          </div>
+
+                          <div className="mt-3">
+                            {col.fullDrawProcessed ? (
+                              <div className="w-full bg-emerald-50 text-emerald-700 rounded-lg py-1.5 px-3 text-center text-[10px] font-semibold flex items-center justify-center gap-1 leading-tight">
+                                <Check size={11} className="stroke-[2.5]" /> Full Balance Processed & Closed
+                              </div>
+                            ) : timeline.fullDrawOpen ? (
+                              <div className="space-y-1">
+                                <button
+                                  onClick={() => handleProcessFullDraw(col.id)}
+                                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg py-1.5 px-3 text-center text-[10px] font-bold uppercase transition-colors cursor-pointer"
+                                >
+                                  Process Balance payout (₦{(col.price * (col.earlyDrawProcessed ? 0.20 : 0.85)).toLocaleString()})
+                                </button>
+                                <div className="text-[8.5px] text-emerald-605 font-mono text-center flex items-center justify-center gap-1">
+                                  <Clock size={10} className="animate-pulse" /> Access window open: {timeline.fullHoursLeft.toFixed(1)} hrs left!
+                                </div>
+                              </div>
+                            ) : !timeline.hasEnded ? (
+                              <div className="w-full bg-zinc-100 text-zinc-400 rounded-lg py-1.5 px-3 text-center text-[10px] font-semibold cursor-not-allowed leading-tight flex items-center justify-center gap-1 select-none">
+                                <Lock size={10} /> Locked until Cohort concludes ({timeline.endFormatted})
+                              </div>
+                            ) : (
+                              // Allow access with standard request since the peak 48h elapsed
+                              <div className="space-y-1">
+                                <button
+                                  onClick={() => handleProcessFullDraw(col.id)}
+                                  className="w-full bg-neutral-900 hover:bg-neutral-850 text-white rounded-lg py-1.5 px-3 text-center text-[10px] font-bold uppercase cursor-pointer"
+                                >
+                                  Claim Cohort Balance (₦{(col.price * (col.earlyDrawProcessed ? 0.20 : 0.85)).toLocaleString()})
+                                </button>
+                                <p className="text-[8.5px] text-zinc-400 font-light text-center leading-tight">Peak 48-hour access window has elapsed. Claims trigger standard manual processing.</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                      </div>
+                    )}
+
+                    {/* Active Roster List inside Cohort Block */}
+                    <div className="p-4 bg-zinc-50/10">
+                      <div className="text-[10px] uppercase tracking-wider font-bold text-zinc-400 font-mono mb-2 flex items-center gap-1">
+                        <Users size={11} className="text-zinc-400" /> Active Student Roster list ({approvedRoster.length})
+                      </div>
+
+                      <div className="space-y-2">
+                        {approvedRoster.map(studentEnr => (
+                          <div 
+                            key={studentEnr.id} 
+                            className="bg-white border border-zinc-100 dark:border-zinc-900 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs"
+                          >
+                            <div>
+                              <div className="font-semibold text-neutral-900 dark:text-zinc-55 flex items-center gap-1.5">
+                                {studentEnr.studentName}
+                                {studentEnr.completed ? (
+                                  <span className="text-[8px] uppercase font-bold text-emerald-800 bg-emerald-100/60 px-1.5 py-0.5 rounded-sm">
+                                    ✓ Completed
+                                  </span>
+                                ) : (
+                                  <span className="text-[8px] uppercase font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded-sm animate-pulse">
+                                    ⏳ In Training
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[9px] text-zinc-405 font-mono">
+                                Email: {studentEnr.studentEmail} • Registered on: {studentEnr.verifiedAt ? new Date(studentEnr.verifiedAt).toLocaleDateString() : 'Direct Setup'}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                              <span className="font-mono text-[10px] text-zinc-450 dark:text-zinc-500">
+                                Paid: ₦{studentEnr.amount?.toLocaleString() || (col.price || 0).toLocaleString()}
+                              </span>
+                              
+                              <button
+                                onClick={() => handleToggleStudentCompletion(studentEnr)}
+                                className={`text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                                  studentEnr.completed
+                                    ? 'bg-amber-100/60 text-amber-900 hover:bg-amber-200 border border-amber-200'
+                                    : 'bg-emerald-650 hover:bg-emerald-700 text-white'
+                                }`}
+                              >
+                                {studentEnr.completed ? "Mark Active" : "Mark Completed"}
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+
+                        {approvedRoster.length === 0 && (
+                          <p className="text-[10px] text-zinc-400 font-mono py-2 text-center select-none italic">
+                            No students matching selected filter criteria registered for this cohort.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
                   </div>
-
-                </div>
-
-              </div>
-            );
-          })
-        )}
-      </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
 
       {/* Propose/Edit Course Modal Window - Implements Collapsible Form Fold Sections */}
       {showProposalModal && (

@@ -554,6 +554,26 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
                                  <span className="font-bold text-neutral-850">₦{((course.price || 0) * 0.15).toLocaleString()}</span>
                                </div>
                              </div>
+
+                             {course.cohortStartDate ? (
+                               <div className="border-t border-dashed border-zinc-200 pt-2 flex flex-col sm:flex-row gap-2 sm:items-center justify-between text-[9px] font-mono select-none">
+                                 <div className="text-zinc-500">
+                                   Cohort Activated on: <span className="font-semibold text-neutral-800">{course.cohortStartDate}</span>
+                                 </div>
+                                 <div className="flex gap-1.5">
+                                   <span className={`px-2 py-0.5 rounded-sm font-semibold ${course.earlyDrawProcessed ? 'bg-emerald-50 text-emerald-800' : 'bg-zinc-100 text-zinc-500'}`}>
+                                     Phase 1 (65% Payout): {course.earlyDrawProcessed ? '✓ DRAWN' : '⏳ OUTSTANDING'}
+                                   </span>
+                                   <span className={`px-2 py-0.5 rounded-sm font-semibold ${course.fullDrawProcessed ? 'bg-emerald-50 text-emerald-800' : 'bg-zinc-100 text-zinc-500'}`}>
+                                     Phase 2 (End Payout): {course.fullDrawProcessed ? '✓ DRAWN' : '⏳ OUTSTANDING'}
+                                   </span>
+                                 </div>
+                               </div>
+                             ) : (
+                               <div className="border-t border-dashed border-zinc-200 pt-2 text-[9px] text-zinc-400 font-mono italic">
+                                 ● Awaiting start-date activation by trainer (requires at least 1 verified student payment).
+                                </div>
+                             )}
                            </div>
                          );
                        })()}

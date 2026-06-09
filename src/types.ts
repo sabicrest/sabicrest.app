@@ -127,6 +127,9 @@ export interface Curriculum {
   approvedAt?: string;
   price?: number; // Price of the course in NGN (Nigerian Naira)
   imageUrl?: string; // Opt course cover image URL
+  cohortStartDate?: string; // YYYY-MM-DD cohort start date
+  earlyDrawProcessed?: boolean; // 65% early draw
+  fullDrawProcessed?: boolean; // full share draw
 }
 
 // Assignment state
@@ -223,6 +226,8 @@ export interface CourseEnrollment {
   submittedAt?: string;
   verifiedAt?: string;
   rejectionReason?: string;
+  completed?: boolean; // Student has completed the cohort/course
+  completedAt?: string; // ISO date of completion
 }
 
 // Administrative Audit logs for actions in the admin dashboard
