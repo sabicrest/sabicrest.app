@@ -15,7 +15,7 @@ import {
   Award, BookOpen, Clock, FileText, CheckCircle2, ChevronRight, Upload, Link, AlertCircle, 
   FileCheck, Printer, Settings, User as UserIcon, Mail, Phone, MapPin, Sliders, Bell, 
   Compass, Radio, Heart, HelpCircle, Activity, CreditCard, Lock, X, ExternalLink, ShieldCheck, Coins, Search, ArrowUpRight,
-  TrendingUp, ChevronDown, ChevronUp, Sparkles, Flame, Snowflake, Briefcase, Trophy, Filter, List
+  TrendingUp, ChevronDown, ChevronUp, Sparkles, Flame, Snowflake, Briefcase, Trophy, Filter, List, Users
 } from 'lucide-react';
 
 interface DashboardStudentProps {
@@ -710,6 +710,13 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
   };
 
   const handleInitiatePaymentProcess = (course: Curriculum) => {
+    // Check if max 5 students limit reached
+    const approvedCount = db.getEnrollments().filter(e => e.courseId === course.id && e.paymentStatus === 'approved').length;
+    if (approvedCount >= 5) {
+      showToast('Error: This cohort is full (maximum 5 students).');
+      return;
+    }
+
     // Check if matching enrollment exists
     const match = db.getEnrollments().find(e => e.courseId === course.id && e.studentId === currentUser.id);
     if (!match) {
@@ -831,6 +838,13 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
   const handleSubmitVerificationReference = (courseId: string, referenceCode: string) => {
     if (!referenceCode.trim()) {
       showToast('Error: Payment reference code cannot be empty!');
+      return;
+    }
+
+    // Check if max 5 students limit reached
+    const approvedCount = db.getEnrollments().filter(e => e.courseId === courseId && e.paymentStatus === 'approved').length;
+    if (approvedCount >= 5) {
+      showToast('Error: This cohort is full (maximum 5 students). Cannot verify payment.');
       return;
     }
     
@@ -2464,6 +2478,8 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                 {(() => {
                   const enr = enrollments.find(e => e.courseId === selectedCourse.id);
                   const isEnrApproved = (currentUser.enrolledCourseIds || []).includes(selectedCourse.id) || (enr && enr.paymentStatus === 'approved');
+                  const approvedCount = db.getEnrollments().filter(e => e.courseId === selectedCourse.id && e.paymentStatus === 'approved').length;
+                  const isCohortFull = approvedCount >= 5;
 
                   if (isEnrApproved) {
                     return (
@@ -2474,6 +2490,23 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                         <h5 className="text-xs font-semibold text-emerald-950 uppercase tracking-wide font-medium">✓ Certified Active Enrollment</h5>
                         <p className="text-[11px] text-emerald-800 leading-relaxed font-light">
                           You are fully registered for this course syllabus. Weekly evaluation tasks have been allocated to your personal dashboard directory.
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  if (isCohortFull) {
+                    return (
+                      <div className="bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 rounded-2xl p-5 text-center space-y-3">
+                        <div className="mx-auto w-10 h-10 bg-rose-100 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 rounded-full flex items-center justify-center mb-1">
+                          <Users size={18} />
+                        </div>
+                        <h5 className="text-xs font-bold text-rose-950 dark:text-rose-200 uppercase tracking-wide">Cohort Capacity Full (5/5 Students)</h5>
+                        <p className="text-[11px] text-rose-900 dark:text-rose-300 font-light leading-relaxed">
+                          Sabicrest limits each cohort to a maximum of 5 students to preserve hyper-personalized expert instruction. Additional registrations are locked for this cohort.
+                        </p>
+                        <p className="text-[10px] text-zinc-500 dark:text-zinc-400 italic">
+                          This cohort is now closed. Please request to join this trainer's next cohort proposal or explore other active expert cohorts.
                         </p>
                       </div>
                     );

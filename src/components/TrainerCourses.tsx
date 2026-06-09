@@ -193,9 +193,18 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
   const totalCourses = courses.length;
   const approvedCourses = courses.filter(c => c.status === 'approved').length;
   const totalStudentsEnrolled = enrollments.filter(e => e.paymentStatus === 'approved').length;
-  const expectedEarnings = enrollments
-    .filter(e => e.paymentStatus === 'approved')
-    .reduce((sum, enr) => sum + (enr.amount || 0), 0);
+
+  const getApprovedStudentsCount = (courseId: string) => {
+    return enrollments.filter(e => e.courseId === courseId && e.paymentStatus === 'approved').length;
+  };
+
+  // Sum of course proposal fees for approved cohorts having at least 1 approved student
+  const totalCohortsEligiblePriceSum = courses
+    .filter(c => c.status === 'approved' && getApprovedStudentsCount(c.id) >= 1)
+    .reduce((sum, c) => sum + (c.price || 0), 0);
+
+  const trainerEligiblePayout85 = totalCohortsEligiblePriceSum * 0.85;
+  const platformMaintenanceFee15 = totalCohortsEligiblePriceSum * 0.15;
 
   // Combined filters applied lists
   const filteredCourses = courses.filter(col => {
@@ -281,16 +290,16 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
         <div className="bg-amber-50/20 border border-amber-100/60 dark:bg-zinc-900 dark:border-zinc-800/60 p-3 h-auto rounded-3xl flex flex-col justify-between space-y-1 select-none">
           <div className="flex items-center justify-between">
             <DollarSign size={16} className="text-amber-600 dark:text-brand-yellow" />
-            <span className="text-[8px] bg-amber-100/60 text-amber-800 dark:bg-amber-950/40 dark:text-brand-yellow font-mono px-1.5 py-0.5 rounded uppercase leading-none font-bold">Gross 65%</span>
+            <span className="text-[8px] bg-amber-100/60 text-amber-800 dark:bg-amber-950/40 dark:text-brand-yellow font-mono px-1.5 py-0.5 rounded uppercase leading-none font-bold">Trainer 85%</span>
           </div>
           <div>
-            <div className="text-[9px] text-zinc-400 dark:text-zinc-500 font-mono uppercase tracking-wide">Gross Payout</div>
+            <div className="text-[9px] text-zinc-400 dark:text-zinc-500 font-mono uppercase tracking-wide">Trainer Payout</div>
             <div className="text-sm font-semibold text-neutral-900 dark:text-zinc-50 font-sans tracking-tight">
-              ₦{(expectedEarnings * 0.65).toLocaleString('en-US', { minimumFractionDigits: 0 })}
+              ₦{trainerEligiblePayout85.toLocaleString('en-US', { minimumFractionDigits: 0 })}
             </div>
             <p className="text-[8.5px] text-zinc-450 dark:text-zinc-500 font-light leading-none">
-              Direct: ₦{(expectedEarnings * 0.60).toLocaleString()} (60%) <br/>
-              Pool: ₦{(expectedEarnings * 0.05).toLocaleString()} (5%)
+              Platform Maintenance (15%): ₦{platformMaintenanceFee15.toLocaleString()} <br/>
+              Total Cohort Gross: ₦{totalCohortsEligiblePriceSum.toLocaleString()}
             </p>
           </div>
         </div>
@@ -758,31 +767,27 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                               {/* Live updated split calculation reminder banner */}
                               <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-850 rounded-xl p-3 text-[11px] leading-relaxed select-none text-zinc-650 dark:text-zinc-300">
                                 <div className="text-[9px] font-bold uppercase tracking-wide text-zinc-400 dark:text-zinc-500 mb-1.5 flex items-center gap-1">
-                                  <AlertCircle size={12} className="text-brand-yellow font-semibold" /> Pricing Revenue Splitting Reminder
+                                  <AlertCircle size={12} className="text-brand-yellow font-semibold" /> Cohort Fixed-Pricing Revenue splits
                                 </div>
                                 <p className="font-light text-zinc-500 dark:text-zinc-400">
-                                  Under the current Trainer agreement, when a student pays <strong>₦{currPrice.toLocaleString()}</strong>, the revenue splits per course enrollment:
+                                  With Sabicrest's unique fixed-fee cohort model, the proposed fee of <strong>₦{currPrice.toLocaleString()}</strong> is the total payment you will collect for this cohort (requires a minimum of 1 active student; maximum of 5 students). Revenue splits:
                                 </p>
-                                <div className="grid grid-cols-3 gap-2 mt-2 font-mono text-[10px] text-center">
+                                <div className="grid grid-cols-2 gap-2 mt-2 font-mono text-[10px] text-center">
                                   <div className="bg-white dark:bg-zinc-955 p-2 rounded-lg border border-zinc-100 dark:border-zinc-800">
-                                    <span className="block text-[8px] text-zinc-400 font-mono">Trainer (60%)</span>
-                                    <span className="font-semibold text-neutral-850 dark:text-zinc-300">₦{(currPrice * 0.60).toLocaleString()}</span>
+                                    <span className="block text-[8px] text-zinc-400 font-mono">Trainer Payout (85%)</span>
+                                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">₦{(currPrice * 0.85).toLocaleString()}</span>
                                   </div>
                                   <div className="bg-white dark:bg-zinc-955 p-2 rounded-lg border border-zinc-100 dark:border-zinc-800">
-                                    <span className="block text-[8px] text-zinc-400 font-mono">Platform (35%)</span>
-                                    <span className="font-semibold text-neutral-850 dark:text-zinc-300 font-mono">₦{(currPrice * 0.35).toLocaleString()}</span>
-                                  </div>
-                                  <div className="bg-white dark:bg-zinc-955 p-2 rounded-lg border border-zinc-100 dark:border-zinc-800">
-                                    <span className="block text-[8px] text-zinc-400 font-mono">Payout Pool (5%)</span>
-                                    <span className="font-semibold text-neutral-850 dark:text-zinc-300">₦{(currPrice * 0.05).toLocaleString()}</span>
+                                    <span className="block text-[8px] text-zinc-400 font-mono">Sabicrest Maintenance (15%)</span>
+                                    <span className="font-semibold text-neutral-850 dark:text-zinc-300 font-mono">₦{(currPrice * 0.15).toLocaleString()}</span>
                                   </div>
                                 </div>
                                 <div className="mt-2.5 pt-2 border-t border-zinc-200/50 dark:border-zinc-800 flex items-center justify-between text-xs">
-                                  <span className="font-medium">Gross Trainer Payout (65%):</span>
-                                  <span className="font-bold text-amber-600 dark:text-brand-yellow font-mono">₦{(currPrice * 0.65).toLocaleString()}</span>
+                                  <span className="font-medium">Total Cohort Fee:</span>
+                                  <span className="font-bold text-amber-600 dark:text-brand-yellow font-mono">₦{currPrice.toLocaleString()}</span>
                                 </div>
                                 <p className="text-[9px] text-zinc-455 dark:text-zinc-500 mt-1 text-center font-light leading-snug">
-                                  (Trainer payout consists of 60% direct share and 5% payouts/app maintenance pool. The platform retains its 35% commission. Read Trainer Agreement details)
+                                  Each course proposal represents a single, independent cohort (max 5 students) and cannot be automatically reused. New cohorts require Admin approval.
                                 </p>
                               </div>
 
@@ -1003,7 +1008,7 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                   <FileText className="text-brand-yellow" size={16} /> Trainer Revenue & Collaboration Agreement
                 </h3>
                 <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono tracking-wider mt-0.5 uppercase">
-                  Sabi Crest Platform Terms • Company Reference ID: trainer-ag-2026
+                  Sabicrest Platform Terms • Company Reference ID: trainer-ag-2026
                 </p>
               </div>
               <button
@@ -1018,14 +1023,14 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
             <div id="agreement-document-content" className="flex-1 overflow-y-auto pr-2 space-y-4 text-xs text-zinc-650 dark:text-zinc-300 font-sans leading-relaxed select-text scrollbar-thin">
               
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-amber-800 dark:text-amber-300 font-serif leading-normal italic py-3 select-none">
-                "This agreement defines the legal fee split policies, payouts processing structure, and standard curriculum guidelines for experts and trainers collaborating with the Sabi Crest educational platform. By creating a curriculum proposal on the platform, both Sabi Crest Ltd. and the Trainer agree to abide by the terms set forth in this document."
+                "This agreement defines the legal fee split policies, cohort limit guidelines, and standard curriculum compliance parameters for experts collaborating with Sabicrest. By creating a curriculum proposal on the platform, both Sabicrest Group of Companies and the Trainer agree to abide by the terms set forth in this document."
               </div>
 
               <div className="space-y-1 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-850 rounded-xl p-3 select-none">
                 <div className="text-[10px] text-zinc-400 font-mono uppercase tracking-wide">Document Metadata</div>
                 <div className="text-[11px] font-mono">
-                  <span className="font-semibold text-neutral-850 dark:text-zinc-200">Contract Version:</span> SC-V3.42-NIGERIA <br />
-                  <span className="font-semibold text-neutral-850 dark:text-zinc-200">Company Board Update Date:</span> June 1, 2026 <br />
+                  <span className="font-semibold text-neutral-850 dark:text-zinc-200">Contract Version:</span> SC-V4.0-COHORT <br />
+                  <span className="font-semibold text-neutral-850 dark:text-zinc-200">Company Board Update Date:</span> {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} (Latest) <br />
                   <span className="font-semibold text-neutral-850 dark:text-zinc-200">Status:</span> Legally Active (In-App Binding) <br />
                   <span className="font-semibold text-neutral-850 dark:text-zinc-200">Applicable Region:</span> Comprehensive Global & Regional Domains
                 </div>
@@ -1037,37 +1042,33 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                 <div>
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-neutral-900 dark:text-zinc-100">1. Pricing Controls & Setup</h4>
                   <p className="font-light mt-0.5">
-                    Trainers are fully authorized to set their base Course Fees during the curriculum proposal phase. This base fee represents the complete, undivided price displayed to, and collected from, the student on the platform workspace. No unapproved surcharges shall be added to this set price.
+                    Trainers set their cohort base Course Fees during the proposal phase. The proposed price represents the fixed payment the trainer will collect for that approved cohort, provided a minimum of one (1) active student is registered. Students see the full fee set by the trainer on their marketplace catalog.
                   </p>
                 </div>
 
                 <div>
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-neutral-900 dark:text-zinc-100">2. Revenue Fee Splitting Model</h4>
                   <p className="font-light mt-0.5">
-                    To maintain top-tier streaming infrastructure, facilitate student bonus initiatives, and ensure platform continuity, all premium enrollments are subject to a standard <strong>35% platforms retention commission</strong>.
+                    Sabicrest structures payouts directly proportional to completed cohorts. For each approved cohort, the trainer earns the exact fee, retaining an **85% direct share** of the cohort price, while the platform earns a **15% commission** for infrastructure and platform maintenance.
                   </p>
                   <p className="font-semibold text-neutral-900 dark:text-zinc-100 mt-2 font-mono text-[11px] bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-2.5 rounded-xl">
-                    Fee Split Allocation:<br />
-                    • Trainer Direct Share: 60.0% of student fee<br />
-                    • Payouts Pool & App Maintenance: 5.0% of student fee<br />
-                    • Platform Retained Commission: 35.0% of student fee
-                  </p>
-                  <p className="font-light mt-1.5">
-                    Accordingly, the Trainer's **Gross Payout** is calculated as: **Total course fees minus the platform's 35% commission**, capturing cumulative direct share (60%) and payout bonus pool allocation (5%), making up exactly **65%** of student tuition revenue.
+                    Syllabus Cohort Splits:<br />
+                    • Partner Trainer Share: 85.0% of cohort fee<br />
+                    • Sabicrest Group of Companies Maintenance Share: 15.0% of cohort fee
                   </p>
                 </div>
 
                 <div>
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-neutral-900 dark:text-zinc-100">3. Verification Codes & Disbursals</h4>
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-neutral-900 dark:text-zinc-100">3. Roster Management & Cohort Limits</h4>
                   <p className="font-light mt-0.5">
-                    All student transfer receipts must be verified directly by the instructor or platform administrator. Disbursal cycles run on a bi-weekly basis. Sums accrued under the 5% Maintenance & Payout pool are disbursed as reward points or app support buffers to maximize cohort engagement.
+                    Each cohort is strictly capped at a <strong>maximum of five (5) students</strong> per cohort model. If a cohort hits the capacity of 5, additional registered students must be rostered on the trainer's next approved cohort proposal, or transferred to another available trainer's cohort. Course proposals represent a single cohort occurrence; they do not automatically rollover and must be approved anew.
                   </p>
                 </div>
 
                 <div>
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-neutral-900 dark:text-zinc-100">4. Intellectual Rights & Terminations</h4>
                   <p className="font-light mt-0.5">
-                    Curriculum syllabi proposed by the trainer remain the shared property of the respective trainer and Sabi Crest. Either party may exit partnership covenants with a seven (7) day structural notification, provided all current enrolled cohorts have successfully concluded.
+                    Curriculum materials proposed remain the shared property of the respective trainer and Sabicrest Group of Companies. Covenant exits require brief notice, provided all current active cohorts (min 1 student, max 5 students) have successfully graduated.
                   </p>
                 </div>
               </div>
@@ -1083,7 +1084,7 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                     <html lang="en">
                     <head>
                       <meta charset="UTF-8">
-                      <title>Sabi Crest Trainer Partnership and Fee Split Agreement</title>
+                      <title>Sabicrest Trainer Partnership and Fee Split Agreement</title>
                       <style>
                         body {
                           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -1113,22 +1114,22 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                     </head>
                     <body>
                       <div class="header">
-                        <div class="logo">SABI CREST</div>
+                        <div class="logo">SABICREST</div>
                         <div class="subtitle">Official Trainer Collaboration & Fees Agreement</div>
                       </div>
                       
                       <div class="meta-info">
-                        <strong>CONTRACT VERSION:</strong> SC-V3.42-NIGERIA<br>
-                        <strong>COMPANY UPDATE DATE:</strong> June 1, 2026<br>
+                        <strong>CONTRACT VERSION:</strong> SC-V4.0-COHORT<br>
+                        <strong>COMPANY UPDATE DATE:</strong> ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}<br>
                         <strong>EFFECTIVE STATUS:</strong> Legally Binding Active Agreement<br>
                         <strong>PARTICIPATING PARTY:</strong> Verified Platform Partner Coach (${currentUser.name})
                       </div>
 
                       <h2>1. Agreement Scope</h2>
-                      <p>This legally binding collaboration agreement defines the revenue split matrices, platform fee structures, and course governance policies between Sabi Crest Ltd. and Partner Trainer: <strong>${currentUser.name}</strong>.</p>
+                      <p>This legally binding collaboration agreement defines the revenue split matrices, platform fee structures, and course governance policies between Sabicrest Group of Companies and Partner Trainer: <strong>${currentUser.name}</strong>.</p>
 
-                      <h2>2. Revenue Fee Splitting Model</h2>
-                      <p>Sabi Crest operates under an exact, transparent curriculum monetization split to cover continuous streaming servers, payouts processing, and platform maintenance:</p>
+                      <h2>2. Revenue Fee Splitting Model & Cohort Limits</h2>
+                      <p>Sabicrest Group of Companies operates under an exact, transparent cohort pricing setup. For each approved cohort, the trainer collects the base course fee, retaining 85.0% while Sabicrest retains 15.0% for operations and streaming servers:</p>
                       
                       <table class="split-table">
                         <thead>
@@ -1140,36 +1141,31 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                         </thead>
                         <tbody>
                           <tr>
-                            <td><strong>Trainer Shared Revenue</strong></td>
-                            <td>60.0%</td>
-                            <td>Direct disbursal to Trainer's bank account.</td>
+                            <td><strong>Trainer Cohort Payout</strong></td>
+                            <td>85.0%</td>
+                            <td>Guaranteed payout to Trainer (minimum 1 student, maximum 5).</td>
                           </tr>
-                          <tr>
-                            <td><strong>Payouts Pool & App Support</strong></td>
-                            <td>5.0%</td>
-                            <td>App maintenance reserves, regional buffers, and payouts.</td>
-                          </tr>
-                          <tr>
-                            <td><strong>Sabi Crest retained commission</strong></td>
-                            <td>35.0%</td>
-                            <td>Standard platform operational commission.</td>
+                        <tr>
+                            <td><strong>Sabicrest Platform Maintenance</strong></td>
+                            <td>15.0%</td>
+                            <td>Standard platform operational and server support commission.</td>
                           </tr>
                           <tr style="font-weight: bold; background: #fafaf9;">
-                            <td>Gross Trainer Payout (Fee - 35% Platform commission)</td>
-                            <td>65.0%</td>
-                            <td>Trainer Collects directly (consists of Trainer 60% + Payout Pool 5%).</td>
+                            <td>Total Cohort Price</td>
+                            <td>100.0%</td>
+                            <td>Gross curriculum proposal fee set by the Trainer.</td>
                           </tr>
                         </tbody>
                       </table>
 
-                      <h2>3. Verification & Payouts</h2>
-                      <p>Instructor shall review and verify students receipts directly inside the courses hub. Payout cycles conclusions occur on a bi-weekly cycle.</p>
+                      <h2>3. Cohort Regulations</h2>
+                      <p>Each course proposal operates as a separate cohort of maximum 5 students. Rollicks / Rollover is not automated, and every new cohort requires Admin approval.</p>
 
                       <h2>4. Formal Execution Covenants</h2>
-                      <p>Proposing new lesson materials via Sabi Crest represents standard electronic confirmation and execution of this agreement. Termination requires 7 days written notice from either partner.</p>
+                      <p>Proposing new curriculum syllabi via Sabicrest represents standard electronic confirmation and execution of this agreement. Termination requires 7 days written notice from either partner.</p>
 
                       <div class="footer">
-                        Sabi Crest Ltd. All Professional Education Rights Protected © 2026. Updated: June 1, 2026.
+                        Sabicrest Group of Companies. All Professional Education Rights Protected © ${new Date().getFullYear()}. Updated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}.
                       </div>
                     </body>
                     </html>
@@ -1180,7 +1176,7 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
                   a.href = url;
-                  a.download = `SabiCrest_Trainer_Collaboration_Agreement_June2026.html`;
+                  a.download = `Sabicrest_Trainer_Collaboration_Agreement_${new Date().getFullYear()}.html`;
                   document.body.appendChild(a);
                   a.click();
                   document.body.removeChild(a);

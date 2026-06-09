@@ -2176,36 +2176,32 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                                 </div>
                               </div>
 
-                              {/* Live updated split calculation reminder banner */}
-                              <div className="col-span-2 bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-[11px] leading-relaxed select-none text-zinc-650 block">
-                                <div className="text-[9px] font-bold uppercase tracking-wide text-zinc-400 mb-1.5 flex items-center gap-1">
-                                  <AlertCircle size={12} className="text-brand-yellow font-semibold" /> Pricing Revenue Splitting Reminder
-                                </div>
-                                <p className="font-light text-zinc-500">
-                                  Under the current Trainer agreement, when a student pays <strong>₦{currPrice.toLocaleString()}</strong>, the revenue splits per course enrollment:
-                                </p>
-                                <div className="grid grid-cols-3 gap-2 mt-2 font-mono text-[10px] text-center">
-                                  <div className="bg-white p-2 border border-zinc-100 rounded-lg">
-                                    <span className="block text-[8px] text-zinc-400 uppercase tracking-tight font-mono">Trainer (60%)</span>
-                                    <span className="font-semibold text-neutral-800">₦{(currPrice * 0.60).toLocaleString()}</span>
-                                  </div>
-                                  <div className="bg-white p-2 border border-zinc-100 rounded-lg">
-                                    <span className="block text-[8px] text-zinc-400 uppercase tracking-tight font-mono font-medium">Platform (35%)</span>
-                                    <span className="font-semibold text-neutral-800">₦{(currPrice * 0.35).toLocaleString()}</span>
-                                  </div>
-                                  <div className="bg-white p-2 border border-zinc-100 rounded-lg">
-                                    <span className="block text-[8px] text-zinc-400 uppercase tracking-tight font-mono font-medium">Payout Pool (5%)</span>
-                                    <span className="font-semibold text-neutral-800">₦{(currPrice * 0.05).toLocaleString()}</span>
-                                  </div>
-                                </div>
-                                <div className="mt-2.5 pt-2 border-t border-zinc-200/50 flex items-center justify-between text-xs">
-                                  <span className="font-medium">Gross Trainer Payout (65%):</span>
-                                  <span className="font-bold text-amber-600 font-mono">₦{(currPrice * 0.65).toLocaleString()}</span>
-                                </div>
-                                <p className="text-[9px] text-zinc-455 mt-1 text-center font-light">
-                                  (Trainer collection minus platform's 35% commission. Fully outlined in Trainer Agreement)
-                                </p>
-                              </div>
+                               {/* Live updated split calculation reminder banner */}
+                               <div className="col-span-2 bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-[11px] leading-relaxed select-none text-zinc-650 block">
+                                 <div className="text-[9px] font-bold uppercase tracking-wide text-zinc-400 mb-1.5 flex items-center gap-1 font-mono">
+                                   <AlertCircle size={12} className="text-brand-yellow font-semibold" /> Cohort Fixed-Pricing Revenue Splits
+                                 </div>
+                                 <p className="font-light text-zinc-500">
+                                   With Sabicrest's unique fixed-fee cohort model, the proposed fee of <strong>₦{currPrice.toLocaleString()}</strong> is the total payment you will collect for this cohort (requires a minimum of 1 active student; maximum of 5 students). Revenue splits:
+                                 </p>
+                                 <div className="grid grid-cols-2 gap-2 mt-2 font-mono text-[10px] text-center">
+                                   <div className="bg-white p-2 border border-zinc-100 rounded-lg">
+                                     <span className="block text-[8px] text-zinc-400 font-mono">Trainer Payout (85%)</span>
+                                     <span className="font-semibold text-emerald-600">₦{(currPrice * 0.85).toLocaleString()}</span>
+                                   </div>
+                                   <div className="bg-white p-2 border border-zinc-100 rounded-lg">
+                                     <span className="block text-[8px] text-zinc-400 font-mono font-medium">Sabicrest Maintenance (15%)</span>
+                                     <span className="font-semibold text-neutral-800">₦{(currPrice * 0.15).toLocaleString()}</span>
+                                   </div>
+                                 </div>
+                                 <div className="mt-2.5 pt-2 border-t border-zinc-200/50 flex items-center justify-between text-xs">
+                                   <span className="font-medium">Total Cohort Fee:</span>
+                                   <span className="font-bold text-amber-600 font-mono">₦{currPrice.toLocaleString()}</span>
+                                 </div>
+                                 <p className="text-[9px] text-zinc-455 mt-1 text-center font-light leading-snug">
+                                   Each course proposal represents a single, independent cohort (max 5 students) and cannot be automatically rolled over or reused. New cohorts require Admin approval.
+                                 </p>
+                               </div>
 
                               {currCategory === 'Other' && (
                                 <div className="animate-in fade-in duration-150">

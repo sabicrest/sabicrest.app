@@ -521,33 +521,42 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
                       </div>
                       <p className="text-[11px] text-zinc-550 font-light leading-relaxed">{course.description}</p>
                       
-                      {/* Interactive Fee Splits Tracking Segment */}
-                      <div className="bg-zinc-50 border border-zinc-100 rounded-xl p-3 space-y-2 mt-1 select-none">
-                        <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-zinc-500 font-mono">
-                          <span>Revenue Fee Splitting Model</span>
-                          <span className="text-emerald-600 font-sans font-bold text-xs bg-emerald-50 px-2 py-0.5 rounded">
-                            Full Student Fee: ₦{(course.price || 0).toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-4 gap-2 text-center text-zinc-600 font-mono text-[10px] pt-1 border-t border-zinc-200/50">
-                          <div className="bg-white border border-zinc-100 p-1.5 rounded-lg">
-                            <span className="block text-[8px] text-zinc-400 uppercase tracking-tight">Trainer (60%)</span>
-                            <span className="font-semibold text-neutral-850">₦{((course.price || 0) * 0.60).toLocaleString()}</span>
-                          </div>
-                          <div className="bg-white border border-zinc-100 p-1.5 rounded-lg">
-                            <span className="block text-[8px] text-zinc-400 uppercase tracking-tight">Platform (35%)</span>
-                            <span className="font-semibold text-neutral-850">₦{((course.price || 0) * 0.35).toLocaleString()}</span>
-                          </div>
-                          <div className="bg-white border border-zinc-100 p-1.5 rounded-lg">
-                            <span className="block text-[8px] text-zinc-400 uppercase tracking-tight">Payout pool (5%)</span>
-                            <span className="font-semibold text-neutral-850">₦{((course.price || 0) * 0.05).toLocaleString()}</span>
-                          </div>
-                          <div className="bg-amber-50/50 border border-amber-100/60 p-1.5 rounded-lg font-sans">
-                            <span className="block text-[8px] text-amber-600 uppercase tracking-tight font-mono font-medium">Gross Payout (65%)</span>
-                            <span className="font-bold text-amber-700">₦{((course.price || 0) * 0.65).toLocaleString()}</span>
-                          </div>
-                        </div>
-                      </div>
+                       {/* Interactive Fee Splits Tracking Segment */}
+                       {(() => {
+                         const approvedEnrolled = enrollments.filter(e => e.courseId === course.id && e.paymentStatus === 'approved').length;
+                         const payoutActive = approvedEnrolled >= 1;
+                         return (
+                           <div className="bg-zinc-50 border border-zinc-100 rounded-xl p-3 space-y-2 mt-1 select-none">
+                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-zinc-200/50 pb-2">
+                               <div className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 font-mono">
+                                 <span>Revenue Fee Splitting Model (Cohort Rules)</span>
+                               </div>
+                               <div className="flex flex-wrap items-center gap-1.5 font-mono text-[9px]">
+                                 <span className="text-zinc-600 bg-zinc-250/50 px-1.5 py-0.5 rounded">
+                                   Roster: {approvedEnrolled}/5 Students
+                                 </span>
+                                 <span className={`px-1.5 py-0.5 rounded font-bold ${payoutActive ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                                   {payoutActive ? '✓ Payout Active (min 1 student)' : '● Payout Inactive (min 1 student)'}
+                                 </span>
+                               </div>
+                             </div>
+                             <div className="grid grid-cols-3 gap-2 text-center text-zinc-600 font-mono text-[10px] pt-1">
+                               <div className="bg-white border border-zinc-100 p-1.5 rounded-lg">
+                                 <span className="block text-[8px] text-zinc-450 uppercase tracking-tight">Total Student Fee set by Trainer</span>
+                                 <span className="font-semibold text-neutral-800">₦{(course.price || 0).toLocaleString()}</span>
+                               </div>
+                               <div className="bg-white border border-zinc-100 p-1.5 rounded-lg">
+                                 <span className="block text-[8px] text-zinc-450 uppercase tracking-tight">Trainer Share (85%)</span>
+                                 <span className="font-semibold text-emerald-600">₦{((course.price || 0) * 0.85).toLocaleString()}</span>
+                               </div>
+                               <div className="bg-white border border-zinc-100 p-1.5 rounded-lg">
+                                 <span className="block text-[8px] text-zinc-450 uppercase tracking-tight font-medium">Platform Share (15%)</span>
+                                 <span className="font-bold text-neutral-850">₦{((course.price || 0) * 0.15).toLocaleString()}</span>
+                               </div>
+                             </div>
+                           </div>
+                         );
+                       })()}
 
                       {/* Course Modules list */}
                       {course.modules && course.modules.length > 0 && (
@@ -724,24 +733,16 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
                     {curr.price !== undefined && (
                       <div className="bg-zinc-50 border border-zinc-100 rounded-xl p-3 space-y-2 mb-2 select-none">
                         <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-zinc-500 font-mono">
-                          <span>Revenue Fee Splits Preview</span>
+                          <span>Revenue Fee Splits Preview (85% / 15%)</span>
                         </div>
-                        <div className="grid grid-cols-4 gap-2 text-center text-zinc-650 font-mono text-[9px] pt-1">
-                          <div className="bg-white border border-zinc-200/50 p-1 rounded-md">
-                            <span className="block text-[7px] text-zinc-450 uppercase tracking-tight">Trainer (60%)</span>
-                            <span className="font-semibold text-neutral-800">₦{(curr.price * 0.60).toLocaleString()}</span>
+                        <div className="grid grid-cols-2 gap-2 text-center text-zinc-650 font-mono text-[9px] pt-1">
+                          <div className="bg-white border border-zinc-200/50 p-1.5 rounded-md">
+                            <span className="block text-[7px] text-zinc-450 uppercase tracking-tight">Trainer Share (85%)</span>
+                            <span className="font-semibold text-emerald-600">₦{(curr.price * 0.85).toLocaleString()}</span>
                           </div>
-                          <div className="bg-white border border-zinc-200/50 p-1 rounded-md">
-                            <span className="block text-[7px] text-zinc-450 uppercase tracking-tight">Platform (35%)</span>
-                            <span className="font-semibold text-neutral-800">₦{(curr.price * 0.35).toLocaleString()}</span>
-                          </div>
-                          <div className="bg-white border border-zinc-200/50 p-1 rounded-md">
-                            <span className="block text-[7px] text-zinc-450 uppercase tracking-tight">Payout pool (5%)</span>
-                            <span className="font-semibold text-neutral-800">₦{(curr.price * 0.05).toLocaleString()}</span>
-                          </div>
-                          <div className="bg-amber-100/40 border border-amber-200/50 p-1 rounded-md font-sans">
-                            <span className="block text-[7px] text-amber-600 uppercase tracking-tight font-mono font-medium">Gross Payout (65%)</span>
-                            <span className="font-bold text-amber-700">₦{(curr.price * 0.65).toLocaleString()}</span>
+                          <div className="bg-white border border-zinc-200/50 p-1.5 rounded-md">
+                            <span className="block text-[7px] text-zinc-450 uppercase tracking-tight">Platform Share (15%)</span>
+                            <span className="font-semibold text-neutral-800">₦{(curr.price * 0.15).toLocaleString()}</span>
                           </div>
                         </div>
                       </div>
