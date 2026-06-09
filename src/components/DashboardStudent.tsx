@@ -1105,10 +1105,10 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
             <div className="relative z-10 flex flex-col justify-center items-stretch border-t md:border-t-0 md:border-l border-zinc-800/40 dark:border-black/10 pt-5 md:pt-0 pl-0 md:pl-6 lg:pl-10">
               <div id="hero-live-ticker-section" className="space-y-4 w-full h-full flex flex-col justify-between">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-[10px] xs:text-[11px] sm:text-xs uppercase font-mono tracking-widest text-brand-black dark:text-zinc-900 font-bold flex items-center gap-1.5 select-none">
+                  <h3 className="text-[10px] xs:text-[11px] sm:text-xs uppercase font-mono tracking-widest text-brand-yellow dark:text-zinc-900 font-bold flex items-center gap-1.5 select-none">
                     <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-yellow opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-yellow"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-yellow dark:bg-black opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-yellow dark:bg-black"></span>
                     </span>
                     Live updates
                   </h3>

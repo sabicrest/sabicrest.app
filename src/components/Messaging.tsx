@@ -131,6 +131,15 @@ export default function Messaging({ currentUser }: MessagingProps) {
   const [messagingSubView, setMessagingSubView] = useState<'chat' | 'channels' | 'directory'>('chat');
 
   const prevMessagesCountRef = useRef<number>(0);
+  const lastScrollStateRef = useRef<{
+    chatKey: string | null;
+    messageCount: number;
+    lastMessageId: string | null;
+  }>({
+    chatKey: null,
+    messageCount: 0,
+    lastMessageId: null,
+  });
 
   // Close emoji reaction picker when tapping/clicking outside
   useEffect(() => {
@@ -531,37 +540,68 @@ export default function Messaging({ currentUser }: MessagingProps) {
     setHasScrolledForSession(null);
   }, [activeChannelId, activeDmUser]);
 
-  // Initial and reactive scrolling to center position
+  // Initial and reactive scrolling with smart change protection to allow scrolling up at will
   useEffect(() => {
-    if (filteredMessages.length === 0 || !chatStreamRef.current) return;
-    
-    // We only perform the restoration on initial load of active chat context
-    if (hasScrolledForSession === chatKey) {
-      if (isNearBottom) {
-        chatStreamRef.current.scrollTop = chatStreamRef.current.scrollHeight;
-      }
+    if (filteredMessages.length === 0 || !chatStreamRef.current) {
+      lastScrollStateRef.current = {
+        chatKey,
+        messageCount: 0,
+        lastMessageId: null
+      };
       return;
     }
 
-    const lastId = lastReadMessageMap[chatKey];
-    if (lastId) {
-      const idx = filteredMessages.findIndex(m => m.id === lastId);
-      if (idx !== -1) {
-        const el = document.getElementById(`dm-msg-${lastId}`);
-        if (el) {
-          el.scrollIntoView({ block: 'center' });
+    const currentCount = filteredMessages.length;
+    const currentLastMsg = filteredMessages[currentCount - 1];
+    const currentLastMsgId = currentLastMsg?.id || null;
+    const prevState = lastScrollStateRef.current;
+
+    // Case 1: Switching to a different chat context
+    if (prevState.chatKey !== chatKey) {
+      const lastId = lastReadMessageMap[chatKey];
+      if (lastId) {
+        const idx = filteredMessages.findIndex(m => m.id === lastId);
+        if (idx !== -1) {
+          const el = document.getElementById(`dm-msg-${lastId}`);
+          if (el) {
+            el.scrollIntoView({ block: 'center' });
+          } else {
+            chatStreamRef.current.scrollTop = chatStreamRef.current.scrollHeight;
+          }
         } else {
           chatStreamRef.current.scrollTop = chatStreamRef.current.scrollHeight;
         }
       } else {
         chatStreamRef.current.scrollTop = chatStreamRef.current.scrollHeight;
+        markAllAsRead();
       }
-    } else {
-      chatStreamRef.current.scrollTop = chatStreamRef.current.scrollHeight;
-      markAllAsRead();
+      
+      lastScrollStateRef.current = {
+        chatKey,
+        messageCount: currentCount,
+        lastMessageId: currentLastMsgId
+      };
+      setHasScrolledForSession(chatKey);
+      return;
     }
-    setHasScrolledForSession(chatKey);
-  }, [filteredMessages, chatKey, hasScrolledForSession]);
+
+    // Case 2: New message arrivals (same chat content length/ID changed)
+    if (prevState.messageCount !== currentCount || prevState.lastMessageId !== currentLastMsgId) {
+      const isMyMessage = currentLastMsg?.senderId === currentUser.id;
+      if (isMyMessage) {
+        chatStreamRef.current.scrollTop = chatStreamRef.current.scrollHeight;
+      } else if (isNearBottom) {
+        chatStreamRef.current.scrollTop = chatStreamRef.current.scrollHeight;
+      }
+
+      lastScrollStateRef.current = {
+        chatKey,
+        messageCount: currentCount,
+        lastMessageId: currentLastMsgId
+      };
+    }
+    // We do NOT scroll on periodic polling/refresh, fulfilling the requirement of free scroll up at will!
+  }, [filteredMessages, chatKey, currentUser.id, isNearBottom, lastReadMessageMap]);
 
   // Scroll to targeted replied message
   const handleScrollToMessage = (id: string) => {
@@ -863,7 +903,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
             ref={chatStreamRef} 
             id="chat-stream-panel" 
             onScroll={handleScroll}
-            className="flex-1 p-6 space-y-4 overflow-y-auto max-h-[380px] bg-zinc-50/20 dark:bg-black/30"
+            className="flex-1 p-6 space-y-4 overflow-y-auto h-[440px] max-h-[50vh] bg-zinc-50/20 dark:bg-black/30"
             onMouseMove={(e) => handleTouchMove(e.clientX)}
             onMouseUp={() => { if (draggedMessageId) setDraggedMessageId(null); }}
           >

@@ -80,6 +80,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
   // Curriculum Proposed System State
   const [showCurriculumModal, setShowCurriculumModal] = useState(false);
   const [editingCurriculum, setEditingCurriculum] = useState<Curriculum | null>(null);
+  const [proposalActiveSection, setProposalActiveSection] = useState<'info' | 'details' | 'image' | 'syllabus'>('info');
   const [currTitle, setCurrTitle] = useState('');
   const [currDesc, setCurrDesc] = useState('');
   const [currCategory, setCurrCategory] = useState('Visual Design');
@@ -722,9 +723,9 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
             <button
               id="assign-assignment-trigger"
               onClick={() => setShowAssignModal(true)}
-              className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-850 text-white border border-zinc-805 dark:border-black/10 rounded-xl py-2.5 px-4 text-xs font-light tracking-wide uppercase transition-all cursor-pointer shadow-xs focus-ring"
+              className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-850 text-white dark:text-white border border-zinc-805 dark:border-black/10 rounded-xl py-2.5 px-4 text-xs font-light tracking-wide uppercase transition-all cursor-pointer shadow-xs focus-ring"
             >
-              <Plus size={14} className="text-zinc-400 font-normal" /> Assign Student Assignment
+              <Plus size={14} className="text-zinc-400 dark:text-white font-normal" /> Assign Student Assignment
             </button>
 
             <button
@@ -739,17 +740,17 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
               }}
               className={`flex items-center gap-2 rounded-xl py-2.5 px-4 text-xs font-semibold tracking-wide uppercase transition-all cursor-pointer shadow-xs focus-ring ${
                 currentUser.verified 
-                  ? 'bg-brand-yellow hover:bg-amber-405 text-brand-black dark:bg-black dark:text-brand-yellow dark:hover:bg-neutral-900'
-                  : 'bg-zinc-800 hover:bg-zinc-705 text-zinc-300 border border-zinc-700 dark:bg-black/20 dark:text-black dark:border-black/10'
+                  ? 'bg-brand-yellow hover:bg-amber-405 text-brand-black dark:bg-black dark:text-white dark:hover:bg-neutral-900'
+                  : 'bg-zinc-800 hover:bg-zinc-705 text-zinc-300 border border-zinc-700 dark:bg-black dark:text-white dark:hover:bg-neutral-900 dark:border-black/10'
               }`}
             >
               {currentUser.verified ? (
                 <>
-                  <Plus size={14} className="font-semibold" /> Propose Curriculum
+                  <Plus size={14} className="font-semibold text-brand-black dark:text-white" /> Propose Curriculum
                 </>
               ) : (
                 <>
-                  <Lock size={14} className="text-brand-yellow dark:text-black font-semibold" /> Get Verified
+                  <Lock size={14} className="text-brand-yellow dark:text-white font-semibold" /> Get Verified
                 </>
               )}
             </button>
@@ -760,10 +761,10 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
         <div className="relative z-10 flex flex-col justify-center items-stretch border-t md:border-t-0 md:border-l border-zinc-800/40 dark:border-black/10 pt-5 md:pt-0 pl-0 md:pl-6 lg:pl-10">
           <div id="hero-live-ticker-section" className="space-y-4 w-full h-full flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <h3 className="text-[10px] xs:text-[11px] sm:text-xs uppercase font-mono tracking-widest text-brand-black dark:text-zinc-900 font-bold flex items-center gap-1.5 select-none">
+              <h3 className="text-[10px] xs:text-[11px] sm:text-xs uppercase font-mono tracking-widest text-brand-yellow dark:text-zinc-900 font-bold flex items-center gap-1.5 select-none">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-yellow opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-yellow"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-yellow dark:bg-black opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-yellow dark:bg-black"></span>
                 </span>
                 Live updates
               </h3>
@@ -1929,312 +1930,475 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
       {/* Propose Curriculum Modal Window */}
       {showCurriculumModal && (
         <div id="add-curriculum-modal" className="fixed inset-0 bg-brand-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white border border-zinc-100 rounded-3xl w-full max-w-lg p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
-            
-            <div className="flex items-center justify-between border-b border-zinc-50 pb-4 mb-4">
-              <h3 className="text-base font-light tracking-tight text-brand-black">
-                {editingCurriculum ? 'Edit Course Proposal' : 'Propose New Course'} // <span className="font-semibold">{editingCurriculum ? 'Update details' : 'Course Proposal Wizard'}</span>
-              </h3>
-              <button
-                id="close-curriculum-modal-btn"
-                onClick={() => {
-                  setShowCurriculumModal(false);
-                  setEditingCurriculum(null);
-                }}
-                className="text-zinc-400 hover:text-brand-black font-semibold text-xl"
-              >
-                &times;
-              </button>
-            </div>
+          {(() => {
+            const isSection1Filled = currTitle.trim().length > 0 && currDesc.trim().length > 0;
+            const isSection2Filled = currCategory.trim().length > 0 && currPrice >= 0 && currDuration > 0;
+            const isSection3Filled = currImageUrl.trim().length > 0;
+            const isSection4Filled = moduleList.length > 0;
 
-            <form onSubmit={handleCreateCurriculum} className="space-y-4">
-              <div>
-                <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Course Project Name</label>
-                <input
-                  id="cur-input-title"
-                  type="text"
-                  placeholder="e.g. Advanced Fluid Typography Systems"
-                  value={currTitle}
-                  onChange={(e) => setCurrTitle(e.target.value)}
-                  className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Course Summary & Outcome (what the end goal will be for the student who takes the course)</label>
-                <textarea
-                  id="cur-input-desc"
-                  placeholder="Draft a brief course summary & outcome, including what the end goal will be for the student who takes the course..."
-                  value={currDesc}
-                  onChange={(e) => setCurrDesc(e.target.value)}
-                  className="w-full min-h-20 text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow resize-none"
-                  required
-                ></textarea>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="col-span-1 relative z-30">
-                  <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Category</label>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsCategoryDropdownOpen(!isCategoryDropdownOpen);
-                        setIsLevelDropdownOpen(false);
-                      }}
-                      className="w-full text-left text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-2.5 py-2 flex items-center justify-between select-none cursor-pointer"
-                    >
-                      <span className="truncate">{currCategory}</span>
-                      <ChevronDown size={12} className={`text-zinc-500 shrink-0 transition-transform ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
-                    </button>
-                    {isCategoryDropdownOpen && (
-                      <>
-                        <div className="fixed inset-0 z-40" onClick={() => setIsCategoryDropdownOpen(false)} />
-                        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-zinc-150 rounded-xl shadow-lg max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-150">
-                          {[
-                            "Business",
-                            "Marketing",
-                            "Design",
-                            "Tech",
-                            "Vocational (Hairmaking, Carpentry, etc.)",
-                            "Visual Design",
-                            "Cloud Architecture",
-                            "Security Engineering",
-                            "Other"
-                          ].map((cat) => (
-                            <button
-                              key={cat}
-                              type="button"
-                              onClick={() => {
-                                setCurrCategory(cat);
-                                setIsCategoryDropdownOpen(false);
-                              }}
-                              className={`w-full text-left px-2.5 py-2 text-[11px] font-light hover:bg-zinc-50 transition-colors select-none ${currCategory === cat ? 'bg-brand-light font-medium text-brand-black' : 'text-zinc-700'}`}
-                            >
-                              {cat}
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <div className="col-span-1 relative z-30">
-                  <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Target Skill level</label>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsLevelDropdownOpen(!isLevelDropdownOpen);
-                        setIsCategoryDropdownOpen(false);
-                      }}
-                      className="w-full text-left text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-2.5 py-2 flex items-center justify-between select-none cursor-pointer"
-                    >
-                      <span className="truncate">{currLevel}</span>
-                      <ChevronDown size={12} className={`text-zinc-500 shrink-0 transition-transform ${isLevelDropdownOpen ? 'rotate-180' : ''}`} />
-                    </button>
-                    {isLevelDropdownOpen && (
-                      <>
-                        <div className="fixed inset-0 z-40" onClick={() => setIsLevelDropdownOpen(false)} />
-                        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-zinc-150 rounded-xl shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
-                          {[
-                            "Beginner",
-                            "Intermediate",
-                            "Advanced"
-                          ].map((lvl) => (
-                            <button
-                              key={lvl}
-                              type="button"
-                              onClick={() => {
-                                setCurrLevel(lvl as any);
-                                setIsLevelDropdownOpen(false);
-                              }}
-                              className={`w-full text-left px-2.5 py-2 text-[11px] font-light hover:bg-zinc-50 transition-colors select-none ${currLevel === lvl ? 'bg-brand-light font-medium text-brand-black' : 'text-zinc-700'}`}
-                            >
-                              {lvl}
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <div className="col-span-1">
-                  <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Weeks count</label>
-                  <input
-                    id="cur-input-duration"
-                    type="number"
-                    min={1}
-                    max={24}
-                    value={currDuration}
-                    onChange={(e) => setCurrDuration(Number(e.target.value))}
-                    className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-2.5 py-2 focus:outline-hidden"
-                    required
-                  />
-                </div>
-
-                <div className="col-span-1">
-                  <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Best Price (NGN)</label>
-                  <input
-                    id="cur-input-price"
-                    type="number"
-                    min={0}
-                    value={currPrice}
-                    onChange={(e) => setCurrPrice(Number(e.target.value))}
-                    className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-2.5 py-2 focus:outline-hidden"
-                    required
-                  />
-                </div>
-              </div>
-
-              {currCategory === 'Other' && (
-                <div className="animate-in fade-in duration-150">
-                  <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Custom Category Name</label>
-                  <input
-                    type="text"
-                    placeholder="Enter custom category name..."
-                    value={customCategory}
-                    onChange={(e) => setCustomCategory(e.target.value)}
-                    className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow"
-                    required
-                  />
-                </div>
-              )}
-
-              <div>
-                <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1.5 flex items-center gap-1.5">
-                  <Camera size={12} className="text-brand-yellow" />
-                  Course Cover Image
-                </label>
+            return (
+              <div className="bg-white border border-zinc-100 rounded-3xl w-full max-w-lg p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
                 
-                <div className="space-y-3">
-                  {/* Visual Dropzone/File Selector */}
-                  <div className="flex items-center gap-4">
-                    {currImageUrl ? (
-                      <div className="relative w-24 h-16 rounded-xl overflow-hidden border border-zinc-200 bg-zinc-50 shrink-0 shadow-2xs">
-                        <img 
-                          src={currImageUrl} 
-                          alt="Cover preview" 
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover"
-                        />
-                        <button
-                          type="button"
-                          id="clear-cover-image-btn"
-                          onClick={() => setCurrImageUrl('')}
-                          className="absolute inset-0 bg-brand-black/40 hover:bg-brand-black/60 flex items-center justify-center text-white transition-colors cursor-pointer"
-                          title="Remove cover image"
-                        >
-                          <X size={14} className="stroke-[2.5]" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="w-24 h-16 rounded-xl border-2 border-dashed border-zinc-200 flex items-center justify-center text-zinc-400 shrink-0 bg-zinc-100/50">
-                        <Camera size={14} className="text-zinc-450" />
-                      </div>
-                    )}
-
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center">
-                        <label className="bg-brand-black hover:bg-zinc-900 text-brand-yellow text-[10px] font-semibold uppercase tracking-wider px-3.5 py-2 rounded-xl cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs">
-                          <Upload size={11} />
-                          Upload Image File
-                          <input 
-                            id="cur-input-file-image"
-                            type="file" 
-                            accept="image/*" 
-                            onChange={handleImageUpload}
-                            className="hidden" 
-                          />
-                        </label>
-                        {currImageUrl && (
-                          <button
-                            type="button"
-                            id="remove-image-file-btn"
-                            onClick={() => setCurrImageUrl('')}
-                            className="ml-2 text-[10px] text-zinc-400 hover:text-red-500 font-medium cursor-pointer py-1 px-2 hover:bg-zinc-100 rounded-lg transition-colors"
-                          >
-                            Remove Image
-                          </button>
-                        )}
-                      </div>
-                      <p className="text-[9px] text-zinc-400 font-light leading-snug">
-                        Recommended size: 800x450 (16:9). Select JPEG/PNG image. If left empty, an aesthetic category backdrop will be auto-assigned.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Modules list addition */}
-              <div>
-                <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Weekly Modules Syllabus ({moduleList.length})</label>
-                <div className="flex gap-2 mb-2">
-                  <input
-                    id="module-type-input"
-                    type="text"
-                    placeholder="e.g. Constructing grid columns for margins"
-                    value={newModuleText}
-                    onChange={(e) => setNewModuleText(e.target.value)}
-                    className="flex-1 text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3 py-2.5 focus:outline-hidden"
-                  />
+                <div className="flex items-center justify-between border-b border-zinc-50 pb-4 mb-4">
+                  <h3 className="text-base font-light tracking-tight text-brand-black">
+                    {editingCurriculum ? 'Edit Course Proposal' : 'Propose New Course'} // <span className="font-semibold">{editingCurriculum ? 'Update details' : 'Course Proposal Wizard'}</span>
+                  </h3>
                   <button
-                    id="add-module-item-btn"
-                    type="button"
-                    onClick={handleAddModule}
-                    className="bg-brand-black text-white rounded-xl px-3 text-xs font-light cursor-pointer"
+                    id="close-curriculum-modal-btn"
+                    onClick={() => {
+                      setShowCurriculumModal(false);
+                      setEditingCurriculum(null);
+                      setProposalActiveSection('info');
+                    }}
+                    className="text-zinc-400 hover:text-brand-black font-semibold text-xl cursor-pointer"
                   >
-                    Add
+                    &times;
                   </button>
                 </div>
 
-                <div className="space-y-1.5 max-h-24 overflow-y-auto">
-                  {moduleList.map((mod, index) => (
-                    <div key={index} className="flex justify-between items-center bg-zinc-50 px-3 py-1.5 rounded-lg text-[11px] font-mono text-zinc-500">
-                      <span className="truncate">Week {index + 1}: {mod}</span>
+                <form onSubmit={handleCreateCurriculum} className="space-y-4">
+                  
+                  {/* Scrollable form sections wrapper */}
+                  <div className="max-h-[50vh] overflow-y-auto pr-1.5 space-y-3 scrollbar-thin">
+                    
+                    {/* Section 1: Course Basics */}
+                    <div className="border border-zinc-100 rounded-2xl overflow-hidden bg-zinc-50/25">
                       <button
                         type="button"
-                        onClick={() => handleRemoveModule(index)}
-                        className="text-red-600 hover:text-red-800 font-bold px-1"
+                        onClick={() => setProposalActiveSection(proposalActiveSection === 'info' ? '' as any : 'info')}
+                        className="w-full text-left px-4 py-3 bg-zinc-50 hover:bg-zinc-100/50 border-b border-zinc-100 flex items-center justify-between cursor-pointer select-none transition-colors"
                       >
-                        &times;
+                        <div className="flex items-center gap-2">
+                          <FileText size={16} className={isSection1Filled ? "text-emerald-500" : "text-zinc-400"} />
+                          <div>
+                            <h4 className="text-xs font-semibold text-brand-black">1. Course Basics</h4>
+                            <p className="text-[10px] text-zinc-400 font-light">Title & Description</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {isSection1Filled && (
+                            <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-0.5 font-mono font-medium">
+                              <CheckCircle2 size={10} className="stroke-[2.5]" /> Done
+                            </span>
+                          )}
+                          <ChevronDown size={14} className={`text-zinc-400 transition-transform ${proposalActiveSection === 'info' ? 'rotate-180' : ''}`} />
+                        </div>
                       </button>
+
+                      <AnimatePresence initial={false}>
+                        {proposalActiveSection === 'info' && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: 'easeInOut' }}
+                            className="overflow-hidden"
+                          >
+                            <div className="p-4 space-y-3 bg-white border-t border-zinc-100">
+                              <div>
+                                <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Course Project Name</label>
+                                <input
+                                  id="cur-input-title"
+                                  type="text"
+                                  placeholder="e.g. Advanced Fluid Typography Systems"
+                                  value={currTitle}
+                                  onChange={(e) => setCurrTitle(e.target.value)}
+                                  className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow"
+                                  required
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Course Summary & Outcome (what the end goal will be for the student who takes the course)</label>
+                                <textarea
+                                  id="cur-input-desc"
+                                  placeholder="Draft a brief course summary & outcome, including what the end goal will be for the student who takes the course..."
+                                  value={currDesc}
+                                  onChange={(e) => setCurrDesc(e.target.value)}
+                                  className="w-full min-h-20 text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow resize-none"
+                                  required
+                                ></textarea>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                  ))}
-                </div>
-              </div>
 
-              <div className="pt-2 border-t border-zinc-50 flex gap-2">
-                <button
-                  id="final-propose-cur-btn"
-                  type="submit"
-                  className="bg-brand-black hover:bg-zinc-900 text-white px-4 py-2.5 rounded-xl text-xs font-light uppercase tracking-wide cursor-pointer flex-1"
-                >
-                  {editingCurriculum ? 'Save Changes' : 'Submit Proposal to Admin'}
-                </button>
-                <button
-                  id="cancel-propose-cur-btn"
-                  type="button"
-                  onClick={() => {
-                    setShowCurriculumModal(false);
-                    setEditingCurriculum(null);
-                    setCurrTitle('');
-                    setCurrDesc('');
-                    setCurrPrice(150000);
-                    setCurrImageUrl('');
-                    setModuleList([]);
-                  }}
-                  className="bg-zinc-100 text-zinc-600 px-4 py-2.5 rounded-xl text-xs font-light uppercase cursor-pointer"
-                >
-                  Cancel
-                </button>
-              </div>
+                    {/* Section 2: Details & Pricing */}
+                    <div className="border border-zinc-100 rounded-2xl overflow-hidden bg-zinc-50/25">
+                      <button
+                        type="button"
+                        onClick={() => setProposalActiveSection(proposalActiveSection === 'details' ? '' as any : 'details')}
+                        className="w-full text-left px-4 py-3 bg-zinc-50 hover:bg-zinc-100/50 border-b border-zinc-100 flex items-center justify-between cursor-pointer select-none transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Sliders size={16} className={isSection2Filled ? "text-emerald-500" : "text-zinc-400"} />
+                          <div>
+                            <h4 className="text-xs font-semibold text-brand-black">2. Details & Pricing</h4>
+                            <p className="text-[10px] text-zinc-400 font-light">Category, Level, Duration & Price</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {isSection2Filled && (
+                            <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-0.5 font-mono font-medium">
+                              <CheckCircle2 size={10} className="stroke-[2.5]" /> Done
+                            </span>
+                          )}
+                          <ChevronDown size={14} className={`text-zinc-400 transition-transform ${proposalActiveSection === 'details' ? 'rotate-180' : ''}`} />
+                        </div>
+                      </button>
 
-            </form>
-          </div>
+                      <AnimatePresence initial={false}>
+                        {proposalActiveSection === 'details' && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: 'easeInOut' }}
+                            className="overflow-hidden"
+                          >
+                            <div className="p-4 space-y-4 bg-white border-t border-zinc-100">
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="col-span-1 relative">
+                                  <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Category</label>
+                                  <div className="relative">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setIsCategoryDropdownOpen(!isCategoryDropdownOpen);
+                                        setIsLevelDropdownOpen(false);
+                                      }}
+                                      className="w-full text-left text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-2.5 py-2 flex items-center justify-between select-none cursor-pointer"
+                                    >
+                                      <span className="truncate">{currCategory}</span>
+                                      <ChevronDown size={12} className={`text-zinc-500 shrink-0 transition-transform ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {isCategoryDropdownOpen && (
+                                      <>
+                                        <div className="fixed inset-0 z-40" onClick={() => setIsCategoryDropdownOpen(false)} />
+                                        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-zinc-150 rounded-xl shadow-lg max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-150">
+                                          {[
+                                            "Business",
+                                            "Marketing",
+                                            "Design",
+                                            "Tech",
+                                            "Vocational (Hairmaking, Carpentry, etc.)",
+                                            "Visual Design",
+                                            "Cloud Architecture",
+                                            "Security Engineering",
+                                            "Other"
+                                          ].map((cat) => (
+                                            <button
+                                              key={cat}
+                                              type="button"
+                                              onClick={() => {
+                                                setCurrCategory(cat);
+                                                setIsCategoryDropdownOpen(false);
+                                              }}
+                                              className={`w-full text-left px-2.5 py-2 text-[11px] font-light hover:bg-zinc-50 transition-colors select-none cursor-pointer ${currCategory === cat ? 'bg-brand-light font-medium text-brand-black' : 'text-zinc-700'}`}
+                                            >
+                                              {cat}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="col-span-1 relative">
+                                  <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Target Skill level</label>
+                                  <div className="relative">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setIsLevelDropdownOpen(!isLevelDropdownOpen);
+                                        setIsCategoryDropdownOpen(false);
+                                      }}
+                                      className="w-full text-left text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-2.5 py-2 flex items-center justify-between select-none cursor-pointer"
+                                    >
+                                      <span className="truncate">{currLevel}</span>
+                                      <ChevronDown size={12} className={`text-zinc-500 shrink-0 transition-transform ${isLevelDropdownOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {isLevelDropdownOpen && (
+                                      <>
+                                        <div className="fixed inset-0 z-40" onClick={() => setIsLevelDropdownOpen(false)} />
+                                        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-zinc-150 rounded-xl shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+                                          {[
+                                            "Beginner",
+                                            "Intermediate",
+                                            "Advanced"
+                                          ].map((lvl) => (
+                                            <button
+                                              key={lvl}
+                                              type="button"
+                                              onClick={() => {
+                                                setCurrLevel(lvl as any);
+                                                setIsLevelDropdownOpen(false);
+                                              }}
+                                              className={`w-full text-left px-2.5 py-2 text-[11px] font-light hover:bg-zinc-50 transition-colors select-none cursor-pointer ${currLevel === lvl ? 'bg-brand-light font-medium text-brand-black' : 'text-zinc-700'}`}
+                                            >
+                                              {lvl}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="col-span-1">
+                                  <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Weeks count</label>
+                                  <input
+                                    id="cur-input-duration"
+                                    type="number"
+                                    min={1}
+                                    max={24}
+                                    value={currDuration}
+                                    onChange={(e) => setCurrDuration(Number(e.target.value))}
+                                    className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-2.5 py-2 focus:outline-hidden focus:border-brand-yellow"
+                                    required
+                                  />
+                                </div>
+
+                                <div className="col-span-1">
+                                  <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Best Price (NGN)</label>
+                                  <input
+                                    id="cur-input-price"
+                                    type="number"
+                                    min={0}
+                                    value={currPrice}
+                                    onChange={(e) => setCurrPrice(Number(e.target.value))}
+                                    className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-2.5 py-2 focus:outline-hidden focus:border-brand-yellow"
+                                    required
+                                  />
+                                </div>
+                              </div>
+
+                              {currCategory === 'Other' && (
+                                <div className="animate-in fade-in duration-150">
+                                  <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Custom Category Name</label>
+                                  <input
+                                    type="text"
+                                    placeholder="Enter custom category name..."
+                                    value={customCategory}
+                                    onChange={(e) => setCustomCategory(e.target.value)}
+                                    className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow"
+                                    required
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Section 3: Cover Image */}
+                    <div className="border border-zinc-100 rounded-2xl overflow-hidden bg-zinc-50/25">
+                      <button
+                        type="button"
+                        onClick={() => setProposalActiveSection(proposalActiveSection === 'image' ? '' as any : 'image')}
+                        className="w-full text-left px-4 py-3 bg-zinc-50 hover:bg-zinc-100/50 border-b border-zinc-100 flex items-center justify-between cursor-pointer select-none transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Camera size={16} className={isSection3Filled ? "text-emerald-500" : "text-zinc-400"} />
+                          <div>
+                            <h4 className="text-xs font-semibold text-brand-black">3. Cover Image</h4>
+                            <p className="text-[10px] text-zinc-400 font-light">Course Illustration Image</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {isSection3Filled && (
+                            <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-0.5 font-mono font-medium">
+                              <CheckCircle2 size={10} className="stroke-[2.5]" /> Done
+                            </span>
+                          )}
+                          <ChevronDown size={14} className={`text-zinc-400 transition-transform ${proposalActiveSection === 'image' ? 'rotate-180' : ''}`} />
+                        </div>
+                      </button>
+
+                      <AnimatePresence initial={false}>
+                        {proposalActiveSection === 'image' && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: 'easeInOut' }}
+                            className="overflow-hidden"
+                          >
+                            <div className="p-4 bg-white border-t border-zinc-100 space-y-3">
+                              <div className="flex items-center gap-4">
+                                {currImageUrl ? (
+                                  <div className="relative w-24 h-16 rounded-xl overflow-hidden border border-zinc-200 bg-zinc-50 shrink-0 shadow-2xs">
+                                    <img 
+                                      src={currImageUrl} 
+                                      alt="Cover preview" 
+                                      referrerPolicy="no-referrer"
+                                      className="w-full h-full object-cover"
+                                    />
+                                    <button
+                                      type="button"
+                                      id="clear-cover-image-btn"
+                                      onClick={() => setCurrImageUrl('')}
+                                      className="absolute inset-0 bg-brand-black/40 hover:bg-brand-black/60 flex items-center justify-center text-white transition-colors cursor-pointer"
+                                      title="Remove cover image"
+                                    >
+                                      <X size={14} className="stroke-[2.5]" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="w-24 h-16 rounded-xl border-2 border-dashed border-zinc-200 flex items-center justify-center text-zinc-400 shrink-0 bg-zinc-100/50">
+                                    <Camera size={14} className="text-zinc-450" />
+                                  </div>
+                                )}
+
+                                <div className="flex-1 space-y-1">
+                                  <div className="flex items-center">
+                                    <label className="bg-brand-black hover:bg-zinc-900 text-brand-yellow text-[10px] font-semibold uppercase tracking-wider px-3.5 py-2 rounded-xl cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs">
+                                      <Upload size={11} />
+                                      Upload Image File
+                                      <input 
+                                        id="cur-input-file-image"
+                                        type="file" 
+                                        accept="image/*" 
+                                        onChange={handleImageUpload}
+                                        className="hidden" 
+                                      />
+                                    </label>
+                                    {currImageUrl && (
+                                      <button
+                                        type="button"
+                                        id="remove-image-file-btn"
+                                        onClick={() => setCurrImageUrl('')}
+                                        className="ml-2 text-[10px] text-zinc-400 hover:text-red-500 font-medium cursor-pointer py-1 px-2 hover:bg-zinc-100 rounded-lg transition-colors"
+                                      >
+                                        Remove Image
+                                      </button>
+                                    )}
+                                  </div>
+                                  <p className="text-[9px] text-zinc-400 font-light leading-snug">
+                                    Recommended size: 800x450 (16:9). Select JPEG/PNG image. If left empty, an aesthetic category backdrop will be auto-assigned.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Section 4: Syllabus & Modules */}
+                    <div className="border border-zinc-100 rounded-2xl overflow-hidden bg-zinc-50/25">
+                      <button
+                        type="button"
+                        onClick={() => setProposalActiveSection(proposalActiveSection === 'syllabus' ? '' as any : 'syllabus')}
+                        className="w-full text-left px-4 py-3 bg-zinc-50 hover:bg-zinc-100/50 border-b border-zinc-100 flex items-center justify-between cursor-pointer select-none transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <BookOpen size={16} className={isSection4Filled ? "text-emerald-500" : "text-zinc-400"} />
+                          <div>
+                            <h4 className="text-xs font-semibold text-brand-black">4. Syllabus & Modules</h4>
+                            <p className="text-[10px] text-zinc-400 font-light">Weekly Curriculum Plan ({moduleList.length})</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {isSection4Filled && (
+                            <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-0.5 font-mono font-medium">
+                              <CheckCircle2 size={10} className="stroke-[2.5]" /> Done
+                            </span>
+                          )}
+                          <ChevronDown size={14} className={`text-zinc-400 transition-transform ${proposalActiveSection === 'syllabus' ? 'rotate-180' : ''}`} />
+                        </div>
+                      </button>
+
+                      <AnimatePresence initial={false}>
+                        {proposalActiveSection === 'syllabus' && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: 'easeInOut' }}
+                            className="overflow-hidden"
+                          >
+                            <div className="p-4 bg-white border-t border-zinc-100 space-y-3">
+                              <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Weekly Modules Syllabus ({moduleList.length})</label>
+                              <div className="flex gap-2">
+                                <input
+                                  id="module-type-input"
+                                  type="text"
+                                  placeholder="e.g. Constructing grid columns for margins"
+                                  value={newModuleText}
+                                  onChange={(e) => setNewModuleText(e.target.value)}
+                                  className="flex-1 text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3 py-2.5 focus:outline-hidden"
+                                />
+                                <button
+                                  id="add-module-item-btn"
+                                  type="button"
+                                  onClick={handleAddModule}
+                                  className="bg-brand-black text-white rounded-xl px-3 text-xs font-light cursor-pointer"
+                                >
+                                  Add
+                                </button>
+                              </div>
+
+                              <div className="space-y-1.5 max-h-36 overflow-y-auto scrollbar-thin">
+                                {moduleList.map((mod, index) => (
+                                  <div key={index} className="flex justify-between items-center bg-zinc-50 px-3 py-1.5 rounded-lg text-[11px] font-mono text-zinc-500">
+                                    <span className="truncate">Week {index + 1}: {mod}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveModule(index)}
+                                      className="text-red-600 hover:text-red-800 font-bold px-1 cursor-pointer"
+                                    >
+                                      &times;
+                                    </button>
+                                  </div>
+                                ))}
+                                {moduleList.length === 0 && (
+                                  <p className="text-[10px] text-zinc-400 font-mono py-2 text-center select-none">No modules added yet. Needs at least 1 week module.</p>
+                                )}
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                  </div>
+
+                  <div className="pt-3 border-t border-zinc-100 flex gap-2">
+                    <button
+                      id="final-propose-cur-btn"
+                      type="submit"
+                      className="bg-brand-black hover:bg-zinc-900 text-white px-4 py-2.5 rounded-xl text-xs font-light uppercase tracking-wide cursor-pointer flex-1"
+                    >
+                      {editingCurriculum ? 'Save Changes' : 'Submit Proposal to Admin'}
+                    </button>
+                    <button
+                      id="cancel-propose-cur-btn"
+                      type="button"
+                      onClick={() => {
+                        setShowCurriculumModal(false);
+                        setEditingCurriculum(null);
+                        setCurrTitle('');
+                        setCurrDesc('');
+                        setCurrPrice(150000);
+                        setCurrImageUrl('');
+                        setModuleList([]);
+                        setProposalActiveSection('info');
+                      }}
+                      className="bg-zinc-105 text-zinc-650 px-4 py-2.5 rounded-xl text-xs font-light uppercase cursor-pointer hover:bg-zinc-200"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
+                </form>
+              </div>
+            );
+          })()}
         </div>
       )}
 
