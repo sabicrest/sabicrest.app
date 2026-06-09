@@ -1117,7 +1117,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                   </span>
                 </div>
 
-                <div className="bg-black text-white border border-brand-yellow p-4 rounded-2xl min-h-[140px] xs:min-h-[150px] md:h-44 flex flex-col justify-between relative overflow-hidden shadow-lg">
+                <div id="live-updates-inner-card" className="bg-black text-white border border-brand-yellow p-4 rounded-2xl min-h-[140px] xs:min-h-[150px] md:h-44 flex flex-col justify-between relative overflow-hidden shadow-lg">
                   <AnimatePresence mode="wait">
                     {(() => {
                       const update = liveUpdates[activeUpdateIdx] || liveUpdates[0];

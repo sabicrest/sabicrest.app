@@ -366,7 +366,7 @@ html.dark #sabicrest-mobile-bottom-nav {
 html.dark #sabicrest-mobile-bottom-nav svg.lucide,
 html.dark #sabicrest-mobile-bottom-nav .lucide {
   filter: none !important;
-  stroke-width: 2.2 !important; /* Premium thick lines for maximum sharpness */
+  stroke-width: 1.35 !important; /* Elegant thinner lines for refined minimalist styling */
   transform: none !important;
 }
 
@@ -404,33 +404,43 @@ html.dark #sabicrest-mobile-bottom-nav .active-nav-item span {
 }
 
 /* --- LIVE UPDATES INNER CARD COLOR RESTORATION --- */
-/* The general dark mode rule forces all items in student-hero-banner to be dark, but the Live Updates card inside the ticker section is a black background card, so we must restore white and colored text visibility there. */
-html.dark #student-hero-banner #hero-live-ticker-section div.bg-black,
-html.dark #student-hero-banner #hero-live-ticker-section div.bg-black * {
+/* The live updates box is always a black background container. We must ensure its texts remain fully visible and correctly colored in BOTH light and dark modes, overriding any styling applied to hero banner descendants. */
+#live-updates-inner-card,
+#live-updates-inner-card *,
+html.dark #live-updates-inner-card,
+html.dark #live-updates-inner-card * {
   color: #ffffff !important;
 }
 
-html.dark #student-hero-banner #hero-live-ticker-section div.bg-black p {
+#live-updates-inner-card p,
+html.dark #live-updates-inner-card p {
   color: #f4f4f5 !important; /* text-zinc-100 equivalent */
 }
 
-html.dark #student-hero-banner #hero-live-ticker-section div.bg-black span.text-emerald-300 {
+#live-updates-inner-card span.text-emerald-300,
+html.dark #live-updates-inner-card span.text-emerald-300 {
   color: #6ee7b7 !important; /* text-emerald-300 equivalent */
 }
 
-html.dark #student-hero-banner #hero-live-ticker-section div.bg-black span.text-indigo-300 {
+#live-updates-inner-card span.text-indigo-300,
+html.dark #live-updates-inner-card span.text-indigo-300 {
   color: #a5b4fc !important; /* text-indigo-300 equivalent */
 }
 
-html.dark #student-hero-banner #hero-live-ticker-section div.bg-black span.text-brand-yellow {
+#live-updates-inner-card span.text-brand-yellow,
+html.dark #live-updates-inner-card span.text-brand-yellow {
   color: #fbbf24 !important; /* text-brand-yellow equivalent */
 }
 
-html.dark #student-hero-banner #hero-live-ticker-section div.bg-black span.text-blue-300 {
+#live-updates-inner-card span.text-blue-300,
+html.dark #live-updates-inner-card span.text-blue-300 {
   color: #93c5fd !important; /* text-blue-300 equivalent */
 }
 
-html.dark #student-hero-banner #hero-live-ticker-section div.bg-black span.text-zinc-400 {
+#live-updates-inner-card .text-zinc-400,
+html.dark #live-updates-inner-card .text-zinc-405,
+#live-updates-inner-card .text-zinc-400 *,
+html.dark #live-updates-inner-card .text-zinc-400 * {
   color: #a1a1aa !important; /* text-zinc-400 equivalent */
 }
 
