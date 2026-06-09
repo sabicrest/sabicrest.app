@@ -723,9 +723,9 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
             <button
               id="assign-assignment-trigger"
               onClick={() => setShowAssignModal(true)}
-              className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-850 text-white dark:text-white border border-zinc-805 dark:border-black/10 rounded-xl py-2.5 px-4 text-xs font-light tracking-wide uppercase transition-all cursor-pointer shadow-xs focus-ring"
+              className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-850 text-white border border-zinc-800 rounded-xl py-2.5 px-4 text-xs font-light tracking-wide uppercase transition-all cursor-pointer shadow-xs focus-ring"
             >
-              <Plus size={14} className="text-zinc-400 dark:text-white font-normal" /> Assign Student Assignment
+              <Plus size={14} className="text-zinc-400 font-normal" /> Assign Student Assignment
             </button>
 
             <button
@@ -740,17 +740,17 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
               }}
               className={`flex items-center gap-2 rounded-xl py-2.5 px-4 text-xs font-semibold tracking-wide uppercase transition-all cursor-pointer shadow-xs focus-ring ${
                 currentUser.verified 
-                  ? 'bg-brand-yellow hover:bg-amber-405 text-brand-black dark:bg-black dark:text-white dark:hover:bg-neutral-900'
-                  : 'bg-zinc-800 hover:bg-zinc-705 text-zinc-300 border border-zinc-700 dark:bg-black dark:text-white dark:hover:bg-neutral-900 dark:border-black/10'
+                  ? 'bg-brand-yellow hover:bg-amber-400 text-brand-black'
+                  : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'
               }`}
             >
               {currentUser.verified ? (
                 <>
-                  <Plus size={14} className="font-semibold text-brand-black dark:text-white" /> Propose Curriculum
+                  <Plus size={14} className="font-semibold text-brand-black" /> Propose Curriculum
                 </>
               ) : (
                 <>
-                  <Lock size={14} className="text-brand-yellow dark:text-white font-semibold" /> Get Verified
+                  <Lock size={14} className="text-brand-yellow font-semibold" /> Get Verified
                 </>
               )}
             </button>
@@ -2174,6 +2174,37 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                                     required
                                   />
                                 </div>
+                              </div>
+
+                              {/* Live updated split calculation reminder banner */}
+                              <div className="col-span-2 bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-[11px] leading-relaxed select-none text-zinc-650 block">
+                                <div className="text-[9px] font-bold uppercase tracking-wide text-zinc-400 mb-1.5 flex items-center gap-1">
+                                  <AlertCircle size={12} className="text-brand-yellow font-semibold" /> Pricing Revenue Splitting Reminder
+                                </div>
+                                <p className="font-light text-zinc-500">
+                                  Under the current Trainer agreement, when a student pays <strong>₦{currPrice.toLocaleString()}</strong>, the revenue splits per course enrollment:
+                                </p>
+                                <div className="grid grid-cols-3 gap-2 mt-2 font-mono text-[10px] text-center">
+                                  <div className="bg-white p-2 border border-zinc-100 rounded-lg">
+                                    <span className="block text-[8px] text-zinc-400 uppercase tracking-tight font-mono">Trainer (60%)</span>
+                                    <span className="font-semibold text-neutral-800">₦{(currPrice * 0.60).toLocaleString()}</span>
+                                  </div>
+                                  <div className="bg-white p-2 border border-zinc-100 rounded-lg">
+                                    <span className="block text-[8px] text-zinc-400 uppercase tracking-tight font-mono font-medium">Platform (35%)</span>
+                                    <span className="font-semibold text-neutral-800">₦{(currPrice * 0.35).toLocaleString()}</span>
+                                  </div>
+                                  <div className="bg-white p-2 border border-zinc-100 rounded-lg">
+                                    <span className="block text-[8px] text-zinc-400 uppercase tracking-tight font-mono font-medium">Payout Pool (5%)</span>
+                                    <span className="font-semibold text-neutral-800">₦{(currPrice * 0.05).toLocaleString()}</span>
+                                  </div>
+                                </div>
+                                <div className="mt-2.5 pt-2 border-t border-zinc-200/50 flex items-center justify-between text-xs">
+                                  <span className="font-medium">Gross Trainer Payout (65%):</span>
+                                  <span className="font-bold text-amber-600 font-mono">₦{(currPrice * 0.65).toLocaleString()}</span>
+                                </div>
+                                <p className="text-[9px] text-zinc-455 mt-1 text-center font-light">
+                                  (Trainer collection minus platform's 35% commission. Fully outlined in Trainer Agreement)
+                                </p>
                               </div>
 
                               {currCategory === 'Other' && (

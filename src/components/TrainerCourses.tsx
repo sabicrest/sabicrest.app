@@ -31,6 +31,7 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
   const [showProposalModal, setShowProposalModal] = useState(false);
   const [editingCurriculum, setEditingCurriculum] = useState<Curriculum | null>(null);
   const [proposalActiveSection, setProposalActiveSection] = useState<'info' | 'details' | 'image' | 'syllabus'>('info');
+  const [showAgreementModal, setShowAgreementModal] = useState(false);
 
   // Form Fields State
   const [currTitle, setCurrTitle] = useState('');
@@ -206,11 +207,11 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
   });
 
   return (
-    <div id="trainer-courses-viewport" className="py-5 px-3 sm:px-6 max-w-5xl mx-auto space-y-6 select-none font-sans">
+    <div id="trainer-courses-viewport" className="py-6 max-w-7xl mx-auto px-4 select-none font-sans space-y-6">
       
       {/* Upper Dashboard Banner - Mobile-First */}
-      <div className="flex flex-col gap-4 border-b border-zinc-100 pb-5">
-        <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 border-b border-zinc-100 dark:border-zinc-900 pb-5">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-xl sm:text-2xl font-light tracking-tight text-neutral-900 dark:text-zinc-50 flex items-center gap-2">
               <BookOpen className="text-brand-yellow shrink-0" size={24} />
@@ -221,21 +222,29 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
             </p>
           </div>
           
-          <button
-            onClick={() => {
-              setEditingCurriculum(null);
-              setCurrTitle('');
-              setCurrDesc('');
-              setCurrPrice(150000);
-              setCurrImageUrl('');
-              setModuleList([]);
-              setProposalActiveSection('info');
-              setShowProposalModal(true);
-            }}
-            className="flex items-center gap-1.5 bg-neutral-900 hover:bg-neutral-850 dark:bg-brand-yellow dark:text-neutral-950 text-white px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all shadow-xs"
-          >
-            <Plus size={14} className="stroke-[2.5]" /> Propose
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowAgreementModal(true)}
+              className="flex items-center gap-1.5 bg-white border border-zinc-200 hover:bg-zinc-50 dark:bg-zinc-900 dark:border-zinc-850 dark:hover:bg-zinc-800 text-neutral-800 dark:text-zinc-200 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all shadow-2xs"
+            >
+              <FileText size={14} className="text-brand-yellow" /> Agreement
+            </button>
+            <button
+              onClick={() => {
+                setEditingCurriculum(null);
+                setCurrTitle('');
+                setCurrDesc('');
+                setCurrPrice(150000);
+                setCurrImageUrl('');
+                setModuleList([]);
+                setProposalActiveSection('info');
+                setShowProposalModal(true);
+              }}
+              className="flex items-center gap-1.5 bg-neutral-900 hover:bg-neutral-850 dark:bg-brand-yellow dark:text-neutral-950 text-white px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all shadow-xs"
+            >
+              <Plus size={14} className="stroke-[2.5]" /> Propose
+            </button>
+          </div>
         </div>
       </div>
 
@@ -268,14 +277,21 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
           </div>
         </div>
 
-        {/* Projected Revenue Metric */}
-        <div className="bg-zinc-50/50 border border-zinc-100 dark:bg-zinc-900 dark:border-zinc-800/60 p-3 h-24 rounded-2xl flex flex-col justify-between">
-          <DollarSign size={16} className="text-emerald-500" />
+        {/* Projected Revenue Metric - Gross Payout details */}
+        <div className="bg-amber-50/20 border border-amber-100/60 dark:bg-zinc-900 dark:border-zinc-800/60 p-3 h-auto rounded-3xl flex flex-col justify-between space-y-1 select-none">
+          <div className="flex items-center justify-between">
+            <DollarSign size={16} className="text-amber-600 dark:text-brand-yellow" />
+            <span className="text-[8px] bg-amber-100/60 text-amber-800 dark:bg-amber-950/40 dark:text-brand-yellow font-mono px-1.5 py-0.5 rounded uppercase leading-none font-bold">Gross 65%</span>
+          </div>
           <div>
-            <div className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono uppercase tracking-wide">Gross Earnings</div>
-            <div className="text-lg font-semibold text-neutral-900 dark:text-zinc-50">
-              ₦{expectedEarnings.toLocaleString('en-US', { minimumFractionDigits: 0 })}
+            <div className="text-[9px] text-zinc-400 dark:text-zinc-500 font-mono uppercase tracking-wide">Gross Payout</div>
+            <div className="text-sm font-semibold text-neutral-900 dark:text-zinc-50 font-sans tracking-tight">
+              ₦{(expectedEarnings * 0.65).toLocaleString('en-US', { minimumFractionDigits: 0 })}
             </div>
+            <p className="text-[8.5px] text-zinc-450 dark:text-zinc-500 font-light leading-none">
+              Direct: ₦{(expectedEarnings * 0.60).toLocaleString()} (60%) <br/>
+              Pool: ₦{(expectedEarnings * 0.05).toLocaleString()} (5%)
+            </p>
           </div>
         </div>
       </div>
@@ -739,6 +755,37 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                                 </div>
                               </div>
 
+                              {/* Live updated split calculation reminder banner */}
+                              <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-850 rounded-xl p-3 text-[11px] leading-relaxed select-none text-zinc-650 dark:text-zinc-300">
+                                <div className="text-[9px] font-bold uppercase tracking-wide text-zinc-400 dark:text-zinc-500 mb-1.5 flex items-center gap-1">
+                                  <AlertCircle size={12} className="text-brand-yellow font-semibold" /> Pricing Revenue Splitting Reminder
+                                </div>
+                                <p className="font-light text-zinc-500 dark:text-zinc-400">
+                                  Under the current Trainer agreement, when a student pays <strong>₦{currPrice.toLocaleString()}</strong>, the revenue splits per course enrollment:
+                                </p>
+                                <div className="grid grid-cols-3 gap-2 mt-2 font-mono text-[10px] text-center">
+                                  <div className="bg-white dark:bg-zinc-955 p-2 rounded-lg border border-zinc-100 dark:border-zinc-800">
+                                    <span className="block text-[8px] text-zinc-400 font-mono">Trainer (60%)</span>
+                                    <span className="font-semibold text-neutral-850 dark:text-zinc-300">₦{(currPrice * 0.60).toLocaleString()}</span>
+                                  </div>
+                                  <div className="bg-white dark:bg-zinc-955 p-2 rounded-lg border border-zinc-100 dark:border-zinc-800">
+                                    <span className="block text-[8px] text-zinc-400 font-mono">Platform (35%)</span>
+                                    <span className="font-semibold text-neutral-850 dark:text-zinc-300 font-mono">₦{(currPrice * 0.35).toLocaleString()}</span>
+                                  </div>
+                                  <div className="bg-white dark:bg-zinc-955 p-2 rounded-lg border border-zinc-100 dark:border-zinc-800">
+                                    <span className="block text-[8px] text-zinc-400 font-mono">Payout Pool (5%)</span>
+                                    <span className="font-semibold text-neutral-850 dark:text-zinc-300">₦{(currPrice * 0.05).toLocaleString()}</span>
+                                  </div>
+                                </div>
+                                <div className="mt-2.5 pt-2 border-t border-zinc-200/50 dark:border-zinc-800 flex items-center justify-between text-xs">
+                                  <span className="font-medium">Gross Trainer Payout (65%):</span>
+                                  <span className="font-bold text-amber-600 dark:text-brand-yellow font-mono">₦{(currPrice * 0.65).toLocaleString()}</span>
+                                </div>
+                                <p className="text-[9px] text-zinc-455 dark:text-zinc-500 mt-1 text-center font-light leading-snug">
+                                  (Trainer payout consists of 60% direct share and 5% payouts/app maintenance pool. The platform retains its 35% commission. Read Trainer Agreement details)
+                                </p>
+                              </div>
+
                               {currCategory === 'Other' && (
                                 <div className="space-y-1">
                                   <label className="block text-[10px] uppercase tracking-wider font-light text-zinc-400 mb-1">Custom Category</label>
@@ -941,6 +988,218 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
               </div>
             );
           })()}
+        </div>
+      )}
+
+      {/* In-app Trainer Partnership Agreement Modal - Downloadable as PDF/HTML */}
+      {showAgreementModal && (
+        <div id="trainer-partnership-agreement-modal" className="fixed inset-0 bg-neutral-950/70 backdrop-blur-xs flex items-center justify-center p-4 z-55 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-850 rounded-3xl w-full max-w-2xl p-5 sm:p-6 shadow-2xl relative flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
+            
+            {/* Agreement Header */}
+            <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-900 pb-3 mb-3 select-none">
+              <div>
+                <h3 className="text-sm font-semibold text-neutral-900 dark:text-zinc-50 flex items-center gap-1.5">
+                  <FileText className="text-brand-yellow" size={16} /> Trainer Revenue & Collaboration Agreement
+                </h3>
+                <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono tracking-wider mt-0.5 uppercase">
+                  Sabi Crest Platform Terms • Company Reference ID: trainer-ag-2026
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAgreementModal(false)}
+                className="text-zinc-400 hover:text-neutral-950 dark:hover:text-zinc-50 p-1.5 rounded-full bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            {/* Scrollable Agreement Body */}
+            <div id="agreement-document-content" className="flex-1 overflow-y-auto pr-2 space-y-4 text-xs text-zinc-650 dark:text-zinc-300 font-sans leading-relaxed select-text scrollbar-thin">
+              
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-amber-800 dark:text-amber-300 font-serif leading-normal italic py-3 select-none">
+                "This agreement defines the legal fee split policies, payouts processing structure, and standard curriculum guidelines for experts and trainers collaborating with the Sabi Crest educational platform. By creating a curriculum proposal on the platform, both Sabi Crest Ltd. and the Trainer agree to abide by the terms set forth in this document."
+              </div>
+
+              <div className="space-y-1 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-850 rounded-xl p-3 select-none">
+                <div className="text-[10px] text-zinc-400 font-mono uppercase tracking-wide">Document Metadata</div>
+                <div className="text-[11px] font-mono">
+                  <span className="font-semibold text-neutral-850 dark:text-zinc-200">Contract Version:</span> SC-V3.42-NIGERIA <br />
+                  <span className="font-semibold text-neutral-850 dark:text-zinc-200">Company Board Update Date:</span> June 1, 2026 <br />
+                  <span className="font-semibold text-neutral-850 dark:text-zinc-200">Status:</span> Legally Active (In-App Binding) <br />
+                  <span className="font-semibold text-neutral-850 dark:text-zinc-200">Applicable Region:</span> Comprehensive Global & Regional Domains
+                </div>
+              </div>
+
+              {/* Terms Details */}
+              <div className="space-y-3">
+                
+                <div>
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-neutral-900 dark:text-zinc-100">1. Pricing Controls & Setup</h4>
+                  <p className="font-light mt-0.5">
+                    Trainers are fully authorized to set their base Course Fees during the curriculum proposal phase. This base fee represents the complete, undivided price displayed to, and collected from, the student on the platform workspace. No unapproved surcharges shall be added to this set price.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-neutral-900 dark:text-zinc-100">2. Revenue Fee Splitting Model</h4>
+                  <p className="font-light mt-0.5">
+                    To maintain top-tier streaming infrastructure, facilitate student bonus initiatives, and ensure platform continuity, all premium enrollments are subject to a standard <strong>35% platforms retention commission</strong>.
+                  </p>
+                  <p className="font-semibold text-neutral-900 dark:text-zinc-100 mt-2 font-mono text-[11px] bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-2.5 rounded-xl">
+                    Fee Split Allocation:<br />
+                    • Trainer Direct Share: 60.0% of student fee<br />
+                    • Payouts Pool & App Maintenance: 5.0% of student fee<br />
+                    • Platform Retained Commission: 35.0% of student fee
+                  </p>
+                  <p className="font-light mt-1.5">
+                    Accordingly, the Trainer's **Gross Payout** is calculated as: **Total course fees minus the platform's 35% commission**, capturing cumulative direct share (60%) and payout bonus pool allocation (5%), making up exactly **65%** of student tuition revenue.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-neutral-900 dark:text-zinc-100">3. Verification Codes & Disbursals</h4>
+                  <p className="font-light mt-0.5">
+                    All student transfer receipts must be verified directly by the instructor or platform administrator. Disbursal cycles run on a bi-weekly basis. Sums accrued under the 5% Maintenance & Payout pool are disbursed as reward points or app support buffers to maximize cohort engagement.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-neutral-900 dark:text-zinc-100">4. Intellectual Rights & Terminations</h4>
+                  <p className="font-light mt-0.5">
+                    Curriculum syllabi proposed by the trainer remain the shared property of the respective trainer and Sabi Crest. Either party may exit partnership covenants with a seven (7) day structural notification, provided all current enrolled cohorts have successfully concluded.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Modal Actions */}
+            <div className="pt-3 border-t border-zinc-100 dark:border-zinc-900 flex gap-2 select-none">
+              <button
+                onClick={() => {
+                  const docHtml = `
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                      <meta charset="UTF-8">
+                      <title>Sabi Crest Trainer Partnership and Fee Split Agreement</title>
+                      <style>
+                        body {
+                          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                          line-height: 1.6;
+                          color: #1c1917;
+                          background-color: #fafaf9;
+                          margin: 40px auto;
+                          max-width: 680px;
+                          padding: 24px;
+                          border: 1px solid #e7e5e4;
+                          border-radius: 12px;
+                        }
+                        .header { text-align: center; border-bottom: 2px solid #e7e5e4; padding-bottom: 12px; margin-bottom: 24px; }
+                        .logo { font-weight: bold; font-size: 20px; text-transform: uppercase; letter-spacing: 1px; color: #1c1917; }
+                        .subtitle { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #78716c; margin-top: 4px; }
+                        h2 { font-size: 16px; border-bottom: 1px solid #e7e5e4; padding-bottom: 4px; margin-top: 24px; text-transform: uppercase; color: #1c1917; }
+                        .meta-info { font-family: monospace; font-size: 11px; background: #f5f5f4; border: 1px solid #e7e5e4; padding: 12px; border-radius: 8px; margin: 16px 0; }
+                        .split-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+                        .split-table th, .split-table td { border: 1px solid #e7e5e4; padding: 8px 12px; font-size: 12px; text-align: left; }
+                        .split-table th { background-color: #f5f5f4; }
+                        .footer { margin-top: 40px; font-size: 10px; text-align: center; color: #78716c; border-top: 1px solid #e7e5e4; padding-top: 12px; }
+                        @media print {
+                          body { border: none; margin: 0; background: #fff; }
+                          .no-print { display: none; }
+                        }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="header">
+                        <div class="logo">SABI CREST</div>
+                        <div class="subtitle">Official Trainer Collaboration & Fees Agreement</div>
+                      </div>
+                      
+                      <div class="meta-info">
+                        <strong>CONTRACT VERSION:</strong> SC-V3.42-NIGERIA<br>
+                        <strong>COMPANY UPDATE DATE:</strong> June 1, 2026<br>
+                        <strong>EFFECTIVE STATUS:</strong> Legally Binding Active Agreement<br>
+                        <strong>PARTICIPATING PARTY:</strong> Verified Platform Partner Coach (${currentUser.name})
+                      </div>
+
+                      <h2>1. Agreement Scope</h2>
+                      <p>This legally binding collaboration agreement defines the revenue split matrices, platform fee structures, and course governance policies between Sabi Crest Ltd. and Partner Trainer: <strong>${currentUser.name}</strong>.</p>
+
+                      <h2>2. Revenue Fee Splitting Model</h2>
+                      <p>Sabi Crest operates under an exact, transparent curriculum monetization split to cover continuous streaming servers, payouts processing, and platform maintenance:</p>
+                      
+                      <table class="split-table">
+                        <thead>
+                          <tr>
+                            <th>Recipient / Allocation</th>
+                            <th>Percentage Share</th>
+                            <th>Description</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td><strong>Trainer Shared Revenue</strong></td>
+                            <td>60.0%</td>
+                            <td>Direct disbursal to Trainer's bank account.</td>
+                          </tr>
+                          <tr>
+                            <td><strong>Payouts Pool & App Support</strong></td>
+                            <td>5.0%</td>
+                            <td>App maintenance reserves, regional buffers, and payouts.</td>
+                          </tr>
+                          <tr>
+                            <td><strong>Sabi Crest retained commission</strong></td>
+                            <td>35.0%</td>
+                            <td>Standard platform operational commission.</td>
+                          </tr>
+                          <tr style="font-weight: bold; background: #fafaf9;">
+                            <td>Gross Trainer Payout (Fee - 35% Platform commission)</td>
+                            <td>65.0%</td>
+                            <td>Trainer Collects directly (consists of Trainer 60% + Payout Pool 5%).</td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                      <h2>3. Verification & Payouts</h2>
+                      <p>Instructor shall review and verify students receipts directly inside the courses hub. Payout cycles conclusions occur on a bi-weekly cycle.</p>
+
+                      <h2>4. Formal Execution Covenants</h2>
+                      <p>Proposing new lesson materials via Sabi Crest represents standard electronic confirmation and execution of this agreement. Termination requires 7 days written notice from either partner.</p>
+
+                      <div class="footer">
+                        Sabi Crest Ltd. All Professional Education Rights Protected © 2026. Updated: June 1, 2026.
+                      </div>
+                    </body>
+                    </html>
+                  `;
+                  
+                  // Trigger direct download of the agreement HTML as printable document
+                  const blob = new Blob([docHtml], { type: 'text/html' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `SabiCrest_Trainer_Collaboration_Agreement_June2026.html`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                }}
+                className="bg-neutral-900 hover:bg-neutral-850 dark:bg-brand-yellow dark:text-neutral-950 text-white px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide cursor-pointer flex-1 flex items-center justify-center gap-1.5 shadow-sm"
+              >
+                <ArrowUpRight size={14} /> Download Agreement (PDF/HTML)
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAgreementModal(false)}
+                className="bg-zinc-100 dark:bg-zinc-900 text-neutral-850 dark:text-zinc-400 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer py-2.5 hover:bg-zinc-200"
+              >
+                Close Terms
+              </button>
+            </div>
+
+          </div>
         </div>
       )}
 
