@@ -15,6 +15,7 @@ import Messaging from './components/Messaging';
 import Scheduling from './components/Scheduling';
 import TeamCollaboration from './components/TeamCollaboration';
 import StudentSettings from './components/StudentSettings';
+import TrainerCourses from './components/TrainerCourses';
 import { LayoutDashboard, MessageSquare, CalendarDays, Users, ShieldAlert, Settings, Home, BookOpen, FileText, User as UserIcon } from 'lucide-react';
 
 export default function App() {
@@ -273,7 +274,7 @@ export default function App() {
         return [
           { id: 'dashboard', label: 'Space', icon: LayoutDashboard },
           { id: 'messaging', label: 'Chats', icon: MessageSquare },
-          { id: 'scheduling', label: 'Schedules', icon: CalendarDays },
+          { id: 'scheduling', label: 'My Courses', icon: BookOpen },
           { id: 'profile', label: 'Settings', icon: Settings }
         ];
       case 'admin':
@@ -309,6 +310,9 @@ export default function App() {
         return <Messaging currentUser={currentUser} />;
       
       case 'scheduling':
+        if (currentUser.role === 'trainer') {
+          return <TrainerCourses currentUser={currentUser} />;
+        }
         return <Scheduling currentUser={currentUser} />;
       
       case 'collaboration':
@@ -359,7 +363,7 @@ export default function App() {
             : [
                 { id: 'dashboard', label: 'Space', icon: LayoutDashboard },
                 { id: 'messaging', label: 'Chats', icon: MessageSquare, badge: chatCount > 0 ? chatCount : 0 },
-                { id: 'scheduling', label: 'Schedules', icon: CalendarDays },
+                { id: 'scheduling', label: 'My Courses', icon: BookOpen },
                 { id: 'profile', label: 'Settings', icon: Settings },
               ]
           ).map(item => {
