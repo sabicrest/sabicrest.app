@@ -31,14 +31,14 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
 
   // Theme states & responsive bindings
   const [themeMode, setThemeMode] = useState<'dark' | 'light' | 'system'>(() => {
-    return (localStorage.getItem('sabicrest_theme_mode') as 'dark' | 'light' | 'system') || 'dark';
+    return (localStorage.getItem('sabicrest_theme_mode') as 'dark' | 'light' | 'system') || 'light';
   });
   const [showThemeDropdown, setShowThemeDropdown] = useState(false);
   const themeContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleThemeUpdate = () => {
-      const mode = (localStorage.getItem('sabicrest_theme_mode') as 'dark' | 'light' | 'system') || 'dark';
+      const mode = (localStorage.getItem('sabicrest_theme_mode') as 'dark' | 'light' | 'system') || 'light';
       setThemeMode(mode);
     };
     window.addEventListener('sabicrest-theme-change', handleThemeUpdate);

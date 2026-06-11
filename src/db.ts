@@ -849,7 +849,7 @@ export class SupabaseDatabase {
 
   // --- Messages CRUD ---
   getMessages(): Message[] {
-    return this.messages;
+    return [...this.messages];
   }
 
   addMessage(msg: Omit<Message, 'id' | 'encryptedContent' | 'isEncrypted' | 'algorithm'>): Message {
@@ -861,7 +861,7 @@ export class SupabaseDatabase {
       isEncrypted: true,
       algorithm: 'AES-256-GCM / Supabase Database Crypt'
     };
-    this.messages.push(newMsg);
+    this.messages = [...this.messages, newMsg];
     this.saveToStorage();
     this.logTransaction('INSERT_SECURE_MESSAGE', 'Messages', JSON.stringify(newMsg));
     this.saveToSupabase('messages', newMsg.id, newMsg).then(() => {
@@ -1003,7 +1003,7 @@ export class SupabaseDatabase {
 
   // --- Sabicrest Community Hub CRUD ---
   getHubMessages(): HubMessage[] {
-    return this.hubMessages;
+    return [...this.hubMessages];
   }
 
   addHubMessage(msg: Omit<HubMessage, 'id' | 'timestamp' | 'reactions'>): HubMessage {
@@ -1013,7 +1013,7 @@ export class SupabaseDatabase {
       timestamp: new Date().toISOString(),
       reactions: {}
     };
-    this.hubMessages.push(newMsg);
+    this.hubMessages = [...this.hubMessages, newMsg];
     this.saveToStorage();
     this.logTransaction('INSERT_HUB_MESSAGE', 'HubMessages', JSON.stringify(newMsg));
     this.saveToSupabase('hub_messages', newMsg.id, newMsg).then(() => {

@@ -37,7 +37,7 @@ export default function App() {
   });
 
   const [themeMode, setThemeMode] = useState<'dark' | 'light' | 'system'>(() => {
-    return (localStorage.getItem('sabicrest_theme_mode') as 'dark' | 'light' | 'system') || 'dark';
+    return (localStorage.getItem('sabicrest_theme_mode') as 'dark' | 'light' | 'system') || 'light';
   });
 
   // Keep saved theme mode synchronized and responsive to system preference shifts
@@ -81,7 +81,7 @@ export default function App() {
   // Keep saved theme settings updated with standard custom custom-events
   useEffect(() => {
     const handleThemeUpdate = () => {
-      const mode = (localStorage.getItem('sabicrest_theme_mode') as 'dark' | 'light' | 'system') || 'dark';
+      const mode = (localStorage.getItem('sabicrest_theme_mode') as 'dark' | 'light' | 'system') || 'light';
       setThemeMode(mode);
     };
     window.addEventListener('sabicrest-theme-change', handleThemeUpdate);

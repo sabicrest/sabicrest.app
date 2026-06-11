@@ -3037,69 +3037,6 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                       ✏️ Edit My Answers / Start Over
                     </button>
                   </div>
-
-                  {/* HIGH VALUE DEVELOPER SIMULATION BOX */}
-                  <div className="bg-amber-50/50 border border-amber-250/50 rounded-2xl p-5 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Shield className="text-amber-600 w-4 h-4 fill-amber-100" />
-                      <h5 className="text-[11px] uppercase font-mono tracking-wider font-bold text-zinc-850">Trainer Verification Override Panel (For Testing)</h5>
-                    </div>
-                    <p className="text-[11px] text-zinc-650 font-light">
-                      To help you quickly test this application from start to finish, you can click the button below to instantly approve this account as a verified trainer!
-                    </p>
-
-                    <div className="flex flex-wrap gap-2 pt-1 font-mono">
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          const updated: User = {
-                            ...currentUser,
-                            verified: true
-                          };
-                          // Save back to DB
-                          await db.updateUser(updated);
-                          
-                          setVerificationData(p => ({
-                            ...p,
-                            status: 'approved'
-                          }));
-
-                          db.addNotification({
-                            userId: currentUser.id,
-                            title: '✨ Coach Accreditation Confirmed!',
-                            message: 'Congratulations! Your trainer verification has been approved. You are now authorized to propose curricula, assign work, and build advanced courses.',
-                            type: 'curriculum'
-                          });
-
-                          showToast("✓ Account approved! You can now create courses.");
-                        }}
-                        className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-[10px] uppercase tracking-wider px-4 py-2.5 rounded-xl cursor-pointer transition-colors inline-flex items-center gap-1.5"
-                      >
-                        <Check size={11} className="stroke-[3]" /> Approve Trainer Instantly
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVerificationData({
-                            category: null,
-                            step1Saved: false,
-                            step1Data: { links: '', lookbookLink: '', instagramLink: '', metrics: '50', farmPhotoUrl: '' },
-                            step2Saved: false,
-                            step2Data: '',
-                            step3Saved: false,
-                            step3Data: { videoUrl: '', recorded: false, durationSeconds: 0 },
-                            status: 'unstarted'
-                          });
-                          showToast("✓ Form cleared! Status updated to 'Unstarted'.");
-                        }}
-                        className="bg-zinc-150 hover:bg-zinc-200 text-zinc-650 font-medium text-[10px] uppercase px-3 py-2.5 rounded-xl cursor-pointer transition-colors"
-                      >
-                        Clear Form & Start Over
-                      </button>
-                    </div>
-                  </div>
-
                 </div>
               )}
 
