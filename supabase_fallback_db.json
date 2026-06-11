@@ -1,5 +1,66 @@
 {
-  "users": [],
+  "users": [
+    {
+      "id": "u-admin-1781181452362",
+      "name": "OFFICIALPRINCEDIKE (Admin)",
+      "email": "officialprincedike@gmail.com",
+      "role": "admin",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
+      "verified": true,
+      "joinedDate": "2026-06-11",
+      "status": "active",
+      "bio": "Authorized Administrative Director.||pwd:Deradyke19",
+      "skills": "[\"Database Auditing\",\"Infrastructure Design\",\"Cybersecurity\"]",
+      "teamId": null,
+      "phone": null,
+      "slackHandle": null,
+      "location": null,
+      "enrolledCourseIds": "[]",
+      "$id": "u-admin-1781181452362",
+      "$createdAt": "2026-06-11T16:23:02.068Z",
+      "$updatedAt": "2026-06-11T16:23:02.068Z"
+    },
+    {
+      "id": "u-custom-1781179779277",
+      "name": "Samson Gbizie",
+      "email": "parafinix29@gmail.com",
+      "role": "student",
+      "avatar": "",
+      "verified": false,
+      "joinedDate": "2026-06-11",
+      "status": "active",
+      "bio": "I love drawing||pwd:Deradyke19",
+      "skills": "[]",
+      "teamId": null,
+      "phone": "",
+      "slackHandle": "",
+      "location": "",
+      "enrolledCourseIds": "[]",
+      "$id": "u-custom-1781179779277",
+      "$createdAt": "2026-06-11T16:23:02.068Z",
+      "$updatedAt": "2026-06-11T16:23:02.068Z"
+    },
+    {
+      "id": "u-custom-1781181309256",
+      "name": "Ortega Bukunmi",
+      "email": "dike.lepharedise@gmail.com",
+      "role": "trainer",
+      "avatar": null,
+      "verified": false,
+      "joinedDate": "2026-06-11",
+      "status": "active",
+      "bio": "Member of the Sabicrest platform.||pwd:Deradyke19",
+      "skills": "[]",
+      "teamId": null,
+      "phone": null,
+      "slackHandle": null,
+      "location": null,
+      "enrolledCourseIds": null,
+      "$id": "u-custom-1781181309256",
+      "$createdAt": "2026-06-11T16:23:02.068Z",
+      "$updatedAt": "2026-06-11T16:23:02.068Z"
+    }
+  ],
   "messages": [],
   "hub_messages": [],
   "events": [],
@@ -11,6 +72,6 @@
   "enrollments": [],
   "admin_activities": [],
   "settings": {
-    "bypassSupabase": false
+    "bypassSupabase": true
   }
 }

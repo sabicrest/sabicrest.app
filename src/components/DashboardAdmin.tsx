@@ -22,6 +22,11 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
   const [rejectionTargetId, setRejectionTargetId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
 
+  // Course Trainer Application states
+  const [trainerApps, setTrainerApps] = useState(db.getTrainerApplications());
+  const [rejectionAppId, setRejectionAppId] = useState<string | null>(null);
+  const [rejectAppReason, setRejectAppReason] = useState('');
+
   // Course Enrollment approval states
   const [enrollments, setEnrollments] = useState<CourseEnrollment[]>(db.getEnrollments());
   const [rejectionEnrollmentId, setRejectionEnrollmentId] = useState<string | null>(null);
@@ -43,6 +48,7 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
     setTransactions(db.getTransactions());
     setEnrollments(db.getEnrollments());
     setActivities(db.getAdminActivities());
+    setTrainerApps(db.getTrainerApplications());
   };
 
   useEffect(() => {
@@ -271,6 +277,90 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
 
     setRejectionEnrollmentId(null);
     setRejectEnrollmentReason('');
+    reloadAdminData();
+  };
+
+  // --- Trainer Application Approvals & Rejections ---
+  const handleApproveTrainerApp = (appId: string) => {
+    const app = db.getTrainerApplications().find(a => a.id === appId);
+    if (!app) return;
+
+    const updatedApp = {
+      ...app,
+      status: 'approved' as const
+    };
+    db.updateTrainerApplication(updatedApp);
+
+    // Verify the trainer (user)
+    const trainerUser = db.getUsers().find(u => u.id === app.trainerId);
+    if (trainerUser) {
+      const updatedUser = {
+        ...trainerUser,
+        verified: true
+      };
+      db.updateUser(updatedUser);
+    }
+
+    // Inform the trainer
+    db.addNotification({
+      userId: app.trainerId,
+      title: 'Trainer Application Approved!',
+      message: `Congratulations! Your application to teach "${app.courseTitle}" has been approved. You are now fully verified as a course trainer!`,
+      type: 'system'
+    });
+
+    // Log admin audit activity
+    db.addAdminActivity({
+      adminId: currentUser.id,
+      adminName: currentUser.name,
+      adminEmail: currentUser.email,
+      action: 'Approve Trainer Application',
+      details: `Approved trainer application for ${app.trainerName} to teach "${app.courseTitle}".`,
+      ipAddress: '192.168.10.22'
+    });
+
+    reloadAdminData();
+  };
+
+  const handleOpenTrainerRejection = (id: string) => {
+    setRejectionAppId(id);
+    setRejectAppReason('');
+  };
+
+  const handleSaveTrainerRejection = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rejectionAppId) return;
+
+    const app = db.getTrainerApplications().find(a => a.id === rejectionAppId);
+    if (app) {
+      const updatedApp = {
+        ...app,
+        status: 'rejected' as const,
+        rejectionReason: rejectAppReason
+      };
+      db.updateTrainerApplication(updatedApp);
+
+      // Inform the trainer
+      db.addNotification({
+        userId: app.trainerId,
+        title: 'Trainer Application Rejected',
+        message: `Your application to teach "${app.courseTitle}" was reviewed and declined. Reason: "${rejectAppReason}".`,
+        type: 'system'
+      });
+
+      // Log admin audit activity
+      db.addAdminActivity({
+        adminId: currentUser.id,
+        adminName: currentUser.name,
+        adminEmail: currentUser.email,
+        action: 'Reject Trainer Application',
+        details: `Rejected trainer application of ${app.trainerName} for "${app.courseTitle}". Reason: "${rejectAppReason}"`,
+        ipAddress: '192.168.10.22'
+      });
+    }
+
+    setRejectionAppId(null);
+    setRejectAppReason('');
     reloadAdminData();
   };
 
@@ -864,6 +954,110 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
             })()}
           </div>
 
+          {/* Trainer Applications review Queue */}
+          <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-semibold tracking-wider text-amber-600 uppercase flex items-center gap-1.5 font-light">
+                <Award size={13} className="text-amber-500" /> Course Trainer Applications Queue ({trainerApps.filter(a => a.status === 'pending').length})
+              </h3>
+              <span className="text-[9px] font-mono uppercase bg-zinc-100 px-2.5 py-0.5 rounded text-zinc-500 font-medium select-none">
+                CAO Trainer Audits
+              </span>
+            </div>
+
+            {(() => {
+              const pendingApps = trainerApps.filter(a => a.status === 'pending');
+              if (pendingApps.length === 0) {
+                return (
+                  <div className="text-center p-8 text-zinc-400 font-light text-xs bg-zinc-50/50 rounded-2xl border border-dashed border-zinc-100 flex flex-col items-center gap-1">
+                    <UserCheck size={24} className="text-amber-500/30 mb-1 animate-pulse" />
+                    <p>All trainer applications audited.</p>
+                    <p className="text-[10px]">No pending instructor applications are currently awaiting CAO review.</p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="space-y-4">
+                  {pendingApps.map(app => (
+                    <div key={app.id} className="border border-zinc-150/75 rounded-2xl p-4 bg-zinc-50/30 flex flex-col md:flex-row justify-between gap-4">
+                      <div className="space-y-2 flex-grow">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[9px] font-mono tracking-wider bg-amber-50 text-amber-800 border border-amber-250 px-2 py-0.5 rounded uppercase font-bold">
+                            Trainer Application
+                          </span>
+                          <span className="text-[9.5px] font-mono text-zinc-400">
+                            Course Scope: <strong className="text-zinc-650 font-bold">{app.courseTitle}</strong> ({app.courseCategory})
+                          </span>
+                        </div>
+
+                        <div>
+                          <h4 className="text-sm font-semibold text-brand-black leading-tight">
+                            Applicant: {app.trainerName}
+                          </h4>
+                          <p className="text-[11px] text-zinc-500 font-light mt-0.5 font-mono">
+                            Email: {app.trainerEmail} // Experience: {app.experienceYears} Years
+                          </p>
+                        </div>
+
+                        <div className="space-y-1.5 text-xs font-mono text-zinc-600 bg-white p-3 rounded-lg border border-zinc-100">
+                          {app.portfolioUrl && (
+                            <p className="text-[10.5px]">
+                              ● <span className="text-zinc-400 font-mono">Portfolio/Website: </span>
+                              <a href={app.portfolioUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all">
+                                {app.portfolioUrl}
+                              </a>
+                            </p>
+                          )}
+                          {app.credentialsLink && (
+                            <p className="text-[10.5px]">
+                              ● <span className="text-zinc-400 font-mono">Credentials/Certificates: </span>
+                              <a href={app.credentialsLink} target="_blank" rel="noopener noreferrer" className="text-brand-yellow font-medium hover:underline break-all">
+                                {app.credentialsLink}
+                              </a>
+                            </p>
+                          )}
+                          {app.workshopAddress && (
+                            <p className="text-[10.5px] text-zinc-650 font-sans">
+                              ● <span className="text-zinc-400 font-mono">Studio/Workshop: </span>
+                              {app.workshopAddress}
+                            </p>
+                          )}
+                          {app.equipmentsOwned && (
+                            <p className="text-[10.5px] text-zinc-650 font-sans">
+                              ● <span className="text-zinc-400 font-mono">Verified Devices/Equipments: </span>
+                              {app.equipmentsOwned}
+                            </p>
+                          )}
+                          {app.submittedAt && (
+                            <p className="text-[9.5px] text-zinc-400">
+                              Submitted At: {new Date(app.submittedAt).toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex md:flex-col justify-end gap-1.5 shrink-0 self-center">
+                        <button
+                          onClick={() => handleApproveTrainerApp(app.id)}
+                          className="bg-[#3bb75e] hover:bg-[#218c3f] text-white rounded-xl text-[10px] uppercase font-bold px-4 py-2 cursor-pointer transition-colors"
+                        >
+                          Approve Application
+                        </button>
+                        <button
+                          onClick={() => handleOpenTrainerRejection(app.id)}
+                          className="bg-red-50 hover:bg-red-100 text-red-650 rounded-xl text-[10px] uppercase font-semibold px-4 py-2 cursor-pointer transition-colors"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+
           {/* Onboarded tenant Directory management list */}
           <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs" id="admin-users-directory-container">
             <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase mb-4 flex items-center gap-1.5 font-light">
@@ -1145,6 +1339,54 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
                 <button
                   type="button"
                   onClick={() => setRejectionEnrollmentId(null)}
+                  className="bg-zinc-100 text-zinc-650 px-4 py-2.5 rounded-xl text-xs uppercase cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Trainer Application Rejection comments modal dialog */}
+      {rejectionAppId && (
+        <div id="add-trainer-rejection-modal" className="fixed inset-0 bg-brand-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white border border-zinc-100 rounded-3xl w-full max-w-md p-6 shadow-2xl relative animate-in fade-in zoom-in-50">
+            <div className="flex items-center justify-between border-b border-zinc-50 pb-4 mb-4">
+              <h3 className="text-sm font-semibold tracking-tight text-brand-black flex items-center gap-1.5">
+                <XCircle size={14} className="text-red-600" /> Trainer Application Query Feedback
+              </h3>
+              <button
+                onClick={() => setRejectionAppId(null)}
+                className="text-zinc-400 hover:text-brand-black font-semibold text-xl"
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveTrainerRejection} className="space-y-4">
+              <div>
+                <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">CAO Evaluation Rationale</label>
+                <textarea
+                  placeholder="Review qualifications, verify workspace equipment, highlight missing portfolio certificates, or provide training suggestions..."
+                  value={rejectAppReason}
+                  onChange={(e) => setRejectAppReason(e.target.value)}
+                  className="w-full min-h-24 text-xs font-mono font-light text-zinc-750 bg-zinc-50/50 border border-zinc-200 rounded-xl p-3 resize-none focus:outline-hidden focus:border-brand-black"
+                  required
+                ></textarea>
+              </div>
+
+              <div className="pt-2 border-t border-zinc-50 flex gap-2">
+                <button
+                  type="submit"
+                  className="bg-red-650 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider cursor-pointer flex-1 transition-colors"
+                >
+                  Reject & Notify Trainer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRejectionAppId(null)}
                   className="bg-zinc-100 text-zinc-650 px-4 py-2.5 rounded-xl text-xs uppercase cursor-pointer"
                 >
                   Close

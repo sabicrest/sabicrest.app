@@ -93,6 +93,15 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
   const [moduleList, setModuleList] = useState<string[]>([]);
   const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
 
+  // New Trainer Application states
+  const [selectedCourseId, setSelectedCourseId] = useState('c-1');
+  const [expYears, setExpYears] = useState(3);
+  const [portfolioUrl, setPortfolioUrl] = useState('');
+  const [workshopAddress, setWorkshopAddress] = useState('');
+  const [equipmentsOwned, setEquipmentsOwned] = useState('');
+  const [credentialsLink, setCredentialsLink] = useState('');
+  const [isSubmittingApp, setIsSubmittingApp] = useState(false);
+
   // Assign Assignment System States
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showGradedListModal, setShowGradedListModal] = useState(false);
@@ -683,6 +692,49 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
     setShowCurriculumModal(false);
   };
 
+  const handleSubmitTrainerApplication = (e: React.FormEvent) => {
+    e.preventDefault();
+    const targetCourse = db.getCurricula().find(c => c.id === selectedCourseId);
+    if (!targetCourse) {
+      showToast("Selected course is invalid!");
+      return;
+    }
+
+    setIsSubmittingApp(true);
+    db.addTrainerApplication({
+      trainerId: currentUser.id,
+      trainerName: currentUser.name,
+      trainerEmail: currentUser.email,
+      courseId: selectedCourseId,
+      courseTitle: targetCourse.title,
+      courseCategory: targetCourse.category,
+      experienceYears: Number(expYears) || 0,
+      portfolioUrl: portfolioUrl || undefined,
+      workshopAddress: workshopAddress || undefined,
+      equipmentsOwned: equipmentsOwned || undefined,
+      credentialsLink: credentialsLink || undefined
+    });
+
+    // Notify administrators
+    db.addNotification({
+      userId: 'u-admin-1',
+      title: 'New Trainer Application',
+      message: `${currentUser.name} has applied to train for the course "${targetCourse.title}".`,
+      type: 'curriculum'
+    });
+
+    showToast("Application submitted successfully! Admins will review your details.");
+    setShowCurriculumModal(false); // Hide the application modal
+    setIsSubmittingApp(false);
+
+    // Reset application form
+    setPortfolioUrl('');
+    setWorkshopAddress('');
+    setEquipmentsOwned('');
+    setCredentialsLink('');
+    setExpYears(3);
+  };
+
   return (
     <div id="trainer-dashboard-root" className="py-6 max-w-7xl mx-auto px-4 select-none">
       
@@ -733,7 +785,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
               onClick={() => {
                 if (!currentUser.verified) {
                   setShowVerificationPortal(true);
-                  showToast("Verification Required! Complete the 3 interactive cards to unlock course proposals.");
+                  showToast("Verification Required! Complete the 3 interactive cards to unlock trainer applications.");
                 } else {
                   setShowCurriculumModal(true);
                 }
@@ -746,7 +798,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
             >
               {currentUser.verified ? (
                 <>
-                  <Plus size={14} className="font-semibold text-brand-black" /> Propose Curriculum
+                  <Plus size={14} className="font-semibold text-brand-black" /> Apply as Course Trainer
                 </>
               ) : (
                 <>
@@ -1937,494 +1989,215 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
             const isSection4Filled = moduleList.length > 0;
 
             return (
-              <div className="bg-white border border-zinc-100 rounded-3xl w-full max-w-lg p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl w-full max-w-lg p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 my-8">
                 
-                <div className="flex items-center justify-between border-b border-zinc-50 pb-4 mb-4">
-                  <h3 className="text-base font-light tracking-tight text-brand-black">
-                    {editingCurriculum ? 'Edit Course Proposal' : 'Propose New Course'} // <span className="font-semibold">{editingCurriculum ? 'Update details' : 'Course Proposal Wizard'}</span>
-                  </h3>
+                <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-4 mb-4">
+                  <div>
+                    <h3 className="text-base font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
+                      Apply as a Course Trainer
+                    </h3>
+                    <p className="text-[11px] text-zinc-500">Submit qualifications to teach a platform-certified course</p>
+                  </div>
                   <button
                     id="close-curriculum-modal-btn"
                     onClick={() => {
                       setShowCurriculumModal(false);
-                      setEditingCurriculum(null);
-                      setProposalActiveSection('info');
                     }}
-                    className="text-zinc-400 hover:text-brand-black font-semibold text-xl cursor-pointer"
+                    className="text-zinc-400 hover:text-brand-black dark:hover:text-white font-semibold text-xl cursor-pointer"
                   >
                     &times;
                   </button>
                 </div>
 
-                <form onSubmit={handleCreateCurriculum} className="space-y-4">
-                  
-                  {/* Scrollable form sections wrapper */}
-                  <div className="max-h-[50vh] overflow-y-auto pr-1.5 space-y-3 scrollbar-thin">
-                    
-                    {/* Section 1: Course Basics */}
-                    <div className="border border-zinc-100 rounded-2xl overflow-hidden bg-zinc-50/25">
-                      <button
-                        type="button"
-                        onClick={() => setProposalActiveSection(proposalActiveSection === 'info' ? '' as any : 'info')}
-                        className="w-full text-left px-4 py-3 bg-zinc-50 hover:bg-zinc-100/50 border-b border-zinc-100 flex items-center justify-between cursor-pointer select-none transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <FileText size={16} className={isSection1Filled ? "text-emerald-500" : "text-zinc-400"} />
-                          <div>
-                            <h4 className="text-xs font-semibold text-brand-black">1. Course Basics</h4>
-                            <p className="text-[10px] text-zinc-400 font-light">Title & Description</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {isSection1Filled && (
-                            <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-0.5 font-mono font-medium">
-                              <CheckCircle2 size={10} className="stroke-[2.5]" /> Done
-                            </span>
-                          )}
-                          <ChevronDown size={14} className={`text-zinc-400 transition-transform ${proposalActiveSection === 'info' ? 'rotate-180' : ''}`} />
-                        </div>
-                      </button>
-
-                      <AnimatePresence initial={false}>
-                        {proposalActiveSection === 'info' && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2, ease: 'easeInOut' }}
-                            className="overflow-hidden"
-                          >
-                            <div className="p-4 space-y-3 bg-white border-t border-zinc-100">
-                              <div>
-                                <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Course Project Name</label>
-                                <input
-                                  id="cur-input-title"
-                                  type="text"
-                                  placeholder="e.g. Advanced Fluid Typography Systems"
-                                  value={currTitle}
-                                  onChange={(e) => setCurrTitle(e.target.value)}
-                                  className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow"
-                                  required
-                                />
-                              </div>
-
-                              <div>
-                                <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Course Summary & Outcome (what the end goal will be for the student who takes the course)</label>
-                                <textarea
-                                  id="cur-input-desc"
-                                  placeholder="Draft a brief course summary & outcome, including what the end goal will be for the student who takes the course..."
-                                  value={currDesc}
-                                  onChange={(e) => setCurrDesc(e.target.value)}
-                                  className="w-full min-h-20 text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow resize-none"
-                                  required
-                                ></textarea>
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    {/* Section 2: Details & Pricing */}
-                    <div className="border border-zinc-100 rounded-2xl overflow-hidden bg-zinc-50/25">
-                      <button
-                        type="button"
-                        onClick={() => setProposalActiveSection(proposalActiveSection === 'details' ? '' as any : 'details')}
-                        className="w-full text-left px-4 py-3 bg-zinc-50 hover:bg-zinc-100/50 border-b border-zinc-100 flex items-center justify-between cursor-pointer select-none transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Sliders size={16} className={isSection2Filled ? "text-emerald-500" : "text-zinc-400"} />
-                          <div>
-                            <h4 className="text-xs font-semibold text-brand-black">2. Details & Pricing</h4>
-                            <p className="text-[10px] text-zinc-400 font-light">Category, Level, Duration & Price</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {isSection2Filled && (
-                            <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-0.5 font-mono font-medium">
-                              <CheckCircle2 size={10} className="stroke-[2.5]" /> Done
-                            </span>
-                          )}
-                          <ChevronDown size={14} className={`text-zinc-400 transition-transform ${proposalActiveSection === 'details' ? 'rotate-180' : ''}`} />
-                        </div>
-                      </button>
-
-                      <AnimatePresence initial={false}>
-                        {proposalActiveSection === 'details' && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2, ease: 'easeInOut' }}
-                            className="overflow-hidden"
-                          >
-                            <div className="p-4 space-y-4 bg-white border-t border-zinc-100">
-                              <div className="grid grid-cols-2 gap-3">
-                                <div className="col-span-1 relative">
-                                  <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Category</label>
-                                  <div className="relative">
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setIsCategoryDropdownOpen(!isCategoryDropdownOpen);
-                                        setIsLevelDropdownOpen(false);
-                                      }}
-                                      className="w-full text-left text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-2.5 py-2 flex items-center justify-between select-none cursor-pointer"
-                                    >
-                                      <span className="truncate">{currCategory}</span>
-                                      <ChevronDown size={12} className={`text-zinc-500 shrink-0 transition-transform ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
-                                    </button>
-                                    {isCategoryDropdownOpen && (
-                                      <>
-                                        <div className="fixed inset-0 z-40" onClick={() => setIsCategoryDropdownOpen(false)} />
-                                        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-zinc-150 rounded-xl shadow-lg max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-150">
-                                          {[
-                                            "Business",
-                                            "Marketing",
-                                            "Design",
-                                            "Tech",
-                                            "Vocational (Hairmaking, Carpentry, etc.)",
-                                            "Visual Design",
-                                            "Cloud Architecture",
-                                            "Security Engineering",
-                                            "Other"
-                                          ].map((cat) => (
-                                            <button
-                                              key={cat}
-                                              type="button"
-                                              onClick={() => {
-                                                setCurrCategory(cat);
-                                                setIsCategoryDropdownOpen(false);
-                                              }}
-                                              className={`w-full text-left px-2.5 py-2 text-[11px] font-light hover:bg-zinc-50 transition-colors select-none cursor-pointer ${currCategory === cat ? 'bg-brand-light font-medium text-brand-black' : 'text-zinc-700'}`}
-                                            >
-                                              {cat}
-                                            </button>
-                                          ))}
-                                        </div>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-
-                                <div className="col-span-1 relative">
-                                  <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Target Skill level</label>
-                                  <div className="relative">
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setIsLevelDropdownOpen(!isLevelDropdownOpen);
-                                        setIsCategoryDropdownOpen(false);
-                                      }}
-                                      className="w-full text-left text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-2.5 py-2 flex items-center justify-between select-none cursor-pointer"
-                                    >
-                                      <span className="truncate">{currLevel}</span>
-                                      <ChevronDown size={12} className={`text-zinc-500 shrink-0 transition-transform ${isLevelDropdownOpen ? 'rotate-180' : ''}`} />
-                                    </button>
-                                    {isLevelDropdownOpen && (
-                                      <>
-                                        <div className="fixed inset-0 z-40" onClick={() => setIsLevelDropdownOpen(false)} />
-                                        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-zinc-150 rounded-xl shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
-                                          {[
-                                            "Beginner",
-                                            "Intermediate",
-                                            "Advanced"
-                                          ].map((lvl) => (
-                                            <button
-                                              key={lvl}
-                                              type="button"
-                                              onClick={() => {
-                                                setCurrLevel(lvl as any);
-                                                setIsLevelDropdownOpen(false);
-                                              }}
-                                              className={`w-full text-left px-2.5 py-2 text-[11px] font-light hover:bg-zinc-50 transition-colors select-none cursor-pointer ${currLevel === lvl ? 'bg-brand-light font-medium text-brand-black' : 'text-zinc-700'}`}
-                                            >
-                                              {lvl}
-                                            </button>
-                                          ))}
-                                        </div>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-
-                                <div className="col-span-1">
-                                  <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Weeks count</label>
-                                  <input
-                                    id="cur-input-duration"
-                                    type="number"
-                                    min={1}
-                                    max={24}
-                                    value={currDuration}
-                                    onChange={(e) => setCurrDuration(Number(e.target.value))}
-                                    className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-2.5 py-2 focus:outline-hidden focus:border-brand-yellow"
-                                    required
-                                  />
-                                </div>
-
-                                <div className="col-span-1">
-                                  <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Best Price (NGN)</label>
-                                  <input
-                                    id="cur-input-price"
-                                    type="number"
-                                    min={0}
-                                    value={currPrice}
-                                    onChange={(e) => setCurrPrice(Number(e.target.value))}
-                                    className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-2.5 py-2 focus:outline-hidden focus:border-brand-yellow"
-                                    required
-                                  />
-                                </div>
-                              </div>
-
-                               {/* Live updated split calculation reminder banner */}
-                               <div className="col-span-2 bg-zinc-50 border border-zinc-100 rounded-xl p-3 text-[11px] leading-relaxed select-none text-zinc-650 block">
-                                 <div className="text-[9px] font-bold uppercase tracking-wide text-zinc-400 mb-1.5 flex items-center gap-1 font-mono">
-                                   <AlertCircle size={12} className="text-brand-yellow font-semibold" /> Cohort Fixed-Pricing Revenue Splits
-                                 </div>
-                                 <p className="font-light text-zinc-500">
-                                   With Sabicrest's unique fixed-fee cohort model, the proposed fee of <strong>₦{currPrice.toLocaleString()}</strong> is the total payment you will collect for this cohort (requires a minimum of 1 active student; maximum of 5 students). Revenue splits:
-                                 </p>
-                                 <div className="grid grid-cols-2 gap-2 mt-2 font-mono text-[10px] text-center">
-                                   <div className="bg-white p-2 border border-zinc-100 rounded-lg">
-                                     <span className="block text-[8px] text-zinc-400 font-mono">Trainer Payout (85%)</span>
-                                     <span className="font-semibold text-emerald-600">₦{(currPrice * 0.85).toLocaleString()}</span>
-                                   </div>
-                                   <div className="bg-white p-2 border border-zinc-100 rounded-lg">
-                                     <span className="block text-[8px] text-zinc-400 font-mono font-medium">Sabicrest Maintenance (15%)</span>
-                                     <span className="font-semibold text-neutral-800">₦{(currPrice * 0.15).toLocaleString()}</span>
-                                   </div>
-                                 </div>
-                                 <div className="mt-2.5 pt-2 border-t border-zinc-200/50 flex items-center justify-between text-xs">
-                                   <span className="font-medium">Total Cohort Fee:</span>
-                                   <span className="font-bold text-amber-600 font-mono">₦{currPrice.toLocaleString()}</span>
-                                 </div>
-                                 <p className="text-[9px] text-zinc-455 mt-1 text-center font-light leading-snug">
-                                   Each course proposal represents a single, independent cohort (max 5 students) and cannot be automatically rolled over or reused. New cohorts require Admin approval.
-                                 </p>
-                               </div>
-
-                              {currCategory === 'Other' && (
-                                <div className="animate-in fade-in duration-150">
-                                  <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Custom Category Name</label>
-                                  <input
-                                    type="text"
-                                    placeholder="Enter custom category name..."
-                                    value={customCategory}
-                                    onChange={(e) => setCustomCategory(e.target.value)}
-                                    className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow"
-                                    required
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    {/* Section 3: Cover Image */}
-                    <div className="border border-zinc-100 rounded-2xl overflow-hidden bg-zinc-50/25">
-                      <button
-                        type="button"
-                        onClick={() => setProposalActiveSection(proposalActiveSection === 'image' ? '' as any : 'image')}
-                        className="w-full text-left px-4 py-3 bg-zinc-50 hover:bg-zinc-100/50 border-b border-zinc-100 flex items-center justify-between cursor-pointer select-none transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Camera size={16} className={isSection3Filled ? "text-emerald-500" : "text-zinc-400"} />
-                          <div>
-                            <h4 className="text-xs font-semibold text-brand-black">3. Cover Image</h4>
-                            <p className="text-[10px] text-zinc-400 font-light">Course Illustration Image</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {isSection3Filled && (
-                            <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-0.5 font-mono font-medium">
-                              <CheckCircle2 size={10} className="stroke-[2.5]" /> Done
-                            </span>
-                          )}
-                          <ChevronDown size={14} className={`text-zinc-400 transition-transform ${proposalActiveSection === 'image' ? 'rotate-180' : ''}`} />
-                        </div>
-                      </button>
-
-                      <AnimatePresence initial={false}>
-                        {proposalActiveSection === 'image' && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2, ease: 'easeInOut' }}
-                            className="overflow-hidden"
-                          >
-                            <div className="p-4 bg-white border-t border-zinc-100 space-y-3">
-                              <div className="flex items-center gap-4">
-                                {currImageUrl ? (
-                                  <div className="relative w-24 h-16 rounded-xl overflow-hidden border border-zinc-200 bg-zinc-50 shrink-0 shadow-2xs">
-                                    <img 
-                                      src={currImageUrl} 
-                                      alt="Cover preview" 
-                                      referrerPolicy="no-referrer"
-                                      className="w-full h-full object-cover"
-                                    />
-                                    <button
-                                      type="button"
-                                      id="clear-cover-image-btn"
-                                      onClick={() => setCurrImageUrl('')}
-                                      className="absolute inset-0 bg-brand-black/40 hover:bg-brand-black/60 flex items-center justify-center text-white transition-colors cursor-pointer"
-                                      title="Remove cover image"
-                                    >
-                                      <X size={14} className="stroke-[2.5]" />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <div className="w-24 h-16 rounded-xl border-2 border-dashed border-zinc-200 flex items-center justify-center text-zinc-400 shrink-0 bg-zinc-100/50">
-                                    <Camera size={14} className="text-zinc-450" />
-                                  </div>
-                                )}
-
-                                <div className="flex-1 space-y-1">
-                                  <div className="flex items-center">
-                                    <label className="bg-brand-black hover:bg-zinc-900 text-brand-yellow text-[10px] font-semibold uppercase tracking-wider px-3.5 py-2 rounded-xl cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs">
-                                      <Upload size={11} />
-                                      Upload Image File
-                                      <input 
-                                        id="cur-input-file-image"
-                                        type="file" 
-                                        accept="image/*" 
-                                        onChange={handleImageUpload}
-                                        className="hidden" 
-                                      />
-                                    </label>
-                                    {currImageUrl && (
-                                      <button
-                                        type="button"
-                                        id="remove-image-file-btn"
-                                        onClick={() => setCurrImageUrl('')}
-                                        className="ml-2 text-[10px] text-zinc-400 hover:text-red-500 font-medium cursor-pointer py-1 px-2 hover:bg-zinc-100 rounded-lg transition-colors"
-                                      >
-                                        Remove Image
-                                      </button>
-                                    )}
-                                  </div>
-                                  <p className="text-[9px] text-zinc-400 font-light leading-snug">
-                                    Recommended size: 800x450 (16:9). Select JPEG/PNG image. If left empty, an aesthetic category backdrop will be auto-assigned.
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    {/* Section 4: Syllabus & Modules */}
-                    <div className="border border-zinc-100 rounded-2xl overflow-hidden bg-zinc-50/25">
-                      <button
-                        type="button"
-                        onClick={() => setProposalActiveSection(proposalActiveSection === 'syllabus' ? '' as any : 'syllabus')}
-                        className="w-full text-left px-4 py-3 bg-zinc-50 hover:bg-zinc-100/50 border-b border-zinc-100 flex items-center justify-between cursor-pointer select-none transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <BookOpen size={16} className={isSection4Filled ? "text-emerald-500" : "text-zinc-400"} />
-                          <div>
-                            <h4 className="text-xs font-semibold text-brand-black">4. Syllabus & Modules</h4>
-                            <p className="text-[10px] text-zinc-400 font-light">Weekly Curriculum Plan ({moduleList.length})</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {isSection4Filled && (
-                            <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-0.5 font-mono font-medium">
-                              <CheckCircle2 size={10} className="stroke-[2.5]" /> Done
-                            </span>
-                          )}
-                          <ChevronDown size={14} className={`text-zinc-400 transition-transform ${proposalActiveSection === 'syllabus' ? 'rotate-180' : ''}`} />
-                        </div>
-                      </button>
-
-                      <AnimatePresence initial={false}>
-                        {proposalActiveSection === 'syllabus' && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2, ease: 'easeInOut' }}
-                            className="overflow-hidden"
-                          >
-                            <div className="p-4 bg-white border-t border-zinc-100 space-y-3">
-                              <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Weekly Modules Syllabus ({moduleList.length})</label>
-                              <div className="flex gap-2">
-                                <input
-                                  id="module-type-input"
-                                  type="text"
-                                  placeholder="e.g. Constructing grid columns for margins"
-                                  value={newModuleText}
-                                  onChange={(e) => setNewModuleText(e.target.value)}
-                                  className="flex-1 text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3 py-2.5 focus:outline-hidden"
-                                />
-                                <button
-                                  id="add-module-item-btn"
-                                  type="button"
-                                  onClick={handleAddModule}
-                                  className="bg-brand-black text-white rounded-xl px-3 text-xs font-light cursor-pointer"
-                                >
-                                  Add
-                                </button>
-                              </div>
-
-                              <div className="space-y-1.5 max-h-36 overflow-y-auto scrollbar-thin">
-                                {moduleList.map((mod, index) => (
-                                  <div key={index} className="flex justify-between items-center bg-zinc-50 px-3 py-1.5 rounded-lg text-[11px] font-mono text-zinc-500">
-                                    <span className="truncate">Week {index + 1}: {mod}</span>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveModule(index)}
-                                      className="text-red-600 hover:text-red-800 font-bold px-1 cursor-pointer"
-                                    >
-                                      &times;
-                                    </button>
-                                  </div>
-                                ))}
-                                {moduleList.length === 0 && (
-                                  <p className="text-[10px] text-zinc-400 font-mono py-2 text-center select-none">No modules added yet. Needs at least 1 week module.</p>
-                                )}
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
+                <form onSubmit={handleSubmitTrainerApplication} className="space-y-4">
+                  {/* Step 1: Select the Course */}
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 font-bold">
+                      Select Certified Course
+                    </label>
+                    <select
+                      value={selectedCourseId}
+                      onChange={(e) => setSelectedCourseId(e.target.value)}
+                      className="w-full bg-zinc-50 dark:bg-zinc-850 text-zinc-805 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-xs focus:outline-hidden focus:border-brand-yellow font-sans"
+                      required
+                    >
+                      {db.getCurricula().map(c => (
+                        <option key={c.id} value={c.id}>
+                          {c.title} ({c.category})
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
-                  <div className="pt-3 border-t border-zinc-100 flex gap-2">
+                  {/* Course Context Preview Box */}
+                  {(() => {
+                    const selectedCourse = db.getCurricula().find(c => c.id === selectedCourseId);
+                    if (!selectedCourse) return null;
+                    return (
+                      <div className="bg-zinc-50 dark:bg-zinc-850/60 border border-zinc-100 dark:border-zinc-800 rounded-xl p-3 space-y-1.5 select-none text-left">
+                        <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-neutral-500 font-mono">
+                          <span>Platform Curriculum Specs</span>
+                          <span className="bg-brand-yellow/20 text-brand-black dark:text-brand-yellow px-1.5 py-0.5 rounded text-[8px] tracking-widest">{selectedCourse.category}</span>
+                        </div>
+                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-light leading-snug">{selectedCourse.description}</p>
+                        <div className="grid grid-cols-2 gap-2 text-center text-zinc-650 dark:text-zinc-300 font-mono text-[9px] pt-1">
+                          <div className="bg-white dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700/50 p-1.5 rounded-md">
+                            <span className="block text-[7px] text-zinc-400 uppercase tracking-tight">Duration</span>
+                            <span className="font-semibold text-zinc-800 dark:text-zinc-200">{selectedCourse.durationWeeks} Weeks</span>
+                          </div>
+                          <div className="bg-white dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700/50 p-1.5 rounded-md">
+                            <span className="block text-[7px] text-zinc-400 uppercase tracking-tight">Medium Tier Price</span>
+                            <span className="font-semibold text-emerald-600">₦{selectedCourse.price.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Step 2: Years of Experience */}
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 font-bold animate-pulse">
+                      Years of Verified Practice
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="40"
+                      value={expYears}
+                      onChange={(e) => setExpYears(Number(e.target.value))}
+                      className="w-full bg-zinc-50 dark:bg-zinc-850 text-zinc-800 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-xs focus:outline-hidden focus:border-brand-yellow font-sans"
+                      required
+                    />
+                  </div>
+
+                  {/* Dynamic Specific Forms */}
+                  {(() => {
+                    const selectedCourse = db.getCurricula().find(c => c.id === selectedCourseId);
+                    const isDigital = selectedCourse && selectedCourse.category === 'Digital Course';
+
+                    if (isDigital) {
+                      return (
+                        <div className="space-y-4 pt-1 text-left">
+                          <div>
+                            <label className="block text-[10px] uppercase font-mono tracking-wider text-zinc-500 dark:text-zinc-400 mb-1 font-bold">
+                              Portfolio URL (GitHub, Behance, Dribbble, Website) *
+                            </label>
+                            <input
+                              type="url"
+                              placeholder="https://behance.net/yourname"
+                              value={portfolioUrl}
+                              onChange={(e) => setPortfolioUrl(e.target.value)}
+                              className="w-full bg-zinc-50 dark:bg-zinc-850 text-zinc-800 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-xs focus:outline-hidden focus:border-brand-yellow font-sans"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] uppercase font-mono tracking-wider text-zinc-500 dark:text-zinc-400 mb-1 font-bold">
+                              Professional Credentials or Certificate Verification Link (Optional)
+                            </label>
+                            <input
+                              type="url"
+                              placeholder="https://drive.google.com/file/d/..."
+                              value={credentialsLink}
+                              onChange={(e) => setCredentialsLink(e.target.value)}
+                              className="w-full bg-zinc-50 dark:bg-zinc-850 text-zinc-800 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-xs focus:outline-hidden focus:border-brand-yellow font-sans"
+                            />
+                          </div>
+                          <div className="flex items-start gap-2 pt-1">
+                            <input
+                              type="checkbox"
+                              id="inf_confirm"
+                              className="mt-0.5 rounded border-zinc-300 dark:border-zinc-700 bg-zinc-50 accent-brand-yellow cursor-pointer"
+                              required
+                            />
+                            <label htmlFor="inf_confirm" className="text-[10px]/[13px] text-zinc-500 dark:text-zinc-400 cursor-pointer">
+                              I confirm I have a professional desktop/laptop setup (minimum 8GB RAM), stable broadband internet connection with backups, and a silent, disturbance-free zone suitable for hosting virtual interactive sessions.
+                            </label>
+                          </div>
+                        </div>
+                      );
+                    } else {
+                      // Physical Course Specific Fields
+                      return (
+                        <div className="space-y-4 pt-1 text-left">
+                          <div>
+                            <label className="block text-[10px] uppercase font-mono tracking-wider text-zinc-500 dark:text-zinc-400 mb-1 font-bold">
+                              Physical Studio, Farm setup, or Workshop Address *
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="No. 12 Sabicrest Layout Road, Lagos, Nigeria"
+                              value={workshopAddress}
+                              onChange={(e) => setWorkshopAddress(e.target.value)}
+                              className="w-full bg-zinc-50 dark:bg-zinc-850 text-zinc-800 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-xs focus:outline-hidden focus:border-brand-yellow font-sans"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] uppercase font-mono tracking-wider text-zinc-500 dark:text-zinc-400 mb-1 font-bold">
+                              List Owned, Operating Practice Devices/Tools (e.g. Sewing machines, cameras, kitchen ovens) *
+                            </label>
+                            <textarea
+                              placeholder="Provide quantity & models: e.g., 5 Two-needle Electric Sewing Machines, 1 Steam iron table, 2 dress forms..."
+                              value={equipmentsOwned}
+                              onChange={(e) => setEquipmentsOwned(e.target.value)}
+                              rows={2}
+                              className="w-full bg-zinc-50 dark:bg-zinc-850 text-zinc-800 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-xs focus:outline-hidden focus:border-brand-yellow font-sans resize-none"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] uppercase font-mono tracking-wider text-zinc-500 dark:text-zinc-400 mb-1 font-bold">
+                              Mastery Certification or Technical Registration Link (Optional)
+                            </label>
+                            <input
+                              type="url"
+                              placeholder="https://drive.google.com/file/d/..."
+                              value={credentialsLink}
+                              onChange={(e) => setCredentialsLink(e.target.value)}
+                              className="w-full bg-zinc-50 dark:bg-zinc-850 text-zinc-805 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-xs focus:outline-hidden focus:border-brand-yellow font-sans"
+                            />
+                          </div>
+                          <div className="flex items-start gap-2 pt-1">
+                            <input
+                              type="checkbox"
+                              id="phy_confirm"
+                              className="mt-0.5 rounded border-zinc-300 dark:border-zinc-700 bg-zinc-50 accent-brand-yellow cursor-pointer"
+                              required
+                            />
+                            <label htmlFor="phy_confirm" className="text-[10px]/[13px] text-zinc-500 dark:text-zinc-400 cursor-pointer">
+                              I confirm I will maintain maximum safety measures, instruct in physical groups safely with active professional supervisions, and provide students hands-on diagnostic coaching and specialized tool exercises.
+                            </label>
+                          </div>
+                        </div>
+                      );
+                    }
+                  })()}
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center justify-end gap-2 border-t border-zinc-100 dark:border-zinc-800 pt-4 mt-2">
                     <button
-                      id="final-propose-cur-btn"
-                      type="submit"
-                      className="bg-brand-black hover:bg-zinc-900 text-white px-4 py-2.5 rounded-xl text-xs font-light uppercase tracking-wide cursor-pointer flex-1"
-                    >
-                      {editingCurriculum ? 'Save Changes' : 'Submit Proposal to Admin'}
-                    </button>
-                    <button
-                      id="cancel-propose-cur-btn"
                       type="button"
                       onClick={() => {
                         setShowCurriculumModal(false);
-                        setEditingCurriculum(null);
-                        setCurrTitle('');
-                        setCurrDesc('');
-                        setCurrPrice(150000);
-                        setCurrImageUrl('');
-                        setModuleList([]);
-                        setProposalActiveSection('info');
                       }}
-                      className="bg-zinc-105 text-zinc-650 px-4 py-2.5 rounded-xl text-xs font-light uppercase cursor-pointer hover:bg-zinc-200"
+                      className="bg-zinc-105 dark:bg-zinc-850 text-zinc-650 dark:text-zinc-450 px-4 py-2.5 rounded-xl text-xs font-light uppercase cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800"
                     >
                       Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingApp}
+                      className="bg-brand-yellow hover:bg-amber-400 text-brand-black px-5 py-2.5 rounded-xl text-xs font-semibold uppercase cursor-pointer transition-colors flex items-center gap-1 shadow-xs disabled:opacity-50"
+                    >
+                      {isSubmittingApp ? 'Submitting...' : 'Submit Application'}
                     </button>
                   </div>
 
                 </form>
               </div>
             );
+            
           })()}
         </div>
       )}

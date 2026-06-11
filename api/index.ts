@@ -116,9 +116,18 @@ function setSupabaseBypassStatus(status: boolean) {
   console.log(`[Autonomous DB Engine] Bypass status updated to: ${status}`);
 }
 
-function detectAndTriggerBypass(status: number, context: string) {
-  if (status === 402 || status === 429) {
-    console.warn(`[Autonomous DB Engine Auto-Trigger] Supabase service threshold code ${status} during '${context}'. Triggering Free Autonomous Local Host Mode!`);
+function detectAndTriggerBypass(status: number, context: string, errorMessage?: string) {
+  const isSchemaOrNotCreatedError = errorMessage && (
+    errorMessage.includes('schema cache') ||
+    errorMessage.includes('column') ||
+    errorMessage.includes('relation') ||
+    errorMessage.includes('does not exist') ||
+    errorMessage.includes('table') ||
+    errorMessage.includes('violates') ||
+    errorMessage.includes('not found')
+  );
+  if (status === 402 || status === 429 || isSchemaOrNotCreatedError) {
+    console.warn(`[Autonomous DB Engine Auto-Trigger] Supabase service threshold code ${status} or schema mismatch/missing relation during '${context}'. Triggering Free Autonomous Local Host Mode! Error: ${errorMessage}`);
     setSupabaseBypassStatus(true);
   }
 }
@@ -165,7 +174,7 @@ async function findUserDocumentByEmail(email: string): Promise<any> {
 
     if (error) {
       console.warn('Supabase find user query failed, checking code...', error);
-      detectAndTriggerBypass(500, `Find user email direct query: ${targetEmail}`);
+      detectAndTriggerBypass(500, `Find user email direct query: ${targetEmail}`, error.message);
       throw error;
     }
 
@@ -434,7 +443,7 @@ app.get('/api/supabase/list/:collectionId', async (req, res) => {
 
     if (error) {
       console.warn(`Supabase list error on '${collectionId}':`, error.message);
-      detectAndTriggerBypass(500, `List collection: ${collectionId}`);
+      detectAndTriggerBypass(500, `List collection: ${collectionId}`, error.message);
       throw error;
     }
 
@@ -550,7 +559,7 @@ app.post('/api/supabase/save', async (req, res) => {
         .eq('id', documentId);
 
       if (error) {
-        detectAndTriggerBypass(500, `Delete doc: ${collectionId} / ${documentId}`);
+        detectAndTriggerBypass(500, `Delete doc: ${collectionId} / ${documentId}`, error.message);
         throw error;
       }
 
@@ -581,7 +590,7 @@ app.post('/api/supabase/save', async (req, res) => {
 
     if (error) {
       console.warn(`Supabase upsert error on '${collectionId}':`, error.message);
-      detectAndTriggerBypass(500, `Upsert doc: ${collectionId} / ${documentId}`);
+      detectAndTriggerBypass(500, `Upsert doc: ${collectionId} / ${documentId}`, error.message);
       throw error;
     }
 

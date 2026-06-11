@@ -126,6 +126,11 @@ export interface Curriculum {
   submittedAt: string;
   approvedAt?: string;
   price?: number; // Price of the course in NGN (Nigerian Naira)
+  pricingBeginner?: number;
+  pricingIntermediate?: number;
+  pricingExpert?: number;
+  equipment?: string;
+  outcomes?: string;
   imageUrl?: string; // Opt course cover image URL
   cohortStartDate?: string; // YYYY-MM-DD cohort start date
   earlyDrawProcessed?: boolean; // 65% early draw
@@ -241,4 +246,24 @@ export interface AdminActivity {
   details: string;
   ipAddress: string;
 }
+
+// Trainer applications submitted for a pre-established course on the platform
+export interface TrainerApplication {
+  id: string;
+  trainerId: string;
+  trainerName: string;
+  trainerEmail: string;
+  courseId: string;
+  courseTitle: string;
+  courseCategory: string; // 'Digital' | 'Physical'
+  experienceYears: number;
+  portfolioUrl?: string; // e.g. GitHub/Behance portfolio
+  workshopAddress?: string; // Physical studio address for physical skills
+  equipmentsOwned?: string; // List of physical devices or tools verified
+  credentialsLink?: string; // Certificate link or document verification details
+  status: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
+  submittedAt: string;
+}
+
 

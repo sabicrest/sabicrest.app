@@ -16,9 +16,11 @@ import {
   NotificationAlert,
   DbTransactionLog,
   CourseEnrollment,
-  AdminActivity
+  AdminActivity,
+  TrainerApplication
 } from './types';
 import { audio } from './utils/audio';
+import { INITIAL_CURRICULA } from './coursesData';
 
 // Supabase details
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://msscwdevpdrkcbvkwdlv.supabase.co';
@@ -104,133 +106,7 @@ const getFirstAdminEmail = (): string => {
 const INITIAL_USERS: User[] = [];
 const INITIAL_MESSAGES: Message[] = [];
 const INITIAL_EVENTS: ScheduleEvent[] = [];
-const INITIAL_CURRICULA: Curriculum[] = [
-  {
-    id: "c-figma-adv",
-    trainerId: "u-trainer-sarah",
-    trainerName: "Sarah Jenkins",
-    title: "Advanced Figma Layouts & Spatial Systems",
-    description: "Master advanced UI design, prototyping, spatial typography systems, design tokens, and components architecture in Figma.",
-    category: "Digital Course",
-    level: "Advanced",
-    durationWeeks: 6,
-    modules: [
-      "Week 1: Advanced Auto Layout and Constraints",
-      "Week 2: Variables & Design Tokens integration",
-      "Week 3: Non-linear Interactive Prototyping",
-      "Week 4: Spatial Grids & UI Typography Scale",
-      "Week 5: Designing for Responsive Interfaces",
-      "Week 6: Creating Multi-platform Design Libraries"
-    ],
-    status: "approved",
-    submittedAt: "2026-06-01T08:00:00Z",
-    approvedAt: "2026-06-02T10:00:00Z",
-    price: 45000,
-    imageUrl: ""
-  },
-  {
-    id: "c-prod-mgmt",
-    trainerId: "u-trainer-sarah",
-    trainerName: "Sarah Jenkins",
-    title: "Digital Product Management & Market Fit",
-    description: "Learn the end-to-end process of launching digital products from roadmap definition, user research, to running wireframe validation cycles.",
-    category: "Digital Course",
-    level: "Intermediate",
-    durationWeeks: 8,
-    modules: [
-      "Week 1: Product Strategy & Market Research",
-      "Week 2: Defining Product Requirement Docs",
-      "Week 3: UX Mapping and User Journeys",
-      "Week 4: MVP Scoping and Agile Frameworks",
-      "Week 5: Product Metric Dashboards",
-      "Week 6: Conversion Rate Optimization",
-      "Week 7: Launch Planning",
-      "Week 8: Growth Loops & Client Retention Strategy"
-    ],
-    status: "approved",
-    submittedAt: "2026-06-02T08:00:00Z",
-    approvedAt: "2026-06-03T10:00:00Z",
-    price: 35000,
-    imageUrl: ""
-  },
-  {
-    id: "c-fullstack-ts",
-    trainerId: "u-trainer-sarah",
-    trainerName: "Sarah Jenkins",
-    title: "Full-Stack Web Development & Cloud Services",
-    description: "An intensive masterclass on TypeScript, React, Vite, Express backends, and deploying scalable apps to global micro-containers.",
-    category: "Digital Course",
-    level: "Advanced",
-    durationWeeks: 12,
-    modules: [
-      "Week 1: Pure TypeScript Deep Dive",
-      "Week 2: Modern React Hooks & Client Routing",
-      "Week 3: Tailwind CSS & Fluid Layout Interfaces",
-      "Week 4: Building Express REST & WebSocket API Servers",
-      "Week 5: Database integration with Postgres & Firestore",
-      "Week 6: Secure User Session Cookies & OAuth 2.0 Flow",
-      "Week 7: Containerization & Docker Architectures",
-      "Week 8: Deploying to Google Cloud Run",
-      "Week 9: Advanced CI/CD GitHub Actions Workflow",
-      "Week 10: App Performance Monitoring & Load Tests",
-      "Week 11: System Scalability Planning",
-      "Week 12: Production-Ready Capstone Submission"
-    ],
-    status: "approved",
-    submittedAt: "2026-06-03T08:00:00Z",
-    approvedAt: "2026-06-04T10:00:00Z",
-    price: 55000,
-    imageUrl: ""
-  },
-  {
-    id: "c-iot-hardware",
-    trainerId: "u-trainer-marcus",
-    trainerName: "Marcus Vance",
-    title: "IoT Hardware & Physical Computing Lab",
-    description: "Hands-on engineering course designing physical microcontrollers, Raspberry Pi routing, and sensors for environment telemetry.",
-    category: "Physical Course",
-    level: "Intermediate",
-    durationWeeks: 10,
-    modules: [
-      "Week 1: Fundamentals of Circuit Board Design",
-      "Week 2: Microcontroller Programming (C++)",
-      "Week 3: Wi-Fi/Bluetooth Network Telemetry integration",
-      "Week 4: Reading Dynamic Sensors & SPI Bus",
-      "Week 5: Industrial Enclosures and CAD modeling",
-      "Week 6: Power Management & Battery Lifetimes",
-      "Week 7: Over-the-air (OTA) Firmware Updates",
-      "Week 8: Cloud SQL Node Databases integration",
-      "Week 9: Final Capstone Prototyping Testing",
-      "Week 10: Manufacturing Lines Preparation"
-    ],
-    status: "approved",
-    submittedAt: "2026-06-04T08:00:00Z",
-    approvedAt: "2026-06-05T10:00:00Z",
-    price: 65000,
-    imageUrl: ""
-  },
-  {
-    id: "c-physical-fab",
-    trainerId: "u-trainer-marcus",
-    trainerName: "Marcus Vance",
-    title: "Physical Prototype Fabrication and Ergonomics",
-    description: "Practical modeling of real ergonomic products, 3D printing parameters, and physical mockups utilizing industrial plastics and components.",
-    category: "Physical Course",
-    level: "Beginner",
-    durationWeeks: 4,
-    modules: [
-      "Week 1: Anthropometrics & Human Factors",
-      "Week 2: 3D CAD modeling with Fusion 360",
-      "Week 3: FDM 3D printing and material tolerances",
-      "Week 4: Post-processing, paint finish, and final assembly"
-    ],
-    status: "approved",
-    submittedAt: "2026-06-05T08:00:00Z",
-    approvedAt: "2026-06-06T10:00:00Z",
-    price: 25000,
-    imageUrl: ""
-  }
-];
+// INITIAL_CURRICULA is now imported from coursesData.ts
 const INITIAL_ASSIGNMENTS: Assignment[] = [];
 const INITIAL_TEAMS: Team[] = [];
 const INITIAL_CERTIFICATES: Certificate[] = [];
@@ -253,6 +129,7 @@ export class SupabaseDatabase {
   private transactions: DbTransactionLog[];
   private enrollments: CourseEnrollment[];
   private adminActivities: AdminActivity[];
+  private trainerApplications: TrainerApplication[];
   private knownNotificationIds: Set<string> = new Set<string>();
 
   constructor() {
@@ -291,6 +168,7 @@ export class SupabaseDatabase {
     this.transactions = JSON.parse(localStorage.getItem('sc_transactions') || JSON.stringify(INITIAL_TRANSACTIONS));
     this.enrollments = JSON.parse(localStorage.getItem('sc_enrollments') || JSON.stringify(INITIAL_ENROLLMENTS));
     this.adminActivities = JSON.parse(localStorage.getItem('sc_admin_activities') || '[]');
+    this.trainerApplications = JSON.parse(localStorage.getItem('sc_trainer_applications') || '[]');
 
     this.notifications.forEach(n => this.knownNotificationIds.add(n.id));
 
@@ -312,6 +190,7 @@ export class SupabaseDatabase {
     localStorage.setItem('sc_transactions', JSON.stringify(this.transactions));
     localStorage.setItem('sc_enrollments', JSON.stringify(this.enrollments));
     localStorage.setItem('sc_admin_activities', JSON.stringify(this.adminActivities));
+    localStorage.setItem('sc_trainer_applications', JSON.stringify(this.trainerApplications));
   }
 
   private logTransaction(operation: string, table: string, dataStr: string) {
@@ -530,10 +409,11 @@ export class SupabaseDatabase {
         console.warn('Supabase sync error [events]:', err);
       }
 
-      // Sync Curricula
+      // Sync Curricula (from 'courses' first with fallback to 'curricula' schema)
+      let syncedCurricula = false;
       try {
-        const res = await this.proxyList('curricula');
-        if (res && res.documents) {
+        const res = await this.proxyList('courses');
+        if (res && res.documents && res.documents.length > 0) {
           this.curricula = res.documents.map((doc: any) => {
             const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
             let parsedModules = [];
@@ -544,9 +424,43 @@ export class SupabaseDatabase {
             }
             return { id: $id, ...data, modules: parsedModules } as any;
           });
+          syncedCurricula = true;
         }
       } catch (err) {
-        console.warn('Supabase sync error [curricula]:', err);
+        console.warn('Supabase sync warning [courses table - using fallback]:', err);
+      }
+
+      if (!syncedCurricula) {
+        try {
+          const res = await this.proxyList('curricula');
+          if (res && res.documents) {
+            this.curricula = res.documents.map((doc: any) => {
+              const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
+              let parsedModules = [];
+              if (typeof data.modules === 'string') {
+                try { parsedModules = JSON.parse(data.modules); } catch(e){}
+              } else if (Array.isArray(data.modules)) {
+                parsedModules = data.modules;
+              }
+              return { id: $id, ...data, modules: parsedModules } as any;
+            });
+          }
+        } catch (err) {
+          console.warn('Supabase sync fallback warning [curricula]:', err);
+        }
+      }
+
+      // Sync Trainer Applications
+      try {
+        const res = await this.proxyList('trainer_applications');
+        if (res && res.documents) {
+          this.trainerApplications = res.documents.map((doc: any) => {
+            const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
+            return { id: $id, ...data } as any;
+          });
+        }
+      } catch (err) {
+        console.warn('Supabase sync warning [trainer_applications]:', err);
       }
 
       // Sync Assignments
@@ -1181,6 +1095,32 @@ export class SupabaseDatabase {
     this.saveToStorage();
     this.logTransaction('UPDATE_CURRICULUM_RECORD', 'Curricula', JSON.stringify(curriculum));
     this.saveToSupabase('curricula', curriculum.id, curriculum);
+  }
+
+  // --- Trainer Applications CRUD ---
+  getTrainerApplications(): TrainerApplication[] {
+    return this.trainerApplications;
+  }
+
+  addTrainerApplication(app: Omit<TrainerApplication, 'id' | 'status' | 'submittedAt'>): TrainerApplication {
+    const newApp: TrainerApplication = {
+      ...app,
+      id: `app-${Date.now()}`,
+      status: 'pending',
+      submittedAt: new Date().toISOString()
+    };
+    this.trainerApplications.push(newApp);
+    this.saveToStorage();
+    this.logTransaction('SUBMIT_TRAINER_APPLICATION', 'TrainerApplications', JSON.stringify(newApp));
+    this.saveToSupabase('trainer_applications', newApp.id, newApp);
+    return newApp;
+  }
+
+  updateTrainerApplication(app: TrainerApplication) {
+    this.trainerApplications = this.trainerApplications.map(a => a.id === app.id ? app : a);
+    this.saveToStorage();
+    this.logTransaction('UPDATE_TRAINER_APPLICATION', 'TrainerApplications', JSON.stringify(app));
+    this.saveToSupabase('trainer_applications', app.id, app);
   }
 
   // --- Assignments CRUD ---
