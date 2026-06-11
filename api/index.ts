@@ -19,6 +19,34 @@ const FALLBACK_DB_PATH = path.join(process.cwd(), 'supabase_fallback_db.json');
 
 let inMemoryBypass = false;
 
+function camelToSnake(str: string): string {
+  if (str.startsWith('$')) return str;
+  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+}
+
+function snakeToCamel(str: string): string {
+  if (str.startsWith('$')) return str;
+  return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+function convertTopLevelKeysToSnake(obj: any): any {
+  if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) return obj;
+  const newObj: any = {};
+  for (const key of Object.keys(obj)) {
+    newObj[camelToSnake(key)] = obj[key];
+  }
+  return newObj;
+}
+
+function convertTopLevelKeysToCamel(obj: any): any {
+  if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) return obj;
+  const newObj: any = {};
+  for (const key of Object.keys(obj)) {
+    newObj[snakeToCamel(key)] = obj[key];
+  }
+  return newObj;
+}
+
 function loadLocalDB(): any {
   try {
     if (fs.existsSync(FALLBACK_DB_PATH)) {
@@ -142,9 +170,10 @@ async function findUserDocumentByEmail(email: string): Promise<any> {
     }
 
     if (data) {
+      const camelData = convertTopLevelKeysToCamel(data);
       return {
-        ...data,
-        $id: data.id
+        ...camelData,
+        $id: camelData.id
       };
     }
   } catch (err) {
@@ -409,12 +438,15 @@ app.get('/api/supabase/list/:collectionId', async (req, res) => {
       throw error;
     }
 
-    const formattedDocs = (data || []).map((row: any) => ({
-      ...row,
-      $id: row.id,
-      $createdAt: row.timestamp || new Date().toISOString(),
-      $updatedAt: row.timestamp || new Date().toISOString()
-    }));
+    const formattedDocs = (data || []).map((row: any) => {
+      const camelRow = convertTopLevelKeysToCamel(row);
+      return {
+        ...camelRow,
+        $id: camelRow.id,
+        $createdAt: camelRow.timestamp || camelRow.createdAt || new Date().toISOString(),
+        $updatedAt: camelRow.timestamp || camelRow.createdAt || new Date().toISOString()
+      };
+    });
 
     // Cache records inside local JSON fallback database
     try {
@@ -541,9 +573,11 @@ app.post('/api/supabase/save', async (req, res) => {
       }
     }
 
+    const snakePayload = convertTopLevelKeysToSnake(payload);
+
     const { data, error } = await supabase
       .from(collectionId)
-      .upsert(payload);
+      .upsert(snakePayload);
 
     if (error) {
       console.warn(`Supabase upsert error on '${collectionId}':`, error.message);
