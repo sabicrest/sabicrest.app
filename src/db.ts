@@ -433,7 +433,7 @@ export class SupabaseDatabase {
       if (!syncedCurricula) {
         try {
           const res = await this.proxyList('curricula');
-          if (res && res.documents) {
+          if (res && res.documents && res.documents.length > 0) {
             this.curricula = res.documents.map((doc: any) => {
               const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
               let parsedModules = [];
@@ -444,9 +444,28 @@ export class SupabaseDatabase {
               }
               return { id: $id, ...data, modules: parsedModules } as any;
             });
+            syncedCurricula = true;
           }
         } catch (err) {
           console.warn('Supabase sync fallback warning [curricula]:', err);
+        }
+      }
+
+      // If we failed to sync from both or if they are empty, fall back to INITIAL_CURRICULA
+      if (!syncedCurricula || this.curricula.length === 0) {
+        console.log('[Fallback DB] No courses or curricula found in Supabase or sync failed. Retaining pre-seeded initial curricula.');
+        const cached = localStorage.getItem('sc_curricula');
+        if (cached) {
+          try {
+            this.curricula = JSON.parse(cached);
+          } catch (e) {
+            this.curricula = INITIAL_CURRICULA;
+          }
+        } else {
+          this.curricula = INITIAL_CURRICULA;
+        }
+        if (!this.curricula || this.curricula.length === 0) {
+          this.curricula = INITIAL_CURRICULA;
         }
       }
 
