@@ -101,19 +101,7 @@ const getFirstAdminEmail = (): string => {
   return getAdminEmails()[0] || 'officialsabicrest@gmail.com';
 };
 
-const INITIAL_USERS: User[] = getAdminEmails().map((email, idx) => ({
-  id: `u-admin-${idx + 1}`,
-  name: `${email.split('@')[0].toUpperCase().replace(/[\._\-]/g, ' ')} (Admin)`,
-  email: email,
-  role: 'admin',
-  password: 'password123',
-  verified: true,
-  joinedDate: '2026-01-10',
-  status: 'active',
-  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-  bio: 'System compliance curator and chief design director at Sabicrest.',
-  skills: ['Cybersecurity', 'Database Auditing', 'Infrastructure Design', 'System Architecture']
-}));
+const INITIAL_USERS: User[] = [];
 const INITIAL_MESSAGES: Message[] = [];
 const INITIAL_EVENTS: ScheduleEvent[] = [];
 const INITIAL_CURRICULA: Curriculum[] = [
@@ -275,7 +263,7 @@ export class SupabaseDatabase {
       localStorage.setItem('sabicrest_clean_v4_courses', 'true');
     }
 
-    if (localStorage.getItem('sabicrest_clean_v3') !== 'true') {
+    if (localStorage.getItem('sabicrest_clean_v5') !== 'true') {
       localStorage.removeItem('sc_users');
       localStorage.removeItem('sc_messages');
       localStorage.removeItem('sc_hub_messages');
@@ -288,7 +276,7 @@ export class SupabaseDatabase {
       localStorage.removeItem('sc_transactions');
       localStorage.removeItem('sc_enrollments');
       localStorage.removeItem('sc_admin_activities');
-      localStorage.setItem('sabicrest_clean_v3', 'true');
+      localStorage.setItem('sabicrest_clean_v5', 'true');
     }
 
     this.users = JSON.parse(localStorage.getItem('sc_users') || JSON.stringify(INITIAL_USERS));

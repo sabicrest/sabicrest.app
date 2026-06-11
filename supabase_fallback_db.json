@@ -1,0 +1,16 @@
+{
+  "users": [],
+  "messages": [],
+  "hub_messages": [],
+  "events": [],
+  "curricula": [],
+  "assignments": [],
+  "teams": [],
+  "certificates": [],
+  "notifications": [],
+  "enrollments": [],
+  "admin_activities": [],
+  "settings": {
+    "bypassSupabase": false
+  }
+}
