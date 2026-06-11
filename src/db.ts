@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Client, Databases, Query, Account } from 'appwrite';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import {
   User,
   Message,
@@ -20,48 +20,21 @@ import {
 } from './types';
 import { audio } from './utils/audio';
 
-let appwriteClient: Client | null = null;
-let appwriteDatabases: Databases | null = null;
-let appwriteAccount: Account | null = null;
+// Supabase details
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://msscwdevpdrkcbvkwdlv.supabase.co';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zc2N3ZGV2cGRya2Nidmt3ZGx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwOTU4NjEsImV4cCI6MjA5NjY3MTg2MX0.HWwZFcIml8gw1a4bPd1kQHEfnWr1RAGRNO9y4R8nVb8';
 
-export function getAppwriteClient(): Client | null {
-  const endpoint = import.meta.env.VITE_APPWRITE_ENDPOINT && !import.meta.env.VITE_APPWRITE_ENDPOINT.includes('fra.cloud.appwrite.io')
-    ? import.meta.env.VITE_APPWRITE_ENDPOINT
-    : `${window.location.origin}/api/appwrite-proxy`;
-  const projectId = import.meta.env.VITE_APPWRITE_PROJECT_ID || '6a19e810001156433516';
-  if (!projectId) {
-    return null;
+let supabaseClient: SupabaseClient | null = null;
+
+export function getSupabase(): SupabaseClient {
+  if (!supabaseClient) {
+    supabaseClient = createClient(supabaseUrl, supabaseKey);
   }
-  if (!appwriteClient) {
-    appwriteClient = new Client().setEndpoint(endpoint).setProject(projectId);
-  }
-  return appwriteClient;
+  return supabaseClient;
 }
 
-export function getAppwrite(): Databases | null {
-  const client = getAppwriteClient();
-  if (!client) {
-    return null;
-  }
-  if (!appwriteDatabases) {
-    appwriteDatabases = new Databases(client);
-  }
-  return appwriteDatabases;
-}
-
-export function getAppwriteAccount(): Account | null {
-  const client = getAppwriteClient();
-  if (!client) {
-    return null;
-  }
-  if (!appwriteAccount) {
-    appwriteAccount = new Account(client);
-  }
-  return appwriteAccount;
-}
-
-// Simple simulated encryption tools for Appwrite database privacy compliance.
-export const encryptPayload = (text: string, fakeKey: string = 'SABICREST_APPWRITE_AES_256_GCM'): string => {
+// Simple simulated encryption tools for database privacy compliance (write-through).
+export const encryptPayload = (text: string, fakeKey: string = 'SABICREST_SUPABASE_AES_256_GCM'): string => {
   if (!text) return '';
   // Convert to Base64 and rot13 equivalent to mock raw encrypted block
   const b64 = btoa(unescape(encodeURIComponent(text)));
@@ -73,7 +46,7 @@ export const encryptPayload = (text: string, fakeKey: string = 'SABICREST_APPWRI
   return btoa(cipher);
 };
 
-export const decryptPayload = (cipherText: string, fakeKey: string = 'SABICREST_APPWRITE_AES_256_GCM'): string => {
+export const decryptPayload = (cipherText: string, fakeKey: string = 'SABICREST_SUPABASE_AES_256_GCM'): string => {
   if (!cipherText) return '';
   try {
     const decryptedB64 = atob(cipherText);
@@ -128,21 +101,19 @@ const getFirstAdminEmail = (): string => {
   return getAdminEmails()[0] || 'officialsabicrest@gmail.com';
 };
 
-const INITIAL_USERS: User[] = [
-  {
-    id: 'u-admin-1',
-    name: 'Chief Admin Officer',
-    email: getFirstAdminEmail(),
-    role: 'admin',
-    password: 'password123',
-    verified: true,
-    joinedDate: '2026-01-10',
-    status: 'active',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-    bio: 'System compliance curator and chief design director at Sabicrest.',
-    skills: ['Cybersecurity', 'Database Auditing', 'Infrastructure Design', 'System Architecture']
-  }
-];
+const INITIAL_USERS: User[] = getAdminEmails().map((email, idx) => ({
+  id: `u-admin-${idx + 1}`,
+  name: `${email.split('@')[0].toUpperCase().replace(/[\._\-]/g, ' ')} (Admin)`,
+  email: email,
+  role: 'admin',
+  password: 'password123',
+  verified: true,
+  joinedDate: '2026-01-10',
+  status: 'active',
+  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+  bio: 'System compliance curator and chief design director at Sabicrest.',
+  skills: ['Cybersecurity', 'Database Auditing', 'Infrastructure Design', 'System Architecture']
+}));
 const INITIAL_MESSAGES: Message[] = [];
 const INITIAL_EVENTS: ScheduleEvent[] = [];
 const INITIAL_CURRICULA: Curriculum[] = [
@@ -281,7 +252,7 @@ const INITIAL_HUB_MESSAGES: HubMessage[] = [];
 const INITIAL_ENROLLMENTS: CourseEnrollment[] = [];
 
 // Database Engine Provider Class
-export class AppwriteDatabase {
+export class SupabaseDatabase {
   private users: User[];
   private messages: Message[];
   private hubMessages: HubMessage[];
@@ -336,7 +307,7 @@ export class AppwriteDatabase {
     this.notifications.forEach(n => this.knownNotificationIds.add(n.id));
 
     this.saveToStorage();
-    this.syncFromAppwrite();
+    this.syncFromSupabase();
     this.syncFastMessages();
   }
 
@@ -360,7 +331,7 @@ export class AppwriteDatabase {
       timestamp: new Date().toISOString(),
       operation,
       table,
-      encryptionKey: 'AES-256-GCM / Appwrite Database Crypt',
+      encryptionKey: 'AES-256-GCM / Supabase Database Crypt',
       hash: generateTxHash(),
       sizeBytes: dataStr.length
     };
@@ -369,7 +340,7 @@ export class AppwriteDatabase {
   }
 
   private async proxyList(collectionId: string): Promise<any> {
-    const res = await fetch(`/api/appwrite/list/${collectionId}`);
+    const res = await fetch(`/api/supabase/list/${collectionId}`);
     if (!res.ok) {
       const errRes = await res.json().catch(() => ({}));
       throw new Error(errRes.error || `Proxy listing failed: ${res.statusText}`);
@@ -382,7 +353,7 @@ export class AppwriteDatabase {
   }
 
   private async proxySave(collectionId: string, documentId: string, data: any, isDelete = false): Promise<any> {
-    const res = await fetch('/api/appwrite/save', {
+    const res = await fetch('/api/supabase/save', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -409,7 +380,7 @@ export class AppwriteDatabase {
     const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
     
     let parsedBio = data.bio || '';
-    let parsedPassword = '';
+    let parsedPassword = data.password || '';
     
     if (parsedBio.includes('||pwd:')) {
       const index = parsedBio.indexOf('||pwd:');
@@ -543,18 +514,19 @@ export class AppwriteDatabase {
     }
   }
 
-  async syncFromAppwrite() {
+  async syncFromSupabase() {
     try {
-      console.log('Appwrite Background Sync Starting...');
+      console.log('Supabase Background Sync Starting...');
       
-      // Sync Users
+      // Sync Users (Merged carefully to preserve existing offline records & passwords)
       try {
         const res = await this.proxyList('users');
         if (res && res.documents) {
-          this.users = res.documents.map((doc: any) => this.parseUserDoc(doc));
+          const syncedUsers = res.documents.map((doc: any) => this.parseUserDoc(doc));
+          this.mergeUsersPayload(syncedUsers);
         }
       } catch (err) {
-        console.warn('Appwrite sync error [users]:', err);
+        console.warn('Supabase sync error [users]:', err);
       }
 
       // Sync Events
@@ -567,7 +539,7 @@ export class AppwriteDatabase {
           });
         }
       } catch (err) {
-        console.warn('Appwrite sync error [events]:', err);
+        console.warn('Supabase sync error [events]:', err);
       }
 
       // Sync Curricula
@@ -586,7 +558,7 @@ export class AppwriteDatabase {
           });
         }
       } catch (err) {
-        console.warn('Appwrite sync error [curricula]:', err);
+        console.warn('Supabase sync error [curricula]:', err);
       }
 
       // Sync Assignments
@@ -599,7 +571,7 @@ export class AppwriteDatabase {
           });
         }
       } catch (err) {
-        console.warn('Appwrite sync error [assignments]:', err);
+        console.warn('Supabase sync error [assignments]:', err);
       }
 
       // Sync Teams
@@ -624,7 +596,7 @@ export class AppwriteDatabase {
           });
         }
       } catch (err) {
-        console.warn('Appwrite sync error [teams]:', err);
+        console.warn('Supabase sync error [teams]:', err);
       }
 
       // Sync Certificates
@@ -637,7 +609,7 @@ export class AppwriteDatabase {
           });
         }
       } catch (err) {
-        console.warn('Appwrite sync error [certificates]:', err);
+        console.warn('Supabase sync error [certificates]:', err);
       }
 
       // Sync Notifications
@@ -654,7 +626,7 @@ export class AppwriteDatabase {
           });
         }
       } catch (err) {
-        console.warn('Appwrite sync error [notifications]:', err);
+        console.warn('Supabase sync error [notifications]:', err);
       }
 
       // Sync Enrollments
@@ -667,7 +639,7 @@ export class AppwriteDatabase {
           });
         }
       } catch (err) {
-        console.warn('Appwrite sync error [enrollments]:', err);
+        console.warn('Supabase sync error [enrollments]:', err);
       }
 
       // Sync Admin Audit Activities
@@ -682,31 +654,31 @@ export class AppwriteDatabase {
           this.adminActivities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
         }
       } catch (err) {
-        console.warn('Appwrite sync error [admin_activities]:', err);
+        console.warn('Supabase sync error [admin_activities]:', err);
       }
 
       this.saveToStorage();
-      console.log('Appwrite Background Sync Completed Successfully!');
+      console.log('Supabase Background Sync Completed Successfully!');
     } catch (globalErr) {
-      console.warn('Appwrite Global sync warning (offline secure local state activated):', globalErr);
+      console.warn('Supabase Global sync warning (offline secure local state activated):', globalErr);
     } finally {
       setTimeout(() => {
-        this.syncFromAppwrite();
+        this.syncFromSupabase();
       }, 4000);
     }
   }
 
-  async saveToAppwrite(collectionId: string, documentId: string, data: any, isDelete = false) {
+  async saveToSupabase(collectionId: string, documentId: string, data: any, isDelete = false) {
     try {
-      let appwriteData = { ...data };
-      delete appwriteData.id;
+      let supabaseData = { ...data };
+      delete supabaseData.id;
 
       if (collectionId === 'users') {
         // Embed password in bio property
-        const passwordVal = appwriteData.password || '';
-        delete appwriteData.password;
+        const passwordVal = supabaseData.password || '';
+        delete supabaseData.password;
 
-        const userBio = appwriteData.bio || '';
+        const userBio = supabaseData.bio || '';
         let finalBio = userBio;
         if (passwordVal) {
           finalBio = `${userBio}||pwd:${passwordVal}`;
@@ -716,9 +688,9 @@ export class AppwriteDatabase {
             finalBio = `${userBio}||pwd:${existingUser.password}`;
           }
         }
-        appwriteData.bio = finalBio;
+        supabaseData.bio = finalBio;
 
-        // Allow list of Appwrite database columns
+        // Allow list of database columns
         const ALLOWED_USER_KEYS = [
           'name',
           'email',
@@ -738,33 +710,33 @@ export class AppwriteDatabase {
 
         const filtered: any = {};
         for (const key of ALLOWED_USER_KEYS) {
-          if (appwriteData[key] !== undefined) {
-            filtered[key] = appwriteData[key];
+          if (supabaseData[key] !== undefined) {
+            filtered[key] = supabaseData[key];
           }
         }
-        appwriteData = filtered;
+        supabaseData = filtered;
       }
 
       // Format types (stringifying objects while preserving primitive arrays)
-      for (const key of Object.keys(appwriteData)) {
-        if (typeof appwriteData[key] === 'object' && appwriteData[key] !== null) {
-          if (Array.isArray(appwriteData[key])) {
-            const hasObject = appwriteData[key].some((item: any) => typeof item === 'object' && item !== null);
+      for (const key of Object.keys(supabaseData)) {
+        if (typeof supabaseData[key] === 'object' && supabaseData[key] !== null) {
+          if (Array.isArray(supabaseData[key])) {
+            const hasObject = supabaseData[key].some((item: any) => typeof item === 'object' && item !== null);
             if (hasObject) {
-              appwriteData[key] = JSON.stringify(appwriteData[key]);
+              supabaseData[key] = JSON.stringify(supabaseData[key]);
             }
           } else {
-            appwriteData[key] = JSON.stringify(appwriteData[key]);
+            supabaseData[key] = JSON.stringify(supabaseData[key]);
           }
         }
       }
 
-      await this.proxySave(collectionId, documentId, appwriteData, isDelete);
+      await this.proxySave(collectionId, documentId, supabaseData, isDelete);
     } catch (err: any) {
-      console.warn(`Appwrite notice on collection ${collectionId} (locally persisted, syncing behind proxy):`, err);
-      this.logTransaction('APPWRITE_SYNC_BYPASS', collectionId, `${err.message || 'Offline gateway enabled'}`);
+      console.warn(`Supabase notice on collection ${collectionId} (locally persisted, syncing behind proxy):`, err);
+      this.logTransaction('SUPABASE_SYNC_BYPASS', collectionId, `${err.message || 'Offline gateway enabled'}`);
       if (collectionId === 'users') {
-        console.warn('Appwrite notice: using secure local state fallback for login.', err);
+        console.warn('Supabase notice: using secure local state fallback for login.', err);
       }
     }
   }
@@ -807,17 +779,74 @@ export class AppwriteDatabase {
     return this.users;
   }
 
+  mergeUsersPayload(remoteUsers: User[]) {
+    const merged = [...this.users];
+    let changed = false;
+    
+    // Always guarantee INITIAL_USERS are included
+    INITIAL_USERS.forEach((initUser: User) => {
+      const idx = merged.findIndex(u => u.id === initUser.id || u.email.toLowerCase().trim() === initUser.email.toLowerCase().trim());
+      if (idx === -1) {
+        merged.push(initUser);
+        changed = true;
+      } else {
+        // Guarantee password and properties of initial users
+        const localUser = merged[idx];
+        const updated = {
+          ...initUser,
+          ...localUser,
+          password: localUser.password || initUser.password || 'password123',
+          role: initUser.role // Keep the role correct
+        };
+        if (JSON.stringify(localUser) !== JSON.stringify(updated)) {
+          merged[idx] = updated;
+          changed = true;
+        }
+      }
+    });
+
+    // Merge remote users carefully
+    remoteUsers.forEach((remoteUser: User) => {
+      const idx = merged.findIndex(u => u.id === remoteUser.id || u.email.toLowerCase().trim() === remoteUser.email.toLowerCase().trim());
+      if (idx >= 0) {
+        const localUser = merged[idx];
+        const mergedUser = {
+          ...localUser,
+          ...remoteUser,
+          // Highly critical: Preserve passwords if missing in remote doc
+          password: remoteUser.password || localUser.password || 'password123'
+        };
+        if (JSON.stringify(localUser) !== JSON.stringify(mergedUser)) {
+          merged[idx] = mergedUser;
+          changed = true;
+        }
+      } else {
+        merged.push({
+          ...remoteUser,
+          password: remoteUser.password || 'password123'
+        });
+        changed = true;
+      }
+    });
+
+    this.users = merged;
+    if (changed) {
+      this.saveToStorage();
+    }
+  }
+
   async fetchLiveUsers(): Promise<User[]> {
     try {
       const res = await this.proxyList('users');
       if (res && res.documents) {
-        this.users = res.documents.map((doc: any) => this.parseUserDoc(doc));
+        const syncedUsers = res.documents.map((doc: any) => this.parseUserDoc(doc));
+        this.mergeUsersPayload(syncedUsers);
         // Force trigger dynamic initialization for loaded rows
         this.getUsers();
       }
       return this.users;
     } catch (err: any) {
-      console.warn('Appwrite direct fetchLiveUsers error, falling back to local database:', err);
+      console.warn('Supabase direct fetchLiveUsers error, falling back to local database:', err);
       this.logTransaction('APPWRITE_FETCH_FALLBACK', 'users', `Error: ${err.message || err}. Falling back to offline client store.`);
       return this.getUsers();
     }
@@ -855,31 +884,46 @@ export class AppwriteDatabase {
   }
 
   async updateUser(user: User): Promise<void> {
-    this.users = this.users.map(u => u.id === user.id ? user : u);
+    const existing = this.getUserById(user.id);
+    const updatedUser = { ...user };
+    if (existing && existing.password && !updatedUser.password) {
+      updatedUser.password = existing.password;
+    }
+    this.users = this.users.map(u => u.id === user.id ? updatedUser : u);
     this.saveToStorage();
-    this.logTransaction('UPDATE_USER_RECORD', 'Users', JSON.stringify(user));
-    await this.saveToAppwrite('users', user.id, user);
+    this.logTransaction('UPDATE_USER_RECORD', 'Users', JSON.stringify(updatedUser));
+    await this.saveToSupabase('users', updatedUser.id, updatedUser);
   }
 
   addUser(user: User) {
-    this.users.push(user);
+    const existing = this.getUserById(user.id);
+    const updatedUser = { ...user };
+    if (existing && existing.password && !updatedUser.password) {
+      updatedUser.password = existing.password;
+    }
+    this.users.push(updatedUser);
     this.saveToStorage();
-    this.logTransaction('INSERT_USER_RECORD', 'Users', JSON.stringify(user));
-    this.saveToAppwrite('users', user.id, user).catch(err => {
+    this.logTransaction('INSERT_USER_RECORD', 'Users', JSON.stringify(updatedUser));
+    this.saveToSupabase('users', updatedUser.id, updatedUser).catch(err => {
       console.warn('Silent addUser failure (can be ignored if offline):', err);
     });
   }
 
   async addUserAsync(user: User): Promise<void> {
+    const existing = this.getUserById(user.id);
+    const updatedUser = { ...user };
+    if (existing && existing.password && !updatedUser.password) {
+      updatedUser.password = existing.password;
+    }
     const exists = this.users.some(u => u.id === user.id);
     if (!exists) {
-      this.users.push(user);
+      this.users.push(updatedUser);
     } else {
-      this.users = this.users.map(u => u.id === user.id ? user : u);
+      this.users = this.users.map(u => u.id === user.id ? updatedUser : u);
     }
     this.saveToStorage();
-    this.logTransaction('INSERT_USER_RECORD', 'Users', JSON.stringify(user));
-    await this.saveToAppwrite('users', user.id, user);
+    this.logTransaction('INSERT_USER_RECORD', 'Users', JSON.stringify(updatedUser));
+    await this.saveToSupabase('users', updatedUser.id, updatedUser);
   }
 
   // --- Messages CRUD ---
@@ -894,12 +938,12 @@ export class AppwriteDatabase {
       id: `m-${Date.now()}`,
       encryptedContent: encrypted,
       isEncrypted: true,
-      algorithm: 'AES-256-GCM / Appwrite Database Crypt'
+      algorithm: 'AES-256-GCM / Supabase Database Crypt'
     };
     this.messages.push(newMsg);
     this.saveToStorage();
     this.logTransaction('INSERT_SECURE_MESSAGE', 'Messages', JSON.stringify(newMsg));
-    this.saveToAppwrite('messages', newMsg.id, newMsg).then(() => {
+    this.saveToSupabase('messages', newMsg.id, newMsg).then(() => {
       this.syncFastMessages(true);
     });
     return newMsg;
@@ -915,7 +959,7 @@ export class AppwriteDatabase {
           content,
           encryptedContent: encrypted
         };
-        this.saveToAppwrite('messages', msgId, updated).then(() => {
+        this.saveToSupabase('messages', msgId, updated).then(() => {
           this.syncFastMessages(true);
         });
         return updated;
@@ -933,7 +977,7 @@ export class AppwriteDatabase {
     this.messages = this.messages.filter(m => m.id !== msgId);
     this.saveToStorage();
     this.logTransaction('DELETE_SECURE_MESSAGE', 'Messages', msgId);
-    this.saveToAppwrite('messages', msgId, null, true).then(() => {
+    this.saveToSupabase('messages', msgId, null, true).then(() => {
       this.syncFastMessages(true);
     });
   }
@@ -952,7 +996,7 @@ export class AppwriteDatabase {
           reactions[emoji] = [...voters, userId];
         }
         const updated = { ...m, reactions };
-        this.saveToAppwrite('messages', msgId, updated).then(() => {
+        this.saveToSupabase('messages', msgId, updated).then(() => {
           this.syncFastMessages(true);
         });
         return updated;
@@ -968,7 +1012,7 @@ export class AppwriteDatabase {
     this.messages = this.messages.map(m => {
       if (m.receiverId === userId && !m.delivered) {
         const next = { ...m, delivered: true };
-        this.saveToAppwrite('messages', m.id, next);
+        this.saveToSupabase('messages', m.id, next);
         hasChanged = true;
         return next;
       }
@@ -984,7 +1028,7 @@ export class AppwriteDatabase {
     this.messages = this.messages.map(m => {
       if (m.senderId === senderId && m.receiverId === receiverId && (!m.delivered || !m.read)) {
         const next = { ...m, delivered: true, read: true };
-        this.saveToAppwrite('messages', m.id, next);
+        this.saveToSupabase('messages', m.id, next);
         hasChanged = true;
         return next;
       }
@@ -1051,7 +1095,7 @@ export class AppwriteDatabase {
     this.hubMessages.push(newMsg);
     this.saveToStorage();
     this.logTransaction('INSERT_HUB_MESSAGE', 'HubMessages', JSON.stringify(newMsg));
-    this.saveToAppwrite('hub_messages', newMsg.id, newMsg).then(() => {
+    this.saveToSupabase('hub_messages', newMsg.id, newMsg).then(() => {
       this.syncFastMessages(true);
     });
     return newMsg;
@@ -1078,7 +1122,7 @@ export class AppwriteDatabase {
     this.logTransaction('TOGGLE_HUB_REACTION', 'HubMessages', `msgId: ${msgId}, emoji: ${emoji}`);
     const updated = this.hubMessages.find(m => m.id === msgId);
     if (updated) {
-      this.saveToAppwrite('hub_messages', msgId, updated).then(() => {
+      this.saveToSupabase('hub_messages', msgId, updated).then(() => {
         this.syncFastMessages(true);
       });
     }
@@ -1095,7 +1139,7 @@ export class AppwriteDatabase {
     this.logTransaction('TOGGLE_HUB_SOLVED', 'HubMessages', `msgId: ${msgId}`);
     const updated = this.hubMessages.find(m => m.id === msgId);
     if (updated) {
-      this.saveToAppwrite('hub_messages', msgId, updated).then(() => {
+      this.saveToSupabase('hub_messages', msgId, updated).then(() => {
         this.syncFastMessages(true);
       });
     }
@@ -1114,7 +1158,7 @@ export class AppwriteDatabase {
     this.events.push(newEvent);
     this.saveToStorage();
     this.logTransaction('INSERT_EVENT_RECORD', 'ScheduleEvents', JSON.stringify(newEvent));
-    this.saveToAppwrite('events', newEvent.id, newEvent);
+    this.saveToSupabase('events', newEvent.id, newEvent);
     return newEvent;
   }
 
@@ -1122,7 +1166,7 @@ export class AppwriteDatabase {
     this.events = this.events.map(e => e.id === event.id ? event : e);
     this.saveToStorage();
     this.logTransaction('UPDATE_EVENT_RECORD', 'ScheduleEvents', JSON.stringify(event));
-    this.saveToAppwrite('events', event.id, event);
+    this.saveToSupabase('events', event.id, event);
   }
 
   // --- Curricula CRUD ---
@@ -1140,7 +1184,7 @@ export class AppwriteDatabase {
     this.curricula.push(newCurriculum);
     this.saveToStorage();
     this.logTransaction('PROPOSE_CURRICULUM_RECORD', 'Curricula', JSON.stringify(newCurriculum));
-    this.saveToAppwrite('curricula', newCurriculum.id, newCurriculum);
+    this.saveToSupabase('curricula', newCurriculum.id, newCurriculum);
     return newCurriculum;
   }
 
@@ -1148,7 +1192,7 @@ export class AppwriteDatabase {
     this.curricula = this.curricula.map(c => c.id === curriculum.id ? curriculum : c);
     this.saveToStorage();
     this.logTransaction('UPDATE_CURRICULUM_RECORD', 'Curricula', JSON.stringify(curriculum));
-    this.saveToAppwrite('curricula', curriculum.id, curriculum);
+    this.saveToSupabase('curricula', curriculum.id, curriculum);
   }
 
   // --- Assignments CRUD ---
@@ -1165,7 +1209,7 @@ export class AppwriteDatabase {
     this.assignments.push(newAssignment);
     this.saveToStorage();
     this.logTransaction('CREATE_ASSIGNMENT_RECORD', 'Assignments', JSON.stringify(newAssignment));
-    this.saveToAppwrite('assignments', newAssignment.id, newAssignment);
+    this.saveToSupabase('assignments', newAssignment.id, newAssignment);
     return newAssignment;
   }
 
@@ -1173,7 +1217,7 @@ export class AppwriteDatabase {
     this.assignments = this.assignments.map(a => a.id === assignment.id ? assignment : a);
     this.saveToStorage();
     this.logTransaction('UPDATE_ASSIGNMENT_RECORD', 'Assignments', JSON.stringify(assignment));
-    this.saveToAppwrite('assignments', assignment.id, assignment);
+    this.saveToSupabase('assignments', assignment.id, assignment);
   }
 
   // --- Teams CRUD ---
@@ -1185,7 +1229,7 @@ export class AppwriteDatabase {
     this.teams = this.teams.map(t => t.id === team.id ? team : t);
     this.saveToStorage();
     this.logTransaction('UPDATE_TEAM_RECORD', 'Teams', JSON.stringify(team));
-    this.saveToAppwrite('teams', team.id, team);
+    this.saveToSupabase('teams', team.id, team);
   }
 
   // --- Certificates CRUD ---
@@ -1237,7 +1281,7 @@ export class AppwriteDatabase {
     this.certificates.push(newCert);
     this.saveToStorage();
     this.logTransaction('ISSUE_VERIFIED_CERTIFICATE', 'Certificates', JSON.stringify(newCert));
-    this.saveToAppwrite('certificates', newCert.id, newCert);
+    this.saveToSupabase('certificates', newCert.id, newCert);
     return newCert;
   }
 
@@ -1279,7 +1323,7 @@ export class AppwriteDatabase {
     };
     this.notifications.push(newNotif);
     this.saveToStorage();
-    this.saveToAppwrite('notifications', newNotif.id, newNotif);
+    this.saveToSupabase('notifications', newNotif.id, newNotif);
     this.checkAndPlayNotificationSound(newNotif);
     return newNotif;
   }
@@ -1288,7 +1332,7 @@ export class AppwriteDatabase {
     this.notifications = this.notifications.map(n => {
       if (n.userId === userId) {
         const updated = { ...n, read: true };
-        this.saveToAppwrite('notifications', n.id, updated);
+        this.saveToSupabase('notifications', n.id, updated);
         return updated;
       }
       return n;
@@ -1299,7 +1343,7 @@ export class AppwriteDatabase {
   clearNotification(id: string) {
     this.notifications = this.notifications.filter(n => n.id !== id);
     this.saveToStorage();
-    this.saveToAppwrite('notifications', id, null, true);
+    this.saveToSupabase('notifications', id, null, true);
   }
 
   // --- Transaction Logs CR ---
@@ -1329,7 +1373,7 @@ export class AppwriteDatabase {
     this.enrollments.push(newEnr);
     this.saveToStorage();
     this.logTransaction('INITIATE_COURSE_PAYMENT', 'CourseEnrollments', JSON.stringify(newEnr));
-    this.saveToAppwrite('enrollments', newEnr.id, newEnr);
+    this.saveToSupabase('enrollments', newEnr.id, newEnr);
     return newEnr;
   }
 
@@ -1337,7 +1381,7 @@ export class AppwriteDatabase {
     this.enrollments = this.enrollments.map(e => e.id === enr.id ? enr : e);
     this.saveToStorage();
     this.logTransaction('UPDATE_COURSE_ENROLLMENT', 'CourseEnrollments', JSON.stringify(enr));
-    this.saveToAppwrite('enrollments', enr.id, enr);
+    this.saveToSupabase('enrollments', enr.id, enr);
   }
 
   // --- Admin Activity Audit System ---
@@ -1354,9 +1398,9 @@ export class AppwriteDatabase {
     this.adminActivities = [freshAct, ...this.adminActivities].slice(0, 150); // keep max 150 administrative logs
     this.saveToStorage();
     this.logTransaction('LOG_ADMIN_ACTIVITY', 'AdminActivities', JSON.stringify(freshAct));
-    this.saveToAppwrite('admin_activities', freshAct.id, freshAct);
+    this.saveToSupabase('admin_activities', freshAct.id, freshAct);
     return freshAct;
   }
 }
 
-export const db = new AppwriteDatabase();
+export const db = new SupabaseDatabase();
