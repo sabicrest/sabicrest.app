@@ -117,7 +117,7 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
       showToast('Error: Please select a valid profile image file.');
       return;
     }
-    // Limit to ~1.2MB for Appwrite/localStorage threshold boundaries
+    // Limit to ~1.2MB for Supabase/localStorage threshold boundaries
     if (file.size > 1.2 * 1024 * 1024) {
       showToast('Error: Selected image exceeds 1.2MB limit. Please provide a lighter image.');
       return;
@@ -223,7 +223,7 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
             senderName: currentUser.name,
             senderAvatar: currentUser.avatar,
             receiverId: admin.id,
-            content: `⚠️ VERIFIED ACCOUNT ERASURE PETITION [Ref: ${petitionId}] ⚠️\n\nI, ${currentUser.name} (E: ${currentUser.email}, Role: ${currentUser.role.toUpperCase()}), am filing a formal request to permanently strip my dashboard registers and files from Sabicrest Appwrite Servers.\n\nPlease approve or reject this request.`,
+            content: `⚠️ VERIFIED ACCOUNT ERASURE PETITION [Ref: ${petitionId}] ⚠️\n\nI, ${currentUser.name} (E: ${currentUser.email}, Role: ${currentUser.role.toUpperCase()}), am filing a formal request to permanently strip my dashboard registers and files from Sabicrest Supabase Servers.\n\nPlease approve or reject this request.`,
             timestamp: new Date().toISOString()
           });
 
@@ -357,7 +357,7 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
                   </div>
 
                   <span className="text-[10px] text-zinc-500 font-sans italic block mt-1.5">
-                    Your uploaded image is saved inside the Appwrite database partition and immediately made visible to all users across the Sabicrest platform.
+                    Your uploaded image is saved inside the Supabase database partition and immediately made visible to all users across the Sabicrest platform.
                   </span>
                 </div>
 

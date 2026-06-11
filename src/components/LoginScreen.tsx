@@ -375,7 +375,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         {/* Modern, minimalist footer branding details */}
         <div id="login-footer-info" className="mt-6 text-[10px] font-light text-zinc-300 tracking-wider uppercase text-center flex flex-col gap-1">
           <span>Sabicrest Administrator Gateway // Restricted Core Access</span>
-          <span>Appwrite Account Credentials Validation Layer</span>
+          <span>Supabase Account Credentials Validation Layer</span>
         </div>
 
       </div>

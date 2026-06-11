@@ -38,7 +38,7 @@ const ALL_CHANNELS = [
   { id: 'team-general', label: 'cohort-general', desc: 'General chatter, major announcements, and introductions.' },
   { id: 'team-collaboration', label: 'team-active-horizon', desc: 'All team collaboration updates, cohort project syncs, and tasks.' },
   { id: 'design-showcase', label: 'design-showcase', desc: 'Present and critique high-fidelity Figma links, design prototypes, and mockups.' },
-  { id: 'technical-support', label: 'technical-support', desc: 'Discuss application environments, system settings, APIs, and Appwrite databases.' }
+  { id: 'technical-support', label: 'technical-support', desc: 'Discuss application environments, system settings, APIs, and Supabase databases.' }
 ];
 
 interface MessagingProps {

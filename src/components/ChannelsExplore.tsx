@@ -18,7 +18,7 @@ export const ALL_CHANNELS = [
   { id: 'team-general', label: 'cohort-general', desc: 'General chatter, major announcements, guidelines, and introductions.' },
   { id: 'team-collaboration', label: 'team-active-horizon', desc: 'Secure workspace for collaborative projects, group milestones, and team tasks.' },
   { id: 'design-showcase', label: 'design-showcase', desc: 'Present and critique high-fidelity Figma links, design prototypes, and concept sketches.' },
-  { id: 'technical-support', label: 'technical-support', desc: 'Troubleshoot developer environments, Appwrite sandbox credentials, and database settings.' }
+  { id: 'technical-support', label: 'technical-support', desc: 'Troubleshoot developer environments, Supabase sandbox credentials, and database settings.' }
 ];
 
 export default function ChannelsExplore({

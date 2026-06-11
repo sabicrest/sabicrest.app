@@ -340,7 +340,7 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
       adminName: currentUser.name,
       adminEmail: currentUser.email,
       action: 'Recalibrate DB Clusters',
-      details: 'Triggered cluster performance alignment sequence across Appwrite replicas.',
+      details: 'Triggered cluster performance alignment sequence across Supabase replicas.',
       ipAddress: '192.168.10.22'
     });
 
@@ -981,7 +981,7 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
             </div>
 
             <p className="text-[9px] text-zinc-400 italic mt-3 text-right">
-              Logs are cryptographically hashed and synced to Appwrite.
+              Logs are cryptographically hashed and synced to Supabase.
             </p>
           </div>
           

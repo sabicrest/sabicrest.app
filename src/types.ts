@@ -63,7 +63,7 @@ export interface Message {
   encryptedContent: string; // Base64 encrypted / hashed representation stored in Database
   timestamp: string;
   isEncrypted: boolean;
-  algorithm: string; // e.g. "AES-256-GCM / Appwrite Database Crypt"
+  algorithm: string; // e.g. "AES-256-GCM / Supabase Database Crypt"
   replyToId?: string; // Quote reply support
   replyToSender?: string;
   replyToText?: string;
@@ -199,7 +199,7 @@ export interface NotificationAlert {
   createdAt: string;
 }
 
-// Appwrite Simulated Serverless DB Transaction audit line
+// Supabase Simulated Serverless DB Transaction audit line
 export interface DbTransactionLog {
   timestamp: string;
   operation: string;
