@@ -654,11 +654,12 @@ export class SupabaseDatabase {
 
       await this.proxySave(collectionId, documentId, supabaseData, isDelete);
     } catch (err: any) {
+      if (collectionId === 'users') {
+        console.error('CRITICAL: Supabase users write failed:', err);
+        throw new Error(`Registration/user sync failed: ${err.message || err}`);
+      }
       console.warn(`Supabase notice on collection ${collectionId} (locally persisted, syncing behind proxy):`, err);
       this.logTransaction('SUPABASE_SYNC_BYPASS', collectionId, `${err.message || 'Offline gateway enabled'}`);
-      if (collectionId === 'users') {
-        console.warn('Supabase notice: using secure local state fallback for login.', err);
-      }
     }
   }
 
@@ -701,30 +702,8 @@ export class SupabaseDatabase {
   }
 
   mergeUsersPayload(remoteUsers: User[]) {
-    const merged = [...this.users];
-    let changed = false;
-    
-    // Always guarantee INITIAL_USERS are included
-    INITIAL_USERS.forEach((initUser: User) => {
-      const idx = merged.findIndex(u => u.id === initUser.id || u.email.toLowerCase().trim() === initUser.email.toLowerCase().trim());
-      if (idx === -1) {
-        merged.push(initUser);
-        changed = true;
-      } else {
-        // Guarantee password and properties of initial users
-        const localUser = merged[idx];
-        const updated = {
-          ...initUser,
-          ...localUser,
-          password: localUser.password || initUser.password || 'password123',
-          role: initUser.role // Keep the role correct
-        };
-        if (JSON.stringify(localUser) !== JSON.stringify(updated)) {
-          merged[idx] = updated;
-          changed = true;
-        }
-      }
-    });
+    // Only keep users that exists in remote parsed list from Supabase
+    const merged: User[] = [];
 
     // Merge remote users carefully
     remoteUsers.forEach((remoteUser: User) => {
@@ -734,26 +713,20 @@ export class SupabaseDatabase {
         const mergedUser = {
           ...localUser,
           ...remoteUser,
-          // Highly critical: Preserve passwords if missing in remote doc
+          // Handle passwords
           password: remoteUser.password || localUser.password || 'password123'
         };
-        if (JSON.stringify(localUser) !== JSON.stringify(mergedUser)) {
-          merged[idx] = mergedUser;
-          changed = true;
-        }
+        merged[idx] = mergedUser;
       } else {
         merged.push({
           ...remoteUser,
           password: remoteUser.password || 'password123'
         });
-        changed = true;
       }
     });
 
     this.users = merged;
-    if (changed) {
-      this.saveToStorage();
-    }
+    this.saveToStorage();
   }
 
   async fetchLiveUsers(): Promise<User[]> {
@@ -767,9 +740,8 @@ export class SupabaseDatabase {
       }
       return this.users;
     } catch (err: any) {
-      console.warn('Supabase direct fetchLiveUsers error, falling back to local database:', err);
-      this.logTransaction('APPWRITE_FETCH_FALLBACK', 'users', `Error: ${err.message || err}. Falling back to offline client store.`);
-      return this.getUsers();
+      console.error('Supabase direct fetchLiveUsers error:', err);
+      throw new Error(`Failed to load educational profile database from cloud Supabase: ${err.message || err}`);
     }
   }
   

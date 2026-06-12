@@ -2801,148 +2801,100 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                         : 'bg-white border-zinc-155 hover:border-zinc-350'
                   }`}>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] text-zinc-400 font-mono tracking-wider font-semibold uppercase">Step 3 // Lesson Video</span>
+                      <span className="text-[10px] text-zinc-400 font-mono tracking-wider font-semibold uppercase">Step 3 // Verification Video Link</span>
                       {verificationData.step3Saved ? (
                         <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] px-2 py-0.5 rounded-md font-mono font-bold flex items-center gap-1">
-                          <Check size={10} className="stroke-[3]" /> Uploaded
+                          <Check size={10} className="stroke-[3]" /> Linked Successfully
                         </span>
                       ) : !verificationData.step2Saved ? (
                         <span className="bg-zinc-150 text-zinc-450 text-[9px] px-2 py-0.5 rounded-md font-mono">Locked</span>
                       ) : (
-                        <span className="bg-amber-50 text-amber-800 border border-amber-200 text-[9px] px-2 py-0.5 rounded-md font-mono font-bold animate-pulse">Waiting for Video</span>
+                        <span className="bg-amber-50 text-amber-800 border border-amber-200 text-[9px] px-2 py-0.5 rounded-md font-mono font-bold animate-pulse">Awaiting Video Link</span>
                       )}
                     </div>
 
                     <h4 className="text-xs font-bold text-zinc-900 tracking-tight mb-2.5 flex items-center gap-1.5 uppercase">
-                      <Play size={14} className="text-rose-500" /> 3. Short Lesson Video
+                      <Play size={14} className="text-rose-500" /> 3. Self-Introduction & Experience Video
                     </h4>
                     
                     <p className="text-[11px] text-zinc-550 font-light mb-4 leading-relaxed">
-                      Record or send us a short 5-minute video of you teaching. Show us how you write code, style designs, or work on the farm.
+                      Please provide a link to a video introducing yourself. Your video must highlight your qualifications and experience, your goals for students, and why you chose to partner with Sabicrest as a trainer-mentor for aspiring professionals and business owners.
                     </p>
 
                     {/* Step-specific directions */}
-                    {verificationData.step2Saved && !verificationData.step3Saved && (
-                      <div className="bg-zinc-50 border border-zinc-150 p-3 rounded-xl mb-4 text-[10px] text-zinc-600 font-mono leading-relaxed">
-                        <span className="font-bold text-rose-600 block uppercase tracking-wide text-[9px] mb-1">
-                          {verificationData.category === 'digital' ? '💻 COMPUTER TEACHING VIDEO GOAL' : verificationData.category === 'creative' ? '🌸 HANDS-ON ART & STYLE VIDEO GOAL' : '🚜 FARM & WORKSHOP VIDEO GOAL'}
+                    {verificationData.step2Saved && (
+                      <div className="bg-zinc-50 border border-zinc-150 p-3.5 rounded-xl mb-4 text-[10px] text-zinc-600 font-mono leading-relaxed space-y-2">
+                        <span className="font-bold text-indigo-700 block uppercase tracking-wide text-[9px]">
+                          🛡️ REQUIRED VIDEO CRITERIA & STRUCTURE
                         </span>
-                        {verificationData.category === 'digital' ? 'Record your screen showing how you build web projects or configure code.' : verificationData.category === 'creative' ? 'Show a video of you drawing, makeup styling, doing hair, or matching colors.' : 'Record a video explaining how to use shop tools safely, or showing your animals and farm machines.'}
+                        <ul className="list-disc pl-4 space-y-1 text-zinc-600 text-[9.5px]">
+                          <li><strong className="text-zinc-850">Qualifications & Experience:</strong> Details about your background, career success, and expertise in your field.</li>
+                          <li><strong className="text-zinc-850">Goals for Students:</strong> What knowledge, skills, and values you aim to impart to your learners.</li>
+                          <li><strong className="text-zinc-850">Sabicrest Partnership Vision:</strong> Why you chose to partner with Sabicrest as a trainer-mentor to build aspiring professionals and business owners.</li>
+                        </ul>
                       </div>
                     )}
 
                     {/* Media Uploader / Recording Simulator */}
                     {!verificationData.step3Saved ? (
                       <div className="space-y-3">
-                        {simulatedMediaState === 'idle' ? (
-                          <div className="border border-dashed border-zinc-200 bg-zinc-50/50 rounded-2xl p-5 text-center space-y-3">
-                            <VideoIcon className="w-8 h-8 text-zinc-400 mx-auto" />
-                            <div>
-                              <span className="text-[11px] font-bold text-zinc-800 block">Record Video or Choose File</span>
-                              <span className="text-[9px] text-zinc-400 font-light block mt-0.5">We accept MP4, WEBM, and MOV video files</span>
-                            </div>
-
-                            <div className="flex gap-2">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  // Simulate recording live
-                                  setSimulatedMediaState('recording');
-                                  let currentSecs = 0;
-                                  const recInt = setInterval(() => {
-                                    currentSecs++;
-                                    setMediaProgress(currentSecs);
-                                    if (currentSecs >= 3) {
-                                      clearInterval(recInt);
-                                      setSimulatedMediaState('uploading');
-                                      let uploadPercent = 0;
-                                      const upInt = setInterval(() => {
-                                        uploadPercent += 20;
-                                        setMediaProgress(uploadPercent);
-                                        if (uploadPercent >= 100) {
-                                          clearInterval(upInt);
-                                          setSimulatedMediaState('completed');
-                                          setVerificationData(p => ({
-                                            ...p,
-                                            step3Saved: true,
-                                            step3Data: {
-                                              ...p.step3Data,
-                                              videoUrl: `sabicrest_audition_video_${currentUser.id}_draft.mp4`,
-                                              recorded: true,
-                                              durationSeconds: 180
-                                            },
-                                            status: 'submitted'
-                                          }));
-                                          showToast("✓ Video lesson recorded and saved!");
-                                        }
-                                      }, 300);
-                                    }
-                                  }, 1000);
-                                }}
-                                className="flex-1 bg-brand-black hover:bg-zinc-800 text-white py-1.5 rounded-lg text-[10px] uppercase font-bold cursor-pointer transition-colors inline-flex justify-center items-center gap-1.5"
-                              >
-                                <Camera size={11} className="text-red-500 animate-pulse" /> Live Record Screen
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setSimulatedMediaState('uploading');
-                                  let percent = 0;
-                                  const loader = setInterval(() => {
-                                    percent += 10;
-                                    setMediaProgress(percent);
-                                    if (percent >= 100) {
-                                      clearInterval(loader);
-                                      setSimulatedMediaState('completed');
-                                      setVerificationData(p => ({
-                                        ...p,
-                                        step3Saved: true,
-                                        step3Data: {
-                                          ...p.step3Data,
-                                          videoUrl: `uploaded_video_${currentUser.name.replace(/\s+/g, '_').toLowerCase()}.mp4`,
-                                          recorded: false,
-                                          durationSeconds: 300
-                                        },
-                                        status: 'submitted'
-                                      }));
-                                      showToast("✓ Video lesson successfully uploaded!");
-                                    }
-                                  }, 150);
-                                }}
-                                className="flex-1 bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-700 py-1.5 rounded-lg text-[10px] uppercase font-bold cursor-pointer transition-colors inline-flex justify-center items-center gap-1.5"
-                              >
-                                <Upload size={11} /> Upload Video File
-                              </button>
-                            </div>
+                        <div className="border border-dashed border-zinc-200 bg-zinc-50/50 rounded-2xl p-5 space-y-3">
+                          <VideoIcon className="w-8 h-8 text-zinc-400 mx-auto" />
+                          <div className="text-center">
+                            <span className="text-[11px] font-bold text-zinc-800 block font-mono">Submit qualifications & experience video link</span>
+                            <span className="text-[9px] text-rose-600 font-medium block mt-1 leading-normal max-w-sm mx-auto">
+                              This must ONLY be a link from a video about your qualifications and experience, your goals for students, and why you chose to partner with Sabicrest as a trainer-mentor for aspiring professionals and business owners.
+                            </span>
                           </div>
-                        ) : (
-                          <div className="border border-zinc-150 bg-zinc-50 rounded-2xl p-5 text-center space-y-4 animate-in fade-in">
-                            {simulatedMediaState === 'recording' && (
-                              <div className="space-y-2">
-                                <div className="flex items-center justify-center gap-2 text-xs font-semibold text-rose-600 font-mono animate-pulse">
-                                  <span className="w-2.5 h-2.5 bg-rose-600 rounded-full animate-ping" />
-                                  <span>RECORDING YOUR SCREEN NOW (SIMULATED)</span>
-                                </div>
-                                <div className="text-3xl font-light font-mono text-zinc-800">
-                                  00:0{mediaProgress}
-                                </div>
-                                <p className="text-[10px] text-zinc-400">Recording your voice and actions. Explain your topic simply and clearly...</p>
-                              </div>
-                            )}
 
-                            {simulatedMediaState === 'uploading' && (
-                              <div className="space-y-2">
-                                <span className="text-xs font-semibold text-zinc-800 font-mono block">UPLOADING YOUR VIDEO FILE</span>
-                                <div className="w-full bg-zinc-200 rounded-full h-2 overflow-hidden">
-                                  <div className="bg-brand-yellow h-2 transition-all duration-150" style={{ width: `${mediaProgress}%` }}></div>
-                                </div>
-                                <div className="text-[10px] font-mono text-zinc-450">
-                                  Saving video chunks // {mediaProgress}% loaded
-                                </div>
-                              </div>
+                          <div className="space-y-2">
+                            <label className="text-[9px] font-mono uppercase tracking-wider text-zinc-450 block font-bold">Video URL Link</label>
+                            <input
+                              type="url"
+                              value={verificationData.step3Data.videoUrl || ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setVerificationData(p => ({
+                                  ...p,
+                                  step3Data: {
+                                    ...p.step3Data,
+                                    videoUrl: val
+                                  }
+                                }));
+                              }}
+                              placeholder="https://www.youtube.com/watch?v=... or https://www.loom.com/share/..."
+                              className="w-full text-xs font-mono bg-white border border-zinc-250 rounded-xl px-3 py-2 text-zinc-800 focus:outline-hidden focus:border-indigo-500 placeholder:text-zinc-300"
+                            />
+                            {verificationData.step3Data.videoUrl && !verificationData.step3Data.videoUrl.startsWith('http') && (
+                              <p className="text-[9px] text-rose-500 font-mono">⚠️ Please input a valid URL starting with http:// or https://</p>
                             )}
                           </div>
-                        )}
+
+                          <button
+                            type="button"
+                            disabled={!verificationData.step3Data.videoUrl || !verificationData.step3Data.videoUrl.startsWith('http')}
+                            onClick={() => {
+                              setVerificationData(p => ({
+                                ...p,
+                                step3Saved: true,
+                                step3Data: {
+                                  ...p.step3Data,
+                                  recorded: false,
+                                  durationSeconds: 120
+                                },
+                                status: 'submitted'
+                              }));
+                              showToast("✓ Video link successfully saved & application submitted!");
+                            }}
+                            className={`w-full py-2 rounded-xl text-[10px] uppercase font-bold tracking-wider cursor-pointer transition-colors ${
+                              verificationData.step3Data.videoUrl && verificationData.step3Data.videoUrl.startsWith('http')
+                                ? 'bg-indigo-700 text-white hover:bg-indigo-800 shadow-sm'
+                                : 'bg-zinc-100 text-zinc-400 cursor-not-allowed'
+                            }`}
+                          >
+                            Save Step 3 & Submit Application
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <div className="space-y-3.5">
@@ -2950,17 +2902,15 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                           <div className="flex items-center gap-2">
                             <Play className="text-emerald-500 w-4 h-4 fill-emerald-100" />
                             <div>
-                              <span className="text-xs font-bold text-zinc-800 block">Sabicrest Lesson Video Saved</span>
-                              <span className="text-[9px] text-zinc-400 font-mono block leading-none">{verificationData.step3Data.videoUrl || 'sabicrest_upload.mp4'}</span>
+                              <span className="text-xs font-bold text-zinc-800 block">Trainer Verification Video Linked</span>
+                              <span className="text-[9px] text-zinc-400 font-mono block leading-none">{verificationData.step3Data.videoUrl}</span>
                             </div>
                           </div>
-                          <span className="text-[9px] uppercase font-mono text-emerald-800 bg-emerald-50 border border-emerald-150 px-2 py-0.5 rounded font-bold">Secure</span>
+                          <span className="text-[9px] uppercase font-mono text-emerald-800 bg-emerald-50 border border-emerald-150 px-2 py-0.5 rounded font-bold">Linked</span>
                         </div>
                         <button
                           type="button"
                           onClick={() => {
-                            setSimulatedMediaState('idle');
-                            setMediaProgress(0);
                             setVerificationData(prev => ({
                               ...prev,
                               step3Saved: false,
@@ -2969,7 +2919,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                           }}
                           className="text-[10px] text-rose-600 hover:underline cursor-pointer block font-semibold text-left"
                         >
-                          ✏️ Remove video & choose another
+                          ✏️ Update or change video link
                         </button>
                       </div>
                     )}

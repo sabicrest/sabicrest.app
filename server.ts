@@ -421,6 +421,40 @@ async function startServer() {
     let fallbackToLocal = false;
     let localDBStatusMessage = '';
 
+    if (collectionId === 'users') {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*');
+
+        if (error) {
+          console.error('[CRITICAL] Supabase list error on users:', error.message);
+          throw error;
+        }
+
+        const formattedDocs = (data || []).map((row: any) => {
+          const camelRow = convertTopLevelKeysToCamel(row);
+          return {
+            ...camelRow,
+            $id: camelRow.id,
+            $createdAt: camelRow.timestamp || camelRow.createdAt || new Date().toISOString(),
+            $updatedAt: camelRow.timestamp || camelRow.createdAt || new Date().toISOString()
+          };
+        });
+
+        return res.json({
+          documents: formattedDocs,
+          total: formattedDocs.length
+        });
+      } catch (err: any) {
+        console.error('[CRITICAL] Direct users fetch fail:', err.message || err);
+        return res.status(500).json({
+          success: false,
+          error: `Database unavailable: ${err.message || err}`
+        });
+      }
+    }
+
     const bypassActive = getSupabaseBypassStatus();
     if (bypassActive) {
       console.log(`[Autonomous DB Engine] Listing bypassed for '${collectionId}' to avoid cloud limits.`);
@@ -495,6 +529,64 @@ async function startServer() {
   // API Proxy Route for Saving or Deleting Documents
   app.post('/api/supabase/save', async (req, res) => {
     const { collectionId, documentId, data: documentData, isDelete } = req.body;
+
+    if (collectionId === 'users') {
+      try {
+        if (isDelete) {
+          const { error } = await supabase
+            .from('users')
+            .delete()
+            .eq('id', documentId);
+
+          if (error) {
+            console.error('[CRITICAL] Delete user in Supabase error:', error.message);
+            throw error;
+          }
+
+          return res.json({
+            success: true,
+            message: 'User deleted successfully via Supabase'
+          });
+        }
+
+        // Prepare payload with id set as Primary Key
+        const payload = {
+          id: documentId,
+          ...documentData
+        };
+        
+        // Filter out any Appwrite metadata fields starting with $
+        for (const k of Object.keys(payload)) {
+          if (k.startsWith('$')) {
+            delete payload[k];
+          }
+        }
+
+        const snakePayload = convertTopLevelKeysToSnake(payload);
+
+        const { error } = await supabase
+          .from('users')
+          .upsert(snakePayload);
+
+        if (error) {
+          console.error('[CRITICAL] Supabase upsert error on users:', error.message);
+          throw error;
+        }
+
+        return res.json({
+          success: true,
+          action: 'upsert',
+          document: payload
+        });
+      } catch (err: any) {
+        console.error('[CRITICAL] Direct user write to Supabase failed:', err.message || err);
+        return res.status(500).json({
+          success: false,
+          error: `Failed to commit user profile/registration to database: ${err.message || err}`
+        });
+      }
+    }
+
     let localSavedSuccessfully = false;
 
     // 1. ALWAYS perform the persistent local save first as a cache!
