@@ -8,7 +8,9 @@ import { User, Curriculum, CourseEnrollment, AdminActivity } from '../types';
 import { db } from '../db';
 import VerifiedBadge from './VerifiedBadge';
 import { getQuoteOfTheDay } from '../utils/quotes';
-import { Shield, Sparkles, BookOpen, UserCheck, Settings, Server, CheckSquare, XCircle, ToggleLeft, ToggleRight, Radio, RefreshCw, KeyRound, Clock, AlertCircle, X, Award, ClipboardCheck, Activity, Search, ArrowUpRight } from 'lucide-react';
+import AdminCharts from './AdminCharts';
+import AdminSubViews from './AdminSubViews';
+import { Shield, Sparkles, BookOpen, UserCheck, Settings, Server, CheckSquare, XCircle, ToggleLeft, ToggleRight, Radio, RefreshCw, KeyRound, Clock, AlertCircle, X, Award, ClipboardCheck, Activity, Search, ArrowUpRight, Users, DollarSign, TrendingUp, MessageSquare, CalendarDays, ChevronLeft, UserX, BarChart3, PieChart, Plus, BookOpenCheck, Flame } from 'lucide-react';
 
 interface DashboardAdminProps {
   currentUser: User;
@@ -41,6 +43,15 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
   const [showSubmittedWorkModal, setShowSubmittedWorkModal] = useState(false);
   const [dashboardSearchQuery, setDashboardSearchQuery] = useState('');
   const [coursesSearchQuery, setCoursesSearchQuery] = useState('');
+
+  // Dynamic administrative subview states for clickable drilldowns
+  const [adminSubView, setAdminSubView] = useState<'default' | 'users' | 'courses' | 'pending-verification' | 'ongoing-courses' | 'graduating' | 'inactive-students' | 'active-students' | 'active-trainers' | 'chats-messages' | 'finances'>('default');
+  const [subViewQuery, setSubViewQuery] = useState('');
+  const [subViewFilters, setSubViewFilters] = useState({
+    role: 'all',          // 'all', 'student', 'trainer'
+    period: 'all',        // 'all', 'today', 'week', 'month', '3months'
+    courseId: 'all',      // course filter
+  });
 
   const reloadAdminData = () => {
     setUsers(db.getUsers());
@@ -95,6 +106,60 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
         u.role.toLowerCase().includes(dashboardSearchQuery.toLowerCase())
       )
     );
+
+  // Dynamic Metrics Audit Computations (12 stats requested by user)
+  const totalStudents = users.filter(u => u.role === 'student').length;
+  const totalTrainers = users.filter(u => u.role === 'trainer').length;
+  const totalCourses = curricula.length;
+  const trainersPendingVerification = users.filter(u => u.role === 'trainer' && !u.verified).length + trainerApps.filter(a => a.status === 'pending').length;
+  
+  // Ongoing courses: approved curriculum and has students registered
+  const ongoingCoursesList = curricula.filter(c => 
+    c.status === 'approved' && 
+    enrollments.some(e => e.courseId === c.id && e.paymentStatus === 'approved')
+  );
+  const ongoingCoursesCount = ongoingCoursesList.length;
+
+  // Graduating students or courses
+  const graduatingStudentsList = enrollments.filter(e => e.paymentStatus === 'approved' && e.completed === true);
+  const graduatingCount = graduatingStudentsList.length;
+
+  // Inactive students (no registered courses, or joined > 3 months ago with zero action)
+  const inactiveStudentsList = users.filter(u => {
+    if (u.role !== 'student') return false;
+    const studentEnrs = enrollments.filter(e => e.studentId === u.id);
+    const hasNoCourse = studentEnrs.length === 0;
+
+    // Check joined time (greater than 90 days ago / 3 months)
+    const joinTime = new Date(u.joinedDate).getTime();
+    const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
+    const isOverThreeMonths = joinTime < ninetyDaysAgo;
+
+    // Check whether student has done any platform messages
+    const hasNoMessages = !db.getMessages().some(m => m.senderId === u.id);
+
+    return hasNoCourse || (isOverThreeMonths && hasNoMessages);
+  });
+  const inactiveStudentsCount = inactiveStudentsList.length;
+
+  // Active students
+  const activeStudentsList = users.filter(u => u.role === 'student' && !inactiveStudentsList.some(ins => ins.id === u.id));
+  const activeStudentsCount = activeStudentsList.length;
+
+  // Active trainers
+  const activeTrainersList = users.filter(u => u.role === 'trainer' && u.verified && curricula.some(c => c.trainerId === u.id && c.status === 'approved'));
+  const activeTrainersCount = activeTrainersList.length;
+
+  // Chats count split
+  const totalDMs = db.getMessages().filter(m => !m.channelId).length;
+  const totalChannelsMsgs = db.getMessages().filter(m => m.channelId).length;
+  const totalChatsCount = db.getMessages().length;
+
+  // financial sums
+  const approvedEnrollments = enrollments.filter(e => e.paymentStatus === 'approved');
+  const totalRevenueGenerated = approvedEnrollments.reduce((sum, e) => sum + (e.amount || 150000), 0);
+  const totalPaidOutToTrainers = totalRevenueGenerated * 0.85;
+  const totalGrossProfit = totalRevenueGenerated * 0.15;
 
   const handleApproveCurriculum = (currId: string) => {
     const target = curricula.find(c => c.id === currId);
@@ -441,124 +506,272 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
   };
 
   return (
-    <div id="admin-dashboard-root" className="py-6 max-w-7xl mx-auto px-4 select-none">
+    <div id="admin-dashboard-root" className="py-6 max-w-7xl mx-auto px-4 select-none pb-24">
       
-      {/* Header Banner - Upgraded to match Student/Trainer aesthetics */}
-      <div id="admin-hero-banner" className="bg-brand-black dark:bg-brand-yellow text-white dark:text-black rounded-3xl p-8 mb-8 relative overflow-hidden shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border border-transparent dark:border-white">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-zinc-800/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
-        <div className="relative z-10 space-y-2 max-w-2xl">
-          <span className="text-[10px] uppercase font-mono tracking-widest bg-zinc-800 dark:bg-black/10 text-white dark:text-black px-3 py-1 rounded-full border border-zinc-700 dark:border-black/20">
-            Welcome back
-          </span>
-          <h2 className="text-2xl md:text-3xl font-light tracking-tight text-white dark:text-black">
-            Administration dashboard // <span className="font-semibold text-brand-yellow dark:text-black">{currentUser.name}</span>
-          </h2>
-          <p className="text-xs text-white dark:text-black/85 font-light leading-relaxed opacity-95">
-            {getQuoteOfTheDay()}
-          </p>
-        </div>
+      {adminSubView !== 'default' ? (
+        <AdminSubViews 
+          currentUser={currentUser}
+          onClose={() => setAdminSubView('default')}
+          users={users}
+          curricula={curricula}
+          enrollments={enrollments}
+          trainerApps={trainerApps}
+          transactions={transactions}
+          activities={activities}
+          subView={adminSubView}
+          initialRoleFilter={subViewFilters.role as any}
+          reloadAdminData={reloadAdminData}
+        />
+      ) : (
+        <>
+          {/* Header Banner - Upgraded to match Student/Trainer aesthetics */}
+          <div id="admin-hero-banner" className="bg-brand-black dark:bg-brand-yellow text-white dark:text-black rounded-3xl p-8 mb-8 relative overflow-hidden shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border border-transparent dark:border-white animate-in fade-in duration-200">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-zinc-805/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+            <div className="relative z-10 space-y-2 max-w-2xl">
+              <span className="text-[10px] uppercase font-mono tracking-widest bg-zinc-800 dark:bg-black/10 text-white dark:text-black px-3 py-1 rounded-full border border-zinc-700 dark:border-black/20">
+                Welcome back
+              </span>
+              <h2 className="text-2xl md:text-3xl font-light tracking-tight text-white dark:text-black">
+                Administration dashboard // <span className="font-semibold text-brand-yellow dark:text-black">{currentUser.name}</span>
+              </h2>
+              <p className="text-xs text-white dark:text-black/85 font-light leading-relaxed opacity-95">
+                {getQuoteOfTheDay()}
+              </p>
+            </div>
 
-        {/* Dynamic header search box */}
-        <div className="relative z-10 w-full md:w-64 shrink-0">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-black/60">
-            <Search size={14} />
-          </span>
-          <input
-            type="text"
-            placeholder="Search users or courses..."
-            value={dashboardSearchQuery}
-            onChange={(e) => setDashboardSearchQuery(e.target.value)}
-            className="w-full bg-zinc-900 dark:bg-black/10 border border-zinc-700 dark:border-black/20 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white dark:text-black placeholder-zinc-500 dark:placeholder-black/50 focus:outline-hidden focus:border-brand-yellow dark:focus:border-black font-light shadow-2xs"
-          />
-          {dashboardSearchQuery && (
-            <button 
-              onClick={() => setDashboardSearchQuery('')} 
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white dark:text-black/60 dark:hover:text-black cursor-pointer"
+            {/* Dynamic header search box */}
+            <div className="relative z-10 w-full md:w-64 shrink-0">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-black/60">
+                <Search size={14} />
+              </span>
+              <input
+                type="text"
+                placeholder="Search users or courses..."
+                value={dashboardSearchQuery}
+                onChange={(e) => setDashboardSearchQuery(e.target.value)}
+                className="w-full bg-zinc-900 dark:bg-black/10 border border-zinc-700 dark:border-black/20 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white dark:text-black placeholder-zinc-500 dark:placeholder-black/50 focus:outline-hidden focus:border-brand-yellow dark:focus:border-black font-light shadow-2xs"
+              />
+              {dashboardSearchQuery && (
+                <button 
+                  onClick={() => setDashboardSearchQuery('')} 
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white dark:text-black/60 dark:hover:text-black cursor-pointer"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 12 Clickable Stats Bento-Grid row */}
+          <div id="admin-metrics-bento-grid" className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+            
+            {/* 1. Total Students */}
+            <div 
+              onClick={() => {
+                setAdminSubView('users');
+                setSubViewFilters(prev => ({ ...prev, role: 'student' }));
+              }}
+              className="group bg-white border border-zinc-100 p-4 rounded-3xl shadow-2xs cursor-pointer hover:border-emerald-500 hover:scale-[1.01] hover:shadow-xs transition-all duration-150 relative overflow-hidden"
             >
-              <X size={12} />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Admin Metrics panel row */}
-      <div id="admin-metrics-row" className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        
-        <div 
-          onClick={() => {
-            document.getElementById('admin-users-directory-container')?.scrollIntoView({ behavior: 'smooth' });
-          }}
-          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
-        >
-          <div className="flex items-center justify-between text-zinc-400 mb-3">
-            <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Registered Users</span>
-            <div className="flex items-center gap-1.5">
-              <UserCheck size={16} className="text-brand-yellow" />
-              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
+              <div className="flex items-center justify-between text-zinc-400 mb-2">
+                <span className="text-[9px] uppercase font-mono tracking-wider font-bold">Total Students</span>
+                <Users size={15} className="text-emerald-500" />
+              </div>
+              <div className="text-xl font-bold text-zinc-900 tracking-tight">
+                {totalStudents}
+              </div>
+              <span className="text-[8px] font-mono text-zinc-400 block mt-1 uppercase">Directory list →</span>
             </div>
-          </div>
-          <div className="text-2xl font-light text-brand-black tracking-tight flex items-baseline gap-1.5">
-            <span>{onboardedUsers.length} Users</span>
-            <span className="text-[10px] text-zinc-400 font-normal italic">registered</span>
-          </div>
-        </div>
 
-        <div 
-          onClick={() => {
-            document.getElementById('course-proposal-approval-queue-container')?.scrollIntoView({ behavior: 'smooth' });
-          }}
-          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
-        >
-          <div className="flex items-center justify-between text-zinc-400 mb-3">
-            <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Pending Approvals</span>
-            <div className="flex items-center gap-1.5">
-              <BookOpen size={16} className="text-brand-yellow font-normal" />
-              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
+            {/* 2. Total Trainers */}
+            <div 
+              onClick={() => {
+                setAdminSubView('users');
+                setSubViewFilters(prev => ({ ...prev, role: 'trainer' }));
+              }}
+              className="group bg-white border border-zinc-100 p-4 rounded-3xl shadow-2xs cursor-pointer hover:border-amber-500 hover:scale-[1.01] hover:shadow-xs transition-all duration-150 relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between text-zinc-400 mb-2">
+                <span className="text-[9px] uppercase font-mono tracking-wider font-bold">Total Trainers</span>
+                <Award size={15} className="text-amber-500" />
+              </div>
+              <div className="text-xl font-bold text-zinc-900 tracking-tight">
+                {totalTrainers}
+              </div>
+              <span className="text-[8px] font-mono text-zinc-404 block mt-1 uppercase">Evaluations →</span>
             </div>
-          </div>
-          <div className="text-2xl font-light text-brand-black tracking-tight flex items-baseline gap-1.5">
-            <span>{pendingCurricula.length} Proposals</span>
-            <span className="text-[10px] text-brand-yellow font-normal italic">needs action</span>
-          </div>
-        </div>
 
-        <div 
-          onClick={() => setShowActiveProgramsModal(true)}
-          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
-        >
-          <div className="flex items-center justify-between text-zinc-400 mb-3">
-            <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Active Programs</span>
-            <div className="flex items-center gap-1.5">
-              <Shield size={16} className="text-emerald-500" />
-              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
+            {/* 3. Total Courses */}
+            <div 
+              onClick={() => setAdminSubView('courses')}
+              className="group bg-white border border-zinc-100 p-4 rounded-3xl shadow-2xs cursor-pointer hover:border-indigo-505 hover:scale-[1.01] hover:shadow-xs transition-all duration-150 relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between text-zinc-400 mb-2">
+                <span className="text-[9px] uppercase font-mono tracking-wider font-bold">Total Courses</span>
+                <BookOpen size={15} className="text-indigo-500" />
+              </div>
+              <div className="text-xl font-bold text-zinc-900 tracking-tight">
+                {totalCourses}
+              </div>
+              <span className="text-[8px] font-mono text-zinc-400 block mt-1 uppercase">Syllabus deck →</span>
             </div>
-          </div>
-          <div className="text-2xl font-light text-brand-black tracking-tight">
-            <span className="font-light text-emerald-600 text-lg">
-              {curricula.filter(c => c.status === 'approved').length} Active
-            </span>
-          </div>
-        </div>
 
-        <div 
-          onClick={() => setShowSubmittedWorkModal(true)}
-          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
-        >
-          <div className="flex items-center justify-between text-zinc-400 mb-3">
-            <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Submitted Work</span>
-            <div className="flex items-center gap-1.5">
-              <Server size={16} className="text-brand-yellow" />
-              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
+            {/* 4. Trainers Pending Verification */}
+            <div 
+              onClick={() => setAdminSubView('pending-verification')}
+              className="group bg-white border border-zinc-100 p-4 rounded-3xl shadow-2xs cursor-pointer hover:border-rose-500 hover:scale-[1.01] hover:shadow-xs transition-all duration-150 relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between text-zinc-400 mb-2">
+                <span className="text-[9px] uppercase font-mono tracking-wider font-bold">Pending Review</span>
+                <Clock size={15} className="text-rose-500 animate-pulse" />
+              </div>
+              <div className="text-xl font-bold text-rose-600 tracking-tight">
+                {trainersPendingVerification}
+              </div>
+              <span className="text-[8px] font-mono text-zinc-400 block mt-1 uppercase">Needs action →</span>
             </div>
-          </div>
-          <div className="text-2xl font-light text-brand-black tracking-tight">
-            <span>{db.getAssignments().length} Assignments</span>
-          </div>
-        </div>
 
-      </div>
+            {/* 5. Ongoing Courses */}
+            <div 
+              onClick={() => setAdminSubView('ongoing-courses')}
+              className="group bg-white border border-zinc-100 p-4 rounded-3xl shadow-2xs cursor-pointer hover:border-cyan-500 hover:scale-[1.01] hover:shadow-xs transition-all duration-150 relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between text-zinc-400 mb-2">
+                <span className="text-[9px] uppercase font-mono tracking-wider font-bold">Ongoing cohorts</span>
+                <TrendingUp size={15} className="text-cyan-500" />
+              </div>
+              <div className="text-xl font-bold text-neutral-800 tracking-tight">
+                {ongoingCoursesCount}
+              </div>
+              <span className="text-[8px] font-mono text-zinc-400 block mt-1 uppercase">Live rooms →</span>
+            </div>
 
-      {/* Active Programs Modal */}
+            {/* 6. Graduating Students */}
+            <div 
+              onClick={() => setAdminSubView('graduating')}
+              className="group bg-white border border-zinc-100 p-4 rounded-3xl shadow-2xs cursor-pointer hover:border-emerald-600 hover:scale-[1.01] hover:shadow-xs transition-all duration-150 relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between text-zinc-400 mb-2">
+                <span className="text-[9px] uppercase font-mono tracking-wider font-bold">Graduating Cleared</span>
+                <Award size={15} className="text-emerald-600" />
+              </div>
+              <div className="text-xl font-bold text-emerald-600 tracking-tight">
+                {graduatingCount}
+              </div>
+              <span className="text-[8px] font-mono text-zinc-400 block mt-1 uppercase">Credentials →</span>
+            </div>
+
+            {/* 7. Inactive Students */}
+            <div 
+              onClick={() => setAdminSubView('inactive-students')}
+              className="group bg-white border border-zinc-100 p-4 rounded-3xl shadow-2xs cursor-pointer hover:border-red-500 hover:scale-[1.01] hover:shadow-xs transition-all duration-150 relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between text-zinc-400 mb-2">
+                <span className="text-[9px] uppercase font-mono tracking-wider font-bold">Sleep Inactive</span>
+                <UserX size={15} className="text-red-500" />
+              </div>
+              <div className="text-xl font-bold text-red-500 tracking-tight">
+                {inactiveStudentsCount}
+              </div>
+              <span className="text-[8px] font-mono text-zinc-400 block mt-1 uppercase">Engage nudge →</span>
+            </div>
+
+            {/* 8. Active Students */}
+            <div 
+              onClick={() => setAdminSubView('active-students')}
+              className="group bg-white border border-zinc-100 p-4 rounded-3xl shadow-2xs cursor-pointer hover:border-orange-500 hover:scale-[1.01] hover:shadow-xs transition-all duration-150 relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between text-zinc-400 mb-2">
+                <span className="text-[9px] uppercase font-mono tracking-wider font-bold">Active Students</span>
+                <Flame size={15} className="text-orange-500" />
+              </div>
+              <div className="text-xl font-bold text-zinc-900 tracking-tight">
+                {activeStudentsCount}
+              </div>
+              <span className="text-[8px] font-mono text-zinc-400 block mt-1 uppercase">Streak board →</span>
+            </div>
+
+            {/* 9. Active Trainers */}
+            <div 
+              onClick={() => setAdminSubView('active-trainers')}
+              className="group bg-white border border-zinc-100 p-4 rounded-3xl shadow-2xs cursor-pointer hover:border-violet-500 hover:scale-[1.01] hover:shadow-xs transition-all duration-150 relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between text-zinc-400 mb-2">
+                <span className="text-[9px] uppercase font-mono tracking-wider font-bold">Active Mentors</span>
+                <Sparkles size={15} className="text-violet-500" />
+              </div>
+              <div className="text-xl font-bold text-zinc-905 tracking-tight">
+                {activeTrainersCount}
+              </div>
+              <span className="text-[8px] font-mono text-zinc-400 block mt-1 uppercase">Verified live →</span>
+            </div>
+
+            {/* 10. Total Chats/Messages */}
+            <div 
+              onClick={() => setAdminSubView('chats-messages')}
+              className="group bg-white border border-zinc-100 p-4 rounded-3xl shadow-2xs cursor-pointer hover:border-pink-500 hover:scale-[1.01] hover:shadow-xs transition-all duration-150 relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between text-zinc-400 mb-2">
+                <span className="text-[9px] uppercase font-mono tracking-wider font-bold">Communications</span>
+                <MessageSquare size={15} className="text-pink-500" />
+              </div>
+              <div className="text-xl font-bold text-zinc-900 tracking-tight">
+                {totalChatsCount}
+              </div>
+              <span className="text-[8px] font-mono text-zinc-400 block mt-1 uppercase">DMs & channels →</span>
+            </div>
+
+            {/* 11. Total Paid Out to Trainers */}
+            <div 
+              onClick={() => setAdminSubView('finances')}
+              className="group bg-white border border-zinc-100 p-4 rounded-3xl shadow-2xs cursor-pointer hover:border-teal-500 hover:scale-[1.01] hover:shadow-xs transition-all duration-150 col-span-1 md:col-span-2 lg:col-span-1"
+            >
+              <div className="flex items-center justify-between text-zinc-400 mb-2">
+                <span className="text-[9px] uppercase font-mono tracking-wider font-bold">Coach Paid (85%)</span>
+                <DollarSign size={15} className="text-teal-500" />
+              </div>
+              <div className="text-[13px] font-mono font-bold text-[#218c3f] tracking-tight truncate">
+                ₦{totalPaidOutToTrainers.toLocaleString()}
+              </div>
+              <span className="text-[8px] font-mono text-zinc-400 block mt-1 uppercase">Audit payouts →</span>
+            </div>
+
+            {/* 12. Total Gross Revenue & Profits */}
+            <div 
+              onClick={() => setAdminSubView('finances')}
+              className="group bg-white border border-zinc-100 p-4 rounded-3xl shadow-2xs cursor-pointer hover:border-emerald-500 hover:scale-[1.01] hover:shadow-xs transition-all duration-150 col-span-1 md:col-span-2 lg:col-span-1"
+            >
+              <div className="flex items-center justify-between text-zinc-400 mb-2">
+                <span className="text-[9px] uppercase font-mono tracking-wider font-bold">Revenue & Split</span>
+                <DollarSign size={15} className="text-emerald-500" />
+              </div>
+              <div className="text-[13px] font-mono font-bold text-emerald-800 tracking-tight truncate">
+                ₦{totalRevenueGenerated.toLocaleString()}
+              </div>
+              <span className="text-[8px] font-mono text-zinc-400 block mt-1 uppercase">Platform 15% ledger →</span>
+            </div>
+
+          </div>
+
+          {/* Analytics Graphs & Pie Charts Sections (User request: well-colored analytics graphs and pie charts) */}
+          <AdminCharts 
+            totalStudents={totalStudents}
+            totalTrainers={totalTrainers}
+            totalCourses={totalCourses}
+            activeStudentsCount={activeStudentsCount}
+            inactiveStudentsCount={inactiveStudentsCount}
+            activeTrainersCount={activeTrainersCount}
+            trainersPendingVerification={trainersPendingVerification}
+            totalDMs={totalDMs}
+            totalChannelsMsgs={totalChannelsMsgs}
+            totalRevenue={totalRevenueGenerated}
+            totalGrossProfit={totalGrossProfit}
+            totalPaidOutToTrainers={totalPaidOutToTrainers}
+          />
+        </>
+      )}
+
+      {/* Legacy active programs / submitted work dialog modals */}
       {showActiveProgramsModal && (
         <div id="active-programs-modal" className="fixed inset-0 bg-brand-black/45 backdrop-blur-xs flex items-center justify-center p-4 z-55 animate-in fade-in duration-155">
           <div className="bg-white border border-zinc-150 rounded-2xl p-6 shadow-xl max-w-2xl w-full text-left space-y-4 animate-in zoom-in-95 duration-200">

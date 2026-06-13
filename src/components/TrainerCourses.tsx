@@ -906,7 +906,7 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                       {/* Cohort Date Setting and Activation Status Button */}
                       <div className="w-full md:w-auto pt-2 md:pt-0">
                         {!col.cohortStartDate ? (
-                          <div className="bg-amber-50/40 border border-amber-100/60 p-2 rounded-xl flex items-center justify-between gap-3 text-xs w-full min-w-[260px]">
+                          <div className="bg-amber-50/40 border border-amber-100/60 p-2 rounded-xl flex items-center justify-between gap-3 text-xs w-full sm:min-w-[260px] min-w-[210px]">
                             <div>
                               <div className="text-[8px] font-bold text-amber-800 uppercase font-mono tracking-wide">Awaiting Activation</div>
                               <div className="text-[9px] text-zinc-505 leading-none">Min 1 paid student registration needed</div>
