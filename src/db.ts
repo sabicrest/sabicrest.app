@@ -595,27 +595,20 @@ export class SupabaseDatabase {
       delete supabaseData.id;
 
       if (collectionId === 'users') {
-        // Embed password in bio property
-        const passwordVal = supabaseData.password || '';
-        delete supabaseData.password;
-
-        const userBio = supabaseData.bio || '';
-        let finalBio = userBio;
-        if (passwordVal) {
-          finalBio = `${userBio}||pwd:${passwordVal}`;
-        } else {
+        // Ensure the password property is resolved if empty using existing user records
+        if (!supabaseData.password) {
           const existingUser = this.getUserById(documentId);
           if (existingUser && existingUser.password) {
-            finalBio = `${userBio}||pwd:${existingUser.password}`;
+            supabaseData.password = existingUser.password;
           }
         }
-        supabaseData.bio = finalBio;
 
         // Allow list of database columns
         const ALLOWED_USER_KEYS = [
           'name',
           'email',
           'role',
+          'password',
           'avatar',
           'verified',
           'joinedDate',

@@ -5,7 +5,8 @@ import VerifiedBadge from './VerifiedBadge';
 import { 
   ChevronLeft, Award, BookOpen, Users, HelpCircle, UserX, UserCheck, Search, XCircle, 
   MessageSquare, DollarSign, Clock, Shield, ToggleLeft, ToggleRight, Trash2, Plus, 
-  BookOpenCheck, CheckCircle2, Flame, RefreshCw, Sparkles, Activity, FileText
+  BookOpenCheck, CheckCircle2, Flame, RefreshCw, Sparkles, Activity, FileText,
+  Play, ClipboardCheck, X
 } from 'lucide-react';
 
 interface AdminSubViewsProps {
@@ -1749,22 +1750,20 @@ export default function AdminSubViews({
                   if (e.key === 'Enter') {
                     const trainerUser = db.getUsers().find(u => u.email === activeMessageApp.trainerEmail);
                     const trainerId = trainerUser ? trainerUser.id : activeMessageApp.id;
-                    if (!adminMessageText.trim()) return;
-
-                    db.addMessage({
+                       db.addMessage({
                       senderId: 'admin',
                       senderName: 'SabiCrest Coordinator',
                       receiverId: trainerId,
-                      receiverName: activeMessageApp.trainerName,
                       content: adminMessageText,
-                     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     });
 
-                    db.addNotification(
-                      trainerId,
-                      `The SabiCrest Admin has messaged you regarding your verification: "${adminMessageText.substring(0, 45)}..."`,
-                      'message'
-                    );
+                    db.addNotification({
+                      userId: trainerId,
+                      title: 'Coordinator Message',
+                      message: `The SabiCrest Admin has messaged you regarding your verification: "${adminMessageText.substring(0, 45)}..."`,
+                      type: 'message'
+                    });
 
                     setAdminMessageText('');
                     showToast('Message sent to candidate safely!');
@@ -1783,16 +1782,16 @@ export default function AdminSubViews({
                     senderId: 'admin',
                     senderName: 'SabiCrest Coordinator',
                     receiverId: trainerId,
-                    receiverName: activeMessageApp.trainerName,
                     content: adminMessageText,
                     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                   });
 
-                  db.addNotification(
-                    trainerId,
-                    `The SabiCrest Admin has messaged you regarding your verification: "${adminMessageText.substring(0, 45)}..."`,
-                    'message'
-                  );
+                  db.addNotification({
+                    userId: trainerId,
+                    title: 'Coordinator Message',
+                    message: `The SabiCrest Admin has messaged you regarding your verification: "${adminMessageText.substring(0, 45)}..."`,
+                    type: 'message'
+                  });
 
                   setAdminMessageText('');
                   showToast('Message sent to candidate safely!');
