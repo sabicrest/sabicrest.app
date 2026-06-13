@@ -502,9 +502,9 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
       {currentTab === 'courses' ? (
         <>
           {/* Control filters panel - highly touch and mobile optimized */}
-          <div className="space-y-3">
+          <div className="space-y-3 w-full max-w-full overflow-hidden">
             {/* Search tool block */}
-            <div className="relative">
+            <div className="relative w-full">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search size={14} className="text-zinc-400" />
               </span>
@@ -518,7 +518,7 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
             </div>
 
             {/* Filter Scrollable Hub Pills */}
-            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none scroll-smooth">
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none scroll-smooth w-full max-w-full">
               {[
                 { id: 'all', label: 'All Courses' },
                 { id: 'approved', label: 'Active/Live' },

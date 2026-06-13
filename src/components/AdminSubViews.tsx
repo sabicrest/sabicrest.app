@@ -50,6 +50,10 @@ export default function AdminSubViews({
   const [rejectionEnrollmentId, setRejectionEnrollmentId] = useState<string | null>(null);
   const [rejectEnrollmentReason, setRejectEnrollmentReason] = useState('');
 
+  // Feedbacks / In-app interactive messages with Trainer Candidate
+  const [activeMessageApp, setActiveMessageApp] = useState<any | null>(null);
+  const [adminMessageText, setAdminMessageText] = useState('');
+
   // Toast confirmation feedback trigger
   const [notifToast, setNotifToast] = useState<string | null>(null);
 
@@ -470,17 +474,36 @@ export default function AdminSubViews({
               <span>/</span>
               <span className="text-zinc-500 font-bold">{subView.split('-').join(' ')}</span>
             </div>
-            <h2 className="text-lg font-bold text-zinc-900 leading-tight uppercase tracking-tight">
-              {subView === 'users' ? '🛡️ Personnel & Access Directory' : 
-               subView === 'courses' ? '📚 Curricula Syllabus Ledger' :
-               subView === 'pending-verification' ? '📝 Evaluation Approvals Desk' :
-               subView === 'ongoing-courses' ? '⚡ Active Class Cohorts' :
-               subView === 'graduating' ? '🎓 Alumni Completion Clearance' :
-               subView === 'inactive-students' ? '💤 Sleep Inactivity Monitor' :
-               subView === 'active-students' ? '🔥 Student Leaderboard & Streaks' :
-               subView === 'active-trainers' ? '⭐ Certified Mentor Dashboard' :
-               subView === 'chats-messages' ? '💬 Interactive Communications feed' :
-               '💰 Financial Accounts Audit'}
+            <h2 className="text-lg font-bold text-zinc-900 leading-tight uppercase tracking-tight flex items-center gap-2">
+              {subView === 'users' && <Users className="w-5 h-5 text-indigo-500" />}
+              {subView === 'courses' && <BookOpen className="w-5 h-5 text-rose-500" />}
+              {subView === 'pending-verification' && <UserCheck className="w-5 h-5 text-amber-500 animate-pulse" />}
+              {subView === 'ongoing-courses' && <Play className="w-5 h-2-1 text-emerald-500" />}
+              {subView === 'graduating' && <Award className="w-5 h-5 text-emerald-600" />}
+              {subView === 'inactive-students' && <UserX className="w-5 h-5 text-red-500" />}
+              {subView === 'active-students' && <Flame className="w-5 h-5 text-orange-500" />}
+              {subView === 'active-trainers' && <Sparkles className="w-5 h-5 text-violet-500" />}
+              {subView === 'chats-messages' && <MessageSquare className="w-5 h-5 text-pink-500" />}
+              {subView === 'finances' && <DollarSign className="w-5 h-5 text-teal-600" />}
+              {subView === 'course-proposals' && <BookOpenCheck className="w-5 h-5 text-[#218c3f]" />}
+              {subView === 'payment-audit' && <ClipboardCheck className="w-5 h-5 text-teal-605" />}
+              {subView === 'audit-logs' && <Activity className="w-5 h-5 text-amber-600" />}
+
+              <span>
+                {subView === 'users' ? "Total User's" : 
+                 subView === 'courses' ? 'Curricula Syllabus Ledger' :
+                 subView === 'pending-verification' ? 'Approvals & Verifications' :
+                 subView === 'ongoing-courses' ? 'Active Class Cohorts' :
+                 subView === 'graduating' ? 'Alumni Completion Clearance' :
+                 subView === 'inactive-students' ? 'Sleep Inactivity Monitor' :
+                 subView === 'active-students' ? 'Student Leaderboard & Streaks' :
+                 subView === 'active-trainers' ? 'Certified Mentor Dashboard' :
+                 subView === 'chats-messages' ? 'Interactive Communications' :
+                 subView === 'course-proposals' ? 'Course proposals queue' :
+                 subView === 'payment-audit' ? 'Student Tuition verification queue' :
+                 subView === 'audit-logs' ? 'System Audit logs' :
+                 'Financial Accounts Audit'}
+              </span>
             </h2>
           </div>
         </div>
@@ -495,34 +518,12 @@ export default function AdminSubViews({
 
       {/* VIEW PANEL SECTIONS */}
 
-      {/* A. PERSONNEL & ACCESS DIRECTORY */}
+      {/* A. PERSONNEL & ACCESS DIRECTORY (Total User's Overview) */}
       {subView === 'users' && (
         <div className="bg-white border border-zinc-100 p-6 rounded-3xl space-y-6">
           
-          <div className="flex border-b border-zinc-100 dark:border-zinc-850 pb-px mb-4 gap-4 flex-wrap">
-            <button
-              onClick={() => setUserActiveTab('directory')}
-              className={`pb-2 text-xs font-mono uppercase tracking-wider border-b-2 transition-all px-1 cursor-pointer flex items-center gap-1.5 ${
-                userActiveTab === 'directory'
-                  ? 'border-zinc-900 text-zinc-900 font-bold'
-                  : 'border-transparent text-zinc-400 hover:text-zinc-600'
-              }`}
-            >
-              <Users size={13} /> Personnel Directory & Access Control
-            </button>
-            <button
-              onClick={() => setUserActiveTab('verifications')}
-              className={`pb-2 text-xs font-mono uppercase tracking-wider border-b-2 transition-all px-1 cursor-pointer flex items-center gap-1.5 ${
-                userActiveTab === 'verifications'
-                  ? 'border-zinc-900 text-zinc-900 font-bold'
-                  : 'border-transparent text-zinc-400 hover:text-zinc-600'
-              }`}
-            >
-              <Award size={13} /> Trainer Verifications Pending ({trainerApps.filter(a => a.status === 'pending').length})
-            </button>
-          </div>
+          {true && (
 
-          {userActiveTab === 'directory' && (
             <>
               {/* Filters Bar */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-zinc-50 p-4 rounded-2xl">
@@ -643,14 +644,21 @@ export default function AdminSubViews({
                       </td>
 
                       <td className="py-3">
-                        <button 
-                          onClick={() => handleVerifyUser(u.id)}
-                          className={`text-[9.5px] font-mono px-2 py-0.5 rounded-md cursor-pointer transition-colors border ${
-                            u.verified ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-zinc-150 text-zinc-500 border-zinc-200'
-                          }`}
-                        >
-                          {u.verified ? '✓ VERIFIED ACTIVE' : '● SET VERIFIED'}
-                        </button>
+                        {u.role === 'trainer' ? (
+                          u.verified ? (
+                            <span className="text-[9.5px] font-mono px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-250 font-bold">
+                              ✓ VERIFIED
+                            </span>
+                          ) : (
+                            <span className="text-[9.5px] font-mono px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-450 border border-zinc-200">
+                              UNVERIFIED
+                            </span>
+                          )
+                        ) : (
+                          <span className="text-[9.5px] font-mono px-2 py-0.5 rounded-md bg-zinc-50 text-zinc-400 border border-zinc-150">
+                            N/A (STUDENT)
+                          </span>
+                        )}
                       </td>
 
                       <td className="py-3 text-right pr-2">
@@ -670,80 +678,6 @@ export default function AdminSubViews({
             </table>
           </div>
           </>
-          )}
-
-          {userActiveTab === 'verifications' && (
-            <div className="space-y-4">
-              <div className="bg-zinc-50 p-4 rounded-xl">
-                <h3 className="text-xs font-bold font-mono tracking-wider text-amber-600 uppercase flex items-center gap-1.5 mb-1.5 animate-pulse">
-                  <Award size={14} className="text-amber-500" /> Pending Trainer Application Requests ({trainerApps.filter(a => a.status === 'pending').length})
-                </h3>
-                <p className="text-[11px] text-zinc-500 font-light leading-snug">
-                  Review and verify submitted qualifications video link and educator capabilities. Approving verification automatically updates and clears the corresponding trainer-personnel workspace.
-                </p>
-              </div>
-
-              {trainerApps.filter(a => a.status === 'pending').length === 0 ? (
-                <div className="text-center py-12 text-zinc-400 font-mono font-light text-xs bg-zinc-50 rounded-2xl border border-dashed border-zinc-150">
-                  No active trainer verification applications are currently awaiting clearance.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {trainerApps.filter(a => a.status === 'pending').map(app => (
-                    <div key={app.id} className="border border-zinc-150 rounded-2xl p-5 bg-zinc-50/50 space-y-3 shadow-3xs hover:border-zinc-300 transition-all">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className="text-[8.5px] font-mono tracking-wider bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded uppercase font-bold">Trainer candidate</span>
-                          <h3 className="text-sm font-bold text-zinc-900 mt-1.5">{app.trainerName}</h3>
-                          <p className="text-[10px] text-zinc-405 font-mono">{app.trainerEmail} // {app.experienceYears} Years experience</p>
-                          <p className="text-[11px] text-zinc-650 mt-1 leading-normal font-sans">Course Scope: <strong className="text-black font-semibold">{app.courseTitle}</strong> ({app.courseCategory})</p>
-                        </div>
-                      </div>
-
-                      {/* Detailed evaluation portfolios & links */}
-                      <div className="space-y-2 text-[10.5px] bg-white p-3 rounded-xl border border-zinc-100 leading-normal font-mono text-zinc-650">
-                        {app.portfolioUrl && (
-                          <p>● Website/Port: <a href={app.portfolioUrl} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{app.portfolioUrl}</a></p>
-                        )}
-                        
-                        {/* CRITICAL STEP 3 Qualifications, goals, sabicrest partnership intro video */}
-                        {app.credentialsLink && (
-                          <div>
-                            <span className="text-zinc-500 font-mono">🎬 Step 3 Video:</span> <br/>
-                            <a href={app.credentialsLink} target="_blank" rel="noreferrer" className="text-amber-650 hover:underline break-all font-bold font-sans flex flex-col gap-1 bg-amber-50/50 hover:bg-amber-50 p-2 rounded-lg border border-amber-100 mt-1">
-                              <span className="flex items-center gap-1">📹 Play Trainer Qualification Video Link ↗</span>
-                              <span className="text-[10px] font-mono font-normal truncate max-w-[280px]">{app.credentialsLink}</span>
-                            </a>
-                          </div>
-                        )}
-
-                        {app.workshopAddress && (
-                          <p>● Workshop Location: {app.workshopAddress}</p>
-                        )}
-                        {app.equipmentsOwned && (
-                          <p>● Practice Devices: {app.equipmentsOwned}</p>
-                        )}
-                      </div>
-
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => handleApproveTrainerApp(app.id)}
-                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-2 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all"
-                        >
-                          Verify & Approve Candidate
-                        </button>
-                        <button 
-                          onClick={() => setRejectionAppId(app.id)}
-                          className="bg-red-50 hover:bg-red-100 text-red-650 rounded-xl px-4 py-2 text-[10px] font-bold uppercase cursor-pointer transition-all"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           )}
 
         </div>
@@ -890,18 +824,24 @@ export default function AdminSubViews({
                       )}
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-1.5 flex-wrap">
                       <button 
                         onClick={() => handleApproveTrainerApp(app.id)}
-                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-2 text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+                        className="flex-1 min-w-[120px] bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-2 text-[10px] font-bold uppercase tracking-wider cursor-pointer shadow-3xs transition-all flex items-center justify-center gap-1"
                       >
-                        Verify & Approve Coach
+                        <UserCheck className="w-3 h-3" /> Approve & Verify
+                      </button>
+                      <button 
+                        onClick={() => setActiveMessageApp(app)}
+                        className="flex-1 min-w-[110px] bg-zinc-150 hover:bg-zinc-200 text-zinc-700 rounded-xl py-2 text-[10px] font-bold uppercase tracking-wider cursor-pointer shadow-3xs transition-all flex items-center justify-center gap-1"
+                      >
+                        <MessageSquare className="w-3 h-3" /> Message Candidate
                       </button>
                       <button 
                         onClick={() => setRejectionAppId(app.id)}
-                        className="bg-red-50 hover:bg-red-100 text-red-600 rounded-xl px-4 py-2 text-[10px] font-bold uppercase cursor-pointer"
+                        className="bg-red-55 hover:bg-red-100 text-red-650 border border-red-200 rounded-xl px-3 py-2 text-[10px] font-bold uppercase cursor-pointer shadow-3xs transition-all flex items-center justify-center gap-1"
                       >
-                        Reject
+                        <UserX className="w-3 h-3" /> Reject
                       </button>
                     </div>
                   </div>
@@ -1206,6 +1146,110 @@ export default function AdminSubViews({
                     </tr>
                   ))
                 )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* G2. CERTIFIED MENTOR DASHBOARD */}
+      {subView === 'active-trainers' && (
+        <div className="bg-white border border-zinc-100 p-6 rounded-3xl space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-zinc-50 p-4 rounded-2xl">
+            <div className="relative flex-grow">
+              <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+              <input 
+                type="text" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Find trainer mentor by name/email..." 
+                className="w-full bg-white border border-zinc-200 rounded-xl pl-8 pr-3 py-1.5 text-xs focus:outline-hidden text-zinc-808"
+              />
+            </div>
+            <div className="text-[10px] bg-indigo-50 border border-indigo-150 text-indigo-800 px-3 py-1.5 rounded-xl font-mono flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-indigo-500 animate-pulse" /> Active Trainer Mentors: <strong>{users.filter(u => u.role === 'trainer').length}</strong>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-2xl border border-zinc-150 shadow-3xs">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-zinc-50 border-b border-zinc-150 text-[10px] font-mono uppercase tracking-wider text-zinc-400">
+                  <th className="py-2.5 pl-4">Mentor Coach</th>
+                  <th className="py-2.5">Email Contact</th>
+                  <th className="py-2.5">Platform Status</th>
+                  <th className="py-2.5">Verification</th>
+                  <th className="py-2.5 text-right pr-4">Direct Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100 text-xs">
+                {(() => {
+                  const trainers = users.filter(u => u.role === 'trainer' && (
+                    u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    u.email.toLowerCase().includes(searchQuery.toLowerCase())
+                  ));
+
+                  if (trainers.length === 0) {
+                    return (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-zinc-400 font-mono text-xs">
+                          No certified trainers match your search queries.
+                        </td>
+                      </tr>
+                    );
+                  }
+
+                  return trainers.map((t) => (
+                    <tr key={t.id} className="hover:bg-zinc-50/50 transition-colors">
+                      <td className="py-3 pl-4 flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold text-[10px] border border-indigo-150">
+                          {t.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-bold text-zinc-900 flex items-center gap-1.5">
+                            {t.name}
+                            {t.verified && <span className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-1 py-px rounded text-[8px] tracking-wide font-bold">VERIFIED</span>}
+                          </p>
+                          <p className="text-[10px] text-zinc-400 font-mono">Date Registered: {t.joinedDate || 'N/A'}</p>
+                        </div>
+                      </td>
+                      <td className="py-3 font-mono text-zinc-600 text-[10.5px]">{t.email}</td>
+                      <td className="py-3">
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-mono uppercase font-bold py-0.5 px-1.5 rounded-full ${
+                          t.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'
+                        }`}>
+                          <span className={`w-1 h-1 rounded-full ${t.status === 'active' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                          {t.status}
+                        </span>
+                      </td>
+                      <td className="py-3">
+                        {t.verified ? (
+                          <span className="text-[9px] font-mono font-bold text-emerald-650 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded">
+                            Verified Professional
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-mono text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded">
+                            Awaiting Credentials Submission
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 text-right pr-4">
+                        <button 
+                          onClick={() => {
+                            setActiveMessageApp({
+                              id: t.id,
+                              trainerName: t.name,
+                              trainerEmail: t.email
+                            });
+                          }}
+                          className="text-[9px] font-mono uppercase tracking-wider bg-zinc-900 hover:bg-black text-white px-2.5 py-1 rounded-lg cursor-pointer transition-all flex items-center gap-1 inline-flex hover:shadow-3xs"
+                        >
+                          <MessageSquare className="w-2.5 h-2.5" /> Chat
+                        </button>
+                      </td>
+                    </tr>
+                  ));
+                })()}
               </tbody>
             </table>
           </div>
@@ -1630,6 +1674,134 @@ export default function AdminSubViews({
                 <button type="button" onClick={() => setRejectionAppId(null)} className="bg-zinc-100 text-zinc-650 rounded-xl px-4 py-2 text-xs uppercase cursor-pointer">Close</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Interactive feedback messenger modal with candidate */}
+      {activeMessageApp && (
+        <div className="fixed inset-0 bg-black/65 backdrop-blur-xs flex items-center justify-center p-4 z-55 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden border border-zinc-150 shadow-2xl flex flex-col max-h-[85vh]">
+            {/* Header */}
+            <div className="bg-zinc-950 p-4 text-white flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-indigo-400" />
+                <div>
+                  <h3 className="font-bold text-sm tracking-tight">{activeMessageApp.trainerName}</h3>
+                  <p className="text-[10px] text-zinc-400 font-mono">Feedback Line: {activeMessageApp.trainerEmail}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => {
+                  setActiveMessageApp(null);
+                  setAdminMessageText('');
+                }}
+                className="p-1 hover:bg-zinc-800 rounded-lg cursor-pointer transition-colors"
+              >
+                <X className="w-4 h-4 text-white" />
+              </button>
+            </div>
+
+            {/* Conversation flow */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-zinc-50 min-h-[250px] max-h-[400px]">
+              {(() => {
+                const trainerUser = db.getUsers().find(u => u.email === activeMessageApp.trainerEmail);
+                const trainerId = trainerUser ? trainerUser.id : activeMessageApp.id;
+                const chatMessages = db.getMessages().filter(
+                  m => (m.senderId === 'admin' && m.receiverId === trainerId) ||
+                       (m.senderId === trainerId && m.receiverId === 'admin')
+                );
+
+                if (chatMessages.length === 0) {
+                  return (
+                    <div className="text-center py-12 text-zinc-400 text-xs font-mono font-light">
+                      <p>Send an initial message to {activeMessageApp.trainerName} regarding their verification candidacy.</p>
+                    </div>
+                  );
+                }
+
+                return chatMessages.map((m) => {
+                  const isAdmin = m.senderId === 'admin' || m.senderId === currentUser.id;
+                  return (
+                    <div key={m.id} className={`flex flex-col ${isAdmin ? 'items-end' : 'items-start'}`}>
+                      <div className={`p-3 rounded-2xl max-w-[85%] text-xs leading-normal shadow-3xs ${
+                        isAdmin 
+                          ? 'bg-zinc-900 text-white rounded-tr-none' 
+                          : 'bg-white text-zinc-800 border border-zinc-150 rounded-tl-none'
+                      }`}>
+                        <p className="font-semibold text-[10px] text-zinc-400 mb-1">{isAdmin ? 'SabiCrest Admin' : m.senderName}</p>
+                        <p className="break-words whitespace-pre-wrap">{m.content}</p>
+                      </div>
+                      <span className="text-[9px] text-zinc-400 font-mono mt-0.5 px-1">{m.timestamp}</span>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+
+            {/* Input box */}
+            <div className="p-4 border-t border-zinc-150 bg-white flex gap-2">
+              <input 
+                type="text" 
+                value={adminMessageText}
+                onChange={(e) => setAdminMessageText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const trainerUser = db.getUsers().find(u => u.email === activeMessageApp.trainerEmail);
+                    const trainerId = trainerUser ? trainerUser.id : activeMessageApp.id;
+                    if (!adminMessageText.trim()) return;
+
+                    db.addMessage({
+                      senderId: 'admin',
+                      senderName: 'SabiCrest Coordinator',
+                      receiverId: trainerId,
+                      receiverName: activeMessageApp.trainerName,
+                      content: adminMessageText,
+                     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    });
+
+                    db.addNotification(
+                      trainerId,
+                      `The SabiCrest Admin has messaged you regarding your verification: "${adminMessageText.substring(0, 45)}..."`,
+                      'message'
+                    );
+
+                    setAdminMessageText('');
+                    showToast('Message sent to candidate safely!');
+                  }
+                }}
+                placeholder="Type feedback response (Press Enter)..."
+                className="flex-grow bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-xs focus:outline-hidden text-zinc-805"
+              />
+              <button 
+                onClick={() => {
+                  const trainerUser = db.getUsers().find(u => u.email === activeMessageApp.trainerEmail);
+                  const trainerId = trainerUser ? trainerUser.id : activeMessageApp.id;
+                  if (!adminMessageText.trim()) return;
+
+                  db.addMessage({
+                    senderId: 'admin',
+                    senderName: 'SabiCrest Coordinator',
+                    receiverId: trainerId,
+                    receiverName: activeMessageApp.trainerName,
+                    content: adminMessageText,
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  });
+
+                  db.addNotification(
+                    trainerId,
+                    `The SabiCrest Admin has messaged you regarding your verification: "${adminMessageText.substring(0, 45)}..."`,
+                    'message'
+                  );
+
+                  setAdminMessageText('');
+                  showToast('Message sent to candidate safely!');
+                }}
+                className="bg-zinc-950 text-white rounded-xl text-xs px-4 py-2 font-mono uppercase tracking-wider cursor-pointer hover:bg-zinc-800 transition-all font-bold"
+              >
+                Send
+              </button>
+            </div>
           </div>
         </div>
       )}

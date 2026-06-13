@@ -16,7 +16,6 @@ import Scheduling from './components/Scheduling';
 import TeamCollaboration from './components/TeamCollaboration';
 import StudentSettings from './components/StudentSettings';
 import TrainerCourses from './components/TrainerCourses';
-import SupabaseConsole from './components/SupabaseConsole';
 import { LayoutDashboard, MessageSquare, CalendarDays, Users, ShieldAlert, Settings, Home, BookOpen, FileText, User as UserIcon } from 'lucide-react';
 
 export default function App() {
@@ -427,8 +426,6 @@ export default function App() {
           })}
         </div>
       )}
-
-      {currentUser.role === 'admin' && <SupabaseConsole />}
 
     </div>
   );

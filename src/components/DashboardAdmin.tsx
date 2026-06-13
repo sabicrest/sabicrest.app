@@ -568,62 +568,98 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setAdminSubView('default')}
-                className="bg-zinc-900 text-white rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer hover:bg-zinc-800 transition-colors"
+                className={`flex items-center gap-1.5 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-all border ${
+                  adminSubView === 'default'
+                    ? 'bg-zinc-950 text-white border-zinc-950 font-bold shadow-xs'
+                    : 'bg-zinc-50 text-zinc-700 border-zinc-100 hover:bg-zinc-100'
+                }`}
               >
-                📊 Dashboard
+                <BarChart3 size={12} /> Dashboard
               </button>
               <button
                 onClick={() => {
                   setAdminSubView('users');
                   setSubViewFilters(prev => ({ ...prev, role: 'all' }));
                 }}
-                className="bg-zinc-50 hover:bg-zinc-100 text-zinc-700 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-colors border border-zinc-100"
+                className={`flex items-center gap-1.5 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-all border ${
+                  adminSubView === 'users'
+                    ? 'bg-zinc-950 text-white border-zinc-950 font-bold shadow-xs'
+                    : 'bg-zinc-50 text-zinc-700 border-zinc-100 hover:bg-zinc-100'
+                }`}
               >
-                👥 Users Directory
+                <Users size={12} /> Total User's
               </button>
               <button
                 onClick={() => {
-                  setAdminSubView('users');
+                  setAdminSubView('pending-verification');
                 }}
-                className="bg-zinc-50 hover:bg-zinc-100 text-zinc-750 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-colors border border-zinc-100"
+                className={`flex items-center gap-1.5 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-all border ${
+                  adminSubView === 'pending-verification'
+                    ? 'bg-zinc-950 text-white border-zinc-950 font-bold shadow-xs'
+                    : 'bg-zinc-50 text-zinc-700 border-zinc-100 hover:bg-zinc-100'
+                }`}
               >
-                🎫 trainer verifications
+                <UserCheck size={12} /> Approvals & Verifications
               </button>
               <button
                 onClick={() => setAdminSubView('course-proposals')}
-                className="bg-zinc-50 hover:bg-zinc-100 text-zinc-750 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-colors border border-zinc-100"
+                className={`flex items-center gap-1.5 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-all border ${
+                  adminSubView === 'course-proposals'
+                    ? 'bg-zinc-950 text-white border-zinc-950 font-bold shadow-xs'
+                    : 'bg-zinc-50 text-zinc-700 border-zinc-100 hover:bg-zinc-100'
+                }`}
               >
-                📝 Course Proposals
+                <BookOpenCheck size={12} /> Course Proposals
               </button>
               <button
                 onClick={() => setAdminSubView('payment-audit')}
-                className="bg-zinc-50 hover:bg-zinc-100 text-zinc-750 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-colors border border-zinc-100"
+                className={`flex items-center gap-1.5 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-all border ${
+                  adminSubView === 'payment-audit'
+                    ? 'bg-zinc-950 text-white border-zinc-950 font-bold shadow-xs'
+                    : 'bg-zinc-50 text-zinc-700 border-zinc-100 hover:bg-zinc-100'
+                }`}
               >
-                💳 Payment clearance
+                <ClipboardCheck size={12} /> Payment clearance
               </button>
               <button
                 onClick={() => setAdminSubView('courses')}
-                className="bg-zinc-50 hover:bg-zinc-100 text-zinc-750 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-colors border border-zinc-100"
+                className={`flex items-center gap-1.5 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-all border ${
+                  adminSubView === 'courses'
+                    ? 'bg-zinc-950 text-white border-zinc-950 font-bold shadow-xs'
+                    : 'bg-zinc-50 text-zinc-700 border-zinc-100 hover:bg-zinc-100'
+                }`}
               >
-                📚 Courses View
+                <BookOpen size={12} /> Courses View
               </button>
               <button
                 onClick={() => setAdminSubView('chats-messages')}
-                className="bg-zinc-50 hover:bg-zinc-100 text-zinc-750 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-colors border border-zinc-100"
+                className={`flex items-center gap-1.5 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-all border ${
+                  adminSubView === 'chats-messages'
+                    ? 'bg-zinc-950 text-white border-zinc-950 font-bold shadow-xs'
+                    : 'bg-zinc-50 text-zinc-700 border-zinc-100 hover:bg-zinc-100'
+                }`}
               >
-                💬 Communications
+                <MessageSquare size={12} /> Communications
               </button>
               <button
                 onClick={() => setAdminSubView('finances')}
-                className="bg-zinc-50 hover:bg-zinc-100 text-zinc-750 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-colors border border-zinc-100"
+                className={`flex items-center gap-1.5 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-all border ${
+                  adminSubView === 'finances'
+                    ? 'bg-zinc-950 text-white border-zinc-950 font-bold shadow-xs'
+                    : 'bg-zinc-50 text-zinc-700 border-zinc-105 hover:bg-zinc-100'
+                }`}
               >
-                💰 Financial Audit
+                <TrendingUp size={12} /> Financial Audit
               </button>
               <button
                 onClick={() => setAdminSubView('audit-logs')}
-                className="bg-zinc-50 hover:bg-zinc-100 text-zinc-755 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-colors border border-zinc-100"
+                className={`flex items-center gap-1.5 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-all border ${
+                  adminSubView === 'audit-logs'
+                    ? 'bg-zinc-950 text-white border-zinc-950 font-bold shadow-xs'
+                    : 'bg-zinc-50 text-zinc-700 border-zinc-100 hover:bg-zinc-100'
+                }`}
               >
-                🛡️ System Audit Logs
+                <Activity size={12} /> System Audit Logs
               </button>
             </div>
           </div>

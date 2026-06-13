@@ -2882,6 +2882,28 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                             type="button"
                             disabled={!verificationData.step3Data.videoUrl || !verificationData.step3Data.videoUrl.startsWith('http')}
                             onClick={() => {
+                              // Write to global shared DB so the Admin sees it in real time in "Approvals & Verifications"
+                              db.addTrainerApplication({
+                                trainerId: currentUser.id,
+                                trainerName: currentUser.name,
+                                trainerEmail: currentUser.email,
+                                courseId: 'profile-verification',
+                                courseTitle: 'Profile Verification Review',
+                                courseCategory: verificationData.category || 'Digital',
+                                experienceYears: 5,
+                                portfolioUrl: (verificationData.category === 'digital' ? verificationData.step1Data.links : (verificationData.category === 'creative' ? verificationData.step1Data.instagramLink : verificationData.step1Data.metrics)) || 'N/A',
+                                workshopAddress: (verificationData.category === 'creative' ? verificationData.step1Data.lookbookLink : (verificationData.category === 'agricultural' ? verificationData.step1Data.farmPhotoUrl : 'Global Classroom')) || 'N/A',
+                                equipmentsOwned: verificationData.step2Data ? `Lesson: ${verificationData.step2Data}` : 'N/A',
+                                credentialsLink: verificationData.step3Data.videoUrl || 'N/A'
+                              });
+
+                              db.addNotification({
+                                userId: 'u-admin-1',
+                                title: 'New Trainer Verification Request',
+                                message: `Coach ${currentUser.name} has submitted their profile for certification review.`,
+                                type: 'system'
+                              });
+
                               setVerificationData(p => ({
                                 ...p,
                                 step3Saved: true,
