@@ -45,7 +45,7 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
   const [coursesSearchQuery, setCoursesSearchQuery] = useState('');
 
   // Dynamic administrative subview states for clickable drilldowns
-  const [adminSubView, setAdminSubView] = useState<'default' | 'users' | 'courses' | 'pending-verification' | 'ongoing-courses' | 'graduating' | 'inactive-students' | 'active-students' | 'active-trainers' | 'chats-messages' | 'finances'>('default');
+  const [adminSubView, setAdminSubView] = useState<'default' | 'users' | 'courses' | 'pending-verification' | 'ongoing-courses' | 'graduating' | 'inactive-students' | 'active-students' | 'active-trainers' | 'chats-messages' | 'finances' | 'course-proposals' | 'payment-audit' | 'audit-logs'>('default');
   const [subViewQuery, setSubViewQuery] = useState('');
   const [subViewFilters, setSubViewFilters] = useState({
     role: 'all',          // 'all', 'student', 'trainer'
@@ -561,6 +561,72 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
               )}
             </div>
           </div>
+          
+          {/* Quick Navigation Admin Menu */}
+          <div className="bg-white border border-zinc-150/75 rounded-2xl p-4 mb-8 flex flex-wrap items-center justify-between gap-4 shadow-3xs" id="admin-quick-menu-bar">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 font-bold">Admin Workspace Menu:</span>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setAdminSubView('default')}
+                className="bg-zinc-900 text-white rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer hover:bg-zinc-800 transition-colors"
+              >
+                📊 Dashboard
+              </button>
+              <button
+                onClick={() => {
+                  setAdminSubView('users');
+                  setSubViewFilters(prev => ({ ...prev, role: 'all' }));
+                }}
+                className="bg-zinc-50 hover:bg-zinc-100 text-zinc-700 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-colors border border-zinc-100"
+              >
+                👥 Users Directory
+              </button>
+              <button
+                onClick={() => {
+                  setAdminSubView('users');
+                }}
+                className="bg-zinc-50 hover:bg-zinc-100 text-zinc-750 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-colors border border-zinc-100"
+              >
+                🎫 trainer verifications
+              </button>
+              <button
+                onClick={() => setAdminSubView('course-proposals')}
+                className="bg-zinc-50 hover:bg-zinc-100 text-zinc-750 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-colors border border-zinc-100"
+              >
+                📝 Course Proposals
+              </button>
+              <button
+                onClick={() => setAdminSubView('payment-audit')}
+                className="bg-zinc-50 hover:bg-zinc-100 text-zinc-750 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-colors border border-zinc-100"
+              >
+                💳 Payment clearance
+              </button>
+              <button
+                onClick={() => setAdminSubView('courses')}
+                className="bg-zinc-50 hover:bg-zinc-100 text-zinc-750 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-colors border border-zinc-100"
+              >
+                📚 Courses View
+              </button>
+              <button
+                onClick={() => setAdminSubView('chats-messages')}
+                className="bg-zinc-50 hover:bg-zinc-100 text-zinc-750 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-colors border border-zinc-100"
+              >
+                💬 Communications
+              </button>
+              <button
+                onClick={() => setAdminSubView('finances')}
+                className="bg-zinc-50 hover:bg-zinc-100 text-zinc-750 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-colors border border-zinc-100"
+              >
+                💰 Financial Audit
+              </button>
+              <button
+                onClick={() => setAdminSubView('audit-logs')}
+                className="bg-zinc-50 hover:bg-zinc-100 text-zinc-755 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-colors border border-zinc-100"
+              >
+                🛡️ System Audit Logs
+              </button>
+            </div>
+          </div>
 
           {/* 12 Clickable Stats Bento-Grid row */}
           <div id="admin-metrics-bento-grid" className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
@@ -977,7 +1043,8 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
         </div>
       )}
 
-      <div id="admin-main-grid" className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Deactivated bottom queues and log cards from DashboardAdmin default view */}
+      {false && <div id="admin-main-grid" className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Curricula Moderation list - Left column Wide */}
         <div className="lg:col-span-2 space-y-6">
@@ -1460,7 +1527,7 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
           </div>
         </div>
 
-      </div>
+      </div>}
 
       {/* Rejection comment text modal dialogue with light weights */}
       {rejectionTargetId && (

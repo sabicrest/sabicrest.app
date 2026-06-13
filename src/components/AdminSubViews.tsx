@@ -17,7 +17,7 @@ interface AdminSubViewsProps {
   trainerApps: TrainerApplication[];
   transactions: any[];
   activities: AdminActivity[];
-  subView: 'users' | 'courses' | 'pending-verification' | 'ongoing-courses' | 'graduating' | 'inactive-students' | 'active-students' | 'active-trainers' | 'chats-messages' | 'finances';
+  subView: 'users' | 'courses' | 'pending-verification' | 'ongoing-courses' | 'graduating' | 'inactive-students' | 'active-students' | 'active-trainers' | 'chats-messages' | 'finances' | 'course-proposals' | 'payment-audit' | 'audit-logs';
   initialRoleFilter?: 'all' | 'student' | 'trainer';
   reloadAdminData: () => void;
 }
@@ -40,6 +40,7 @@ export default function AdminSubViews({
   const [periodFilter, setPeriodFilter] = useState<'all' | 'today' | 'week' | 'month' | '3months'>('all');
   const [courseFilter, setCourseFilter] = useState<string>('all');
   const [selectedCurriculumStatus, setSelectedCurriculumStatus] = useState<string>('all');
+  const [userActiveTab, setUserActiveTab] = useState<'directory' | 'verifications'>('directory');
 
   // Local Rejection Comments States
   const [rejectionTargetId, setRejectionTargetId] = useState<string | null>(null);
@@ -236,6 +237,106 @@ export default function AdminSubViews({
     }
   };
 
+  const handleApproveEnrollment = (enrId: string) => {
+    const enr = db.getEnrollmentById(enrId);
+    if (!enr) return;
+
+    const updated: CourseEnrollment = {
+      ...enr,
+      paymentStatus: 'approved'
+    };
+    db.updateEnrollment(updated);
+
+    const student = db.getUsers().find(u => u.id === enr.studentId);
+    if (student) {
+      const currentEnrolls = student.enrolledCourseIds || [];
+      if (!currentEnrolls.includes(enr.courseId)) {
+        const updatedUser: User = {
+          ...student,
+          enrolledCourseIds: [...currentEnrolls, enr.courseId]
+        };
+        db.updateUser(updatedUser);
+      }
+    }
+
+    const course = db.getCurricula().find(c => c.id === enr.courseId);
+    if (course) {
+      db.addAssignment({
+        title: `${course.title}: Getting Started Assignment`,
+        description: `Starter evaluation task for the newly registered syllabus: "${course.title}". Scope focus represents Week 1: "${course.modules[0] || 'Foundational Principles'}". Submit your work here when accomplished for tutor grading.`,
+        dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1050).toISOString().split('T')[0],
+        maxPoints: 100,
+        studentId: enr.studentId,
+        studentName: enr.studentName,
+        trainerId: course.trainerId,
+        trainerName: course.trainerName
+      });
+
+      db.addNotification({
+        userId: course.trainerId,
+        title: 'New Student Approved & Onboarded',
+        message: `${enr.studentName} has enrolled for your syllabus: "${course.title}". Starter assignment initialized.`,
+        type: 'curriculum'
+      });
+    }
+
+    db.addNotification({
+      userId: enr.studentId,
+      title: 'Tuition Payment Confirmed & Course Unlocked!',
+      message: `Your reference "${enr.paymentReference}" has been audited successfully. "${enr.courseTitle}" is now fully unlocked in your dashboard!`,
+      type: 'grade'
+    });
+
+    db.addAdminActivity({
+      adminId: currentUser.id,
+      adminName: currentUser.name,
+      adminEmail: currentUser.email,
+      action: 'Approve Payment Audit',
+      details: `Approved enrollment request of ${enr.studentName} for course "${enr.courseTitle}" (Ref: "${enr.paymentReference || 'N/A'}").`,
+      ipAddress: '192.168.10.22'
+    });
+
+    showToast(`Payment reference of ${enr.studentName} APPROVED successfully.`);
+    reloadAdminData();
+  };
+
+  const handleSaveEnrollmentRejection = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rejectionEnrollmentId) return;
+
+    const enr = db.getEnrollmentById(rejectionEnrollmentId);
+    if (enr) {
+      const updated: CourseEnrollment = {
+        ...enr,
+        paymentStatus: 'rejected',
+        rejectionReason: rejectEnrollmentReason
+      };
+      db.updateEnrollment(updated);
+
+      db.addNotification({
+        userId: enr.studentId,
+        title: 'Tuition Payment Reference Audit Failed',
+        message: `Your reference submission "${enr.paymentReference}" was rejected by CAO. Reason: "${rejectEnrollmentReason}".`,
+        type: 'system'
+      });
+
+      db.addAdminActivity({
+        adminId: currentUser.id,
+        adminName: currentUser.name,
+        adminEmail: currentUser.email,
+        action: 'Reject Payment Audit',
+        details: `Rejected enrollment query from student ${enr.studentName} for course "${enr.courseTitle}" (Ref: "${enr.paymentReference || 'N/A'}"). Reason: "${rejectEnrollmentReason}"`,
+        ipAddress: '192.168.10.22'
+      });
+
+      showToast(`Tuition payment of student ${enr.studentName} REJECTED.`);
+    }
+
+    setRejectionEnrollmentId(null);
+    setRejectEnrollmentReason('');
+    reloadAdminData();
+  };
+
   const handleTriggerNudgeAlert = (user: User) => {
     db.addNotification({
       userId: user.id,
@@ -398,7 +499,32 @@ export default function AdminSubViews({
       {subView === 'users' && (
         <div className="bg-white border border-zinc-100 p-6 rounded-3xl space-y-6">
           
-          {/* Filters Bar */}
+          <div className="flex border-b border-zinc-100 dark:border-zinc-850 pb-px mb-4 gap-4 flex-wrap">
+            <button
+              onClick={() => setUserActiveTab('directory')}
+              className={`pb-2 text-xs font-mono uppercase tracking-wider border-b-2 transition-all px-1 cursor-pointer flex items-center gap-1.5 ${
+                userActiveTab === 'directory'
+                  ? 'border-zinc-900 text-zinc-900 font-bold'
+                  : 'border-transparent text-zinc-400 hover:text-zinc-600'
+              }`}
+            >
+              <Users size={13} /> Personnel Directory & Access Control
+            </button>
+            <button
+              onClick={() => setUserActiveTab('verifications')}
+              className={`pb-2 text-xs font-mono uppercase tracking-wider border-b-2 transition-all px-1 cursor-pointer flex items-center gap-1.5 ${
+                userActiveTab === 'verifications'
+                  ? 'border-zinc-900 text-zinc-900 font-bold'
+                  : 'border-transparent text-zinc-400 hover:text-zinc-600'
+              }`}
+            >
+              <Award size={13} /> Trainer Verifications Pending ({trainerApps.filter(a => a.status === 'pending').length})
+            </button>
+          </div>
+
+          {userActiveTab === 'directory' && (
+            <>
+              {/* Filters Bar */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-zinc-50 p-4 rounded-2xl">
             <div>
               <label className="block text-[9px] font-mono font-bold uppercase text-zinc-500 mb-1">Search Profile</label>
@@ -543,6 +669,83 @@ export default function AdminSubViews({
               </tbody>
             </table>
           </div>
+          </>
+          )}
+
+          {userActiveTab === 'verifications' && (
+            <div className="space-y-4">
+              <div className="bg-zinc-50 p-4 rounded-xl">
+                <h3 className="text-xs font-bold font-mono tracking-wider text-amber-600 uppercase flex items-center gap-1.5 mb-1.5 animate-pulse">
+                  <Award size={14} className="text-amber-500" /> Pending Trainer Application Requests ({trainerApps.filter(a => a.status === 'pending').length})
+                </h3>
+                <p className="text-[11px] text-zinc-500 font-light leading-snug">
+                  Review and verify submitted qualifications video link and educator capabilities. Approving verification automatically updates and clears the corresponding trainer-personnel workspace.
+                </p>
+              </div>
+
+              {trainerApps.filter(a => a.status === 'pending').length === 0 ? (
+                <div className="text-center py-12 text-zinc-400 font-mono font-light text-xs bg-zinc-50 rounded-2xl border border-dashed border-zinc-150">
+                  No active trainer verification applications are currently awaiting clearance.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {trainerApps.filter(a => a.status === 'pending').map(app => (
+                    <div key={app.id} className="border border-zinc-150 rounded-2xl p-5 bg-zinc-50/50 space-y-3 shadow-3xs hover:border-zinc-300 transition-all">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <span className="text-[8.5px] font-mono tracking-wider bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded uppercase font-bold">Trainer candidate</span>
+                          <h3 className="text-sm font-bold text-zinc-900 mt-1.5">{app.trainerName}</h3>
+                          <p className="text-[10px] text-zinc-405 font-mono">{app.trainerEmail} // {app.experienceYears} Years experience</p>
+                          <p className="text-[11px] text-zinc-650 mt-1 leading-normal font-sans">Course Scope: <strong className="text-black font-semibold">{app.courseTitle}</strong> ({app.courseCategory})</p>
+                        </div>
+                      </div>
+
+                      {/* Detailed evaluation portfolios & links */}
+                      <div className="space-y-2 text-[10.5px] bg-white p-3 rounded-xl border border-zinc-100 leading-normal font-mono text-zinc-650">
+                        {app.portfolioUrl && (
+                          <p>● Website/Port: <a href={app.portfolioUrl} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{app.portfolioUrl}</a></p>
+                        )}
+                        
+                        {/* CRITICAL STEP 3 Qualifications, goals, sabicrest partnership intro video */}
+                        {app.credentialsLink && (
+                          <div>
+                            <span className="text-zinc-500 font-mono">🎬 Step 3 Video:</span> <br/>
+                            <a href={app.credentialsLink} target="_blank" rel="noreferrer" className="text-amber-650 hover:underline break-all font-bold font-sans flex flex-col gap-1 bg-amber-50/50 hover:bg-amber-50 p-2 rounded-lg border border-amber-100 mt-1">
+                              <span className="flex items-center gap-1">📹 Play Trainer Qualification Video Link ↗</span>
+                              <span className="text-[10px] font-mono font-normal truncate max-w-[280px]">{app.credentialsLink}</span>
+                            </a>
+                          </div>
+                        )}
+
+                        {app.workshopAddress && (
+                          <p>● Workshop Location: {app.workshopAddress}</p>
+                        )}
+                        {app.equipmentsOwned && (
+                          <p>● Practice Devices: {app.equipmentsOwned}</p>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => handleApproveTrainerApp(app.id)}
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-2 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all"
+                        >
+                          Verify & Approve Candidate
+                        </button>
+                        <button 
+                          onClick={() => setRejectionAppId(app.id)}
+                          className="bg-red-50 hover:bg-red-100 text-red-650 rounded-xl px-4 py-2 text-[10px] font-bold uppercase cursor-pointer transition-all"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
         </div>
       )}
 
@@ -1119,6 +1322,245 @@ export default function AdminSubViews({
         </div>
       )}
 
+      {/* J. COURSE PROPOSALS APPROVAL AUDIT PAGE */}
+      {subView === 'course-proposals' && (
+        <div className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-zinc-50 p-4 rounded-2xl">
+            <div>
+              <h3 className="text-xs font-mono uppercase text-indigo-700 font-bold flex items-center gap-1.5 leading-none shadow-3xs">
+                <BookOpen size={14} className="text-indigo-500 animate-pulse" /> Syllabus & Proposals approvals desk
+              </h3>
+              <p className="text-[11px] text-zinc-500 mt-1 font-light leading-snug">Socrates curriculum proposal review for mentor-trainer candidates.</p>
+            </div>
+            <div className="relative w-full sm:w-64 shrink-0">
+              <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+              <input
+                type="text"
+                placeholder="Search proposal syllabi..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white border border-zinc-200 rounded-xl pl-8 pr-4 py-1.5 text-xs text-brand-black placeholder-zinc-400 focus:outline-hidden text-zinc-805"
+              />
+            </div>
+          </div>
+
+          {(() => {
+            const pendingCurricula = curricula.filter(c => 
+              c.status === 'pending' && 
+              (c.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+               c.trainerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               c.category.toLowerCase().includes(searchQuery.toLowerCase()))
+            );
+
+            if (pendingCurricula.length === 0) {
+              return (
+                <div className="text-center p-12 text-zinc-400 font-light text-xs bg-zinc-50/50 rounded-2xl border border-dashed border-zinc-150 flex flex-col items-center gap-1">
+                  <BookOpen size={28} className="text-zinc-300 animate-pulse" />
+                  <p>All reviews caught up!</p>
+                  <p className="text-[10px]">No proposed syllabus curriculum is currently awaiting admin verification.</p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="space-y-4">
+                {pendingCurricula.map(curr => (
+                  <div key={curr.id} className="border border-zinc-150 rounded-2xl p-5 bg-zinc-50/20 shadow-3xs">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-3">
+                      <div>
+                        <span className="text-[8px] font-mono tracking-wider bg-indigo-50 text-indigo-800 border border-indigo-200 px-2 py-0.5 rounded uppercase font-semibold">Pending approval</span>
+                        <h4 className="text-base font-bold text-zinc-900 mt-1.5 leading-tight">{curr.title}</h4>
+                        <span className="text-[10.5px] text-zinc-500 font-mono block mt-1">Proposed by Coach: <strong>{curr.trainerName}</strong></span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0 w-full md:w-auto">
+                        <button
+                          onClick={() => handleApproveCurriculum(curr.id)}
+                          className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold tracking-wider uppercase px-4 py-2 cursor-pointer transition-colors"
+                        >
+                          Approve Syllabus
+                        </button>
+                        <button
+                          onClick={() => {
+                            setRejectionTargetId(curr.id);
+                            setRejectReason('');
+                          }}
+                          className="bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-[10px] font-bold tracking-wider uppercase px-4 py-2 cursor-pointer transition-colors"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-zinc-600 font-light leading-relaxed mb-3">{curr.description}</p>
+                    
+                    <div className="flex justify-between items-center text-[10px] font-mono text-zinc-400 mb-3 bg-white p-2.5 rounded-lg border border-zinc-100">
+                      <span>WEEKS: {curr.durationWeeks} // LEVEL: {curr.level} // CATEGORY: {curr.category}</span>
+                      {curr.price !== undefined && (
+                        <span className="text-zinc-805 font-bold font-sans">TUITION FEE: ₦{curr.price.toLocaleString()}</span>
+                      )}
+                    </div>
+
+                    {curr.price !== undefined && (
+                      <div className="bg-zinc-50 border border-zinc-150 rounded-xl p-3.5 space-y-2 mb-3">
+                        <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-zinc-500 font-mono">
+                          <span>Revenue Fee Splits Preview (85% / 15%)</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 text-center text-zinc-650 font-mono text-[9px] pt-1">
+                          <div className="bg-white border border-zinc-200/50 p-2 rounded-xl">
+                            <span className="block text-[7.5px] text-zinc-400 uppercase tracking-tight">Trainer Share (85%)</span>
+                            <span className="font-bold text-emerald-600 text-xs">₦{(curr.price * 0.85).toLocaleString()}</span>
+                          </div>
+                          <div className="bg-white border border-zinc-200/50 p-2 rounded-xl">
+                            <span className="block text-[7.5px] text-zinc-400 uppercase tracking-tight">Platform Share (15%)</span>
+                            <span className="font-bold text-neutral-805 text-xs">₦{(curr.price * 0.15).toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="bg-white p-3.5 rounded-xl border border-zinc-100">
+                      <p className="text-[9px] uppercase tracking-wide text-zinc-400 mb-1.5 font-bold font-mono">Proposed weekly Syllabus modules</p>
+                      <div className="space-y-1.5">
+                        {curr.modules && curr.modules.map((m, i) => (
+                          <div key={i} className="text-xs font-light text-zinc-650 flex items-center gap-2">
+                            <span className="bg-zinc-50 text-brand-black dark:text-zinc-400 font-bold text-[9px] font-mono px-1.5 py-0.5 rounded border border-zinc-100 font-sans">W{i+1}</span> {m}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* K. TUITION COHORT PAYMENTS clearance PAGE */}
+      {subView === 'payment-audit' && (
+        <div className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-xs space-y-6">
+          <div className="bg-zinc-50 p-4 rounded-xl flex items-center justify-between">
+            <div>
+              <h3 className="text-xs font-bold tracking-wider text-emerald-700 uppercase flex items-center gap-1.5 font-mono">
+                <Shield size={14} className="text-emerald-500" /> Paystack tuition audit & confirmation queue
+              </h3>
+              <p className="text-[11px] text-zinc-500 font-light mt-0.5">Verify Paystack bank draft references to unlock classes & starter assignments for students.</p>
+            </div>
+            <span className="text-[9px] font-mono uppercase bg-emerald-50 text-emerald-700 border border-emerald-150 px-2.5 py-1 rounded-xl font-medium">Clearance required</span>
+          </div>
+
+          {(() => {
+            const pendingEnrs = enrollments.filter(e => e.paymentStatus === 'pending_verification');
+            if (pendingEnrs.length === 0) {
+              return (
+                <div className="text-center py-16 text-zinc-455 font-light text-xs bg-zinc-50/50 rounded-2xl border border-dashed border-zinc-150 flex flex-col items-center gap-1">
+                  <Shield size={28} className="text-emerald-500/30 mb-1 animate-pulse" />
+                  <p className="font-semibold text-zinc-800">All tuition and payments verified.</p>
+                  <p className="text-[10px]">No pending Paystack references currently requiring administrator verification.</p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="space-y-4">
+                {pendingEnrs.map(enr => (
+                  <div key={enr.id} className="border border-zinc-150 rounded-2xl p-5 bg-zinc-50/20 flex flex-col md:flex-row justify-between gap-4 shadow-3xs">
+                    <div className="space-y-2.5 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-mono tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-150 px-2 py-0.5 rounded uppercase font-bold">
+                          Pending confirmation
+                        </span>
+                        <span className="text-[11px] text-zinc-500 font-mono">
+                          Invoice: <strong className="text-zinc-805">₦{enr.amount ? enr.amount.toLocaleString() : "150,000"}</strong>
+                        </span>
+                      </div>
+
+                      <div>
+                        <h4 className="text-base font-bold text-zinc-900 leading-tight">
+                          {enr.courseTitle}
+                        </h4>
+                        <p className="text-xs text-zinc-505 font-light mt-0.5 leading-snug">
+                          Student profile: <strong className="text-zinc-805 font-semibold">{enr.studentName}</strong> ({enr.studentEmail})
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 text-[10.5px] font-mono text-zinc-500 items-center">
+                        <span className="bg-white border border-zinc-200 px-2 py-1 rounded-lg text-zinc-750 font-semibold select-all font-sans">
+                          Paystack Reference ID: {enr.paymentReference}
+                        </span>
+                        {enr.submittedAt && (
+                          <span className="text-zinc-405 font-light text-[10px]">
+                            Transmitted: {new Date(enr.submittedAt).toLocaleDateString()} at {new Date(enr.submittedAt).toLocaleTimeString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex md:flex-col justify-end gap-2 shrink-0 self-center w-full md:w-auto">
+                      <button
+                        onClick={() => handleApproveEnrollment(enr.id)}
+                        className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] uppercase font-bold tracking-wider px-5 py-2.5 cursor-pointer transition-colors shadow-2xs"
+                      >
+                        Approve confirmation
+                      </button>
+                      <button
+                        onClick={() => {
+                          setRejectionEnrollmentId(enr.id);
+                          setRejectEnrollmentReason('');
+                        }}
+                        className="bg-red-50 hover:bg-red-100 text-red-650 rounded-xl text-[10px] uppercase font-semibold px-4 py-2.5 cursor-pointer transition-colors border border-red-100"
+                      >
+                        Reject Reference
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* L. DB RECORDS & ADMIN AUDIT LOGS */}
+      {subView === 'audit-logs' && (
+        <div className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-xs space-y-6">
+          <div className="bg-zinc-50 p-4 rounded-xl flex items-center justify-between">
+            <div>
+              <h3 className="text-xs font-bold tracking-wider text-neutral-800 uppercase flex items-center gap-1.5 font-mono">
+                <Activity size={14} className="text-neutral-500 animate-pulse" /> Administrative activity & audit logs
+              </h3>
+              <p className="text-[11px] text-zinc-500 font-light mt-0.5">Chronological system transactional activity feed for security audits.</p>
+            </div>
+            <span className="text-[9px] font-mono bg-neutral-200 text-neutral-800 border border-neutral-300 px-2.5 py-1 rounded-xl">SECURE REPLICA</span>
+          </div>
+
+          <div className="space-y-3.5 max-h-[480px] overflow-y-auto pr-1">
+            {activities.length === 0 ? (
+              <div className="text-center py-12 text-zinc-405 font-mono text-xs bg-zinc-50 rounded-2xl border border-dashed border-zinc-150">
+                Audit ledger currently vacant.
+              </div>
+            ) : (
+              activities.slice().reverse().map((act) => (
+                <div key={act.id} className="border border-zinc-100 p-4 rounded-xl bg-zinc-50/20 shadow-3xs flex flex-col sm:flex-row justify-between gap-3">
+                  <div className="space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[8px] font-mono tracking-widest bg-zinc-850 text-white font-bold px-2 py-0.5 rounded-lg uppercase">{act.action}</span>
+                      <span className="text-[10px] font-mono text-zinc-505 font-bold">{act.adminName} ({act.adminEmail})</span>
+                    </div>
+                    <p className="text-xs font-light text-zinc-705 leading-relaxed">Details: {act.details}</p>
+                    <div className="text-[10px] font-mono text-zinc-400">IP ADDRESS GATE: <span className="font-semibold text-zinc-650">{act.ipAddress || '127.0.0.1'}</span></div>
+                  </div>
+                  <div className="text-right text-[10px] font-mono text-zinc-450 shrink-0 self-center">
+                    {act.timestamp ? new Date(act.timestamp).toLocaleString() : 'Just now'}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
       {/* REJECTION OVERLAYS AND PROMPT MODALS */}
       {rejectionTargetId && (
         <div className="fixed inset-0 bg-brand-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-55">
@@ -1136,8 +1578,32 @@ export default function AdminSubViews({
                 required
               />
               <div className="flex gap-2">
-                <button type="submit" className="flex-1 bg-red-650 text-white rounded-xl py-2 text-xs uppercase cursor-pointer">Submit</button>
+                <button type="submit" className="flex-1 bg-red-650 text-white rounded-xl py-2 text-xs uppercase cursor-pointer animate-pulse">Submit</button>
                 <button type="button" onClick={() => setRejectionTargetId(null)} className="bg-zinc-100 text-zinc-650 rounded-xl px-4 py-2 text-xs uppercase cursor-pointer">Close</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {rejectionEnrollmentId && (
+        <div className="fixed inset-0 bg-brand-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-55">
+          <div className="bg-white border border-zinc-100 rounded-3xl w-full max-w-md p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b pb-4 mb-4">
+              <h3 className="text-sm font-bold text-zinc-900">Tuition payment Rejection Comments</h3>
+              <button onClick={() => setRejectionEnrollmentId(null)} className="text-zinc-450 hover:text-black font-semibold text-xl">&times;</button>
+            </div>
+            <form onSubmit={handleSaveEnrollmentRejection} className="space-y-4">
+              <textarea 
+                value={rejectEnrollmentReason}
+                onChange={(e) => setRejectEnrollmentReason(e.target.value)}
+                placeholder="E.g., Paystack transaction reference was not recognized or found as successful in Paystack ledger. Please submit a valid reference receipt..."
+                className="w-full min-h-24 text-xs font-mono text-zinc-700 bg-zinc-50 p-3 rounded-xl border border-zinc-200 focus:outline-hidden"
+                required
+              />
+              <div className="flex gap-2">
+                <button type="submit" className="flex-1 bg-red-650 text-white rounded-xl py-2 text-xs uppercase cursor-pointer">Submit</button>
+                <button type="button" onClick={() => setRejectionEnrollmentId(null)} className="bg-zinc-100 text-zinc-650 rounded-xl px-4 py-2 text-xs uppercase cursor-pointer">Close</button>
               </div>
             </form>
           </div>

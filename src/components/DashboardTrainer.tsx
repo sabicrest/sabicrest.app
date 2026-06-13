@@ -2093,15 +2093,19 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                           </div>
                           <div>
                             <label className="block text-[10px] uppercase font-mono tracking-wider text-zinc-500 dark:text-zinc-400 mb-1 font-bold">
-                              Professional Credentials or Certificate Verification Link (Optional)
+                              Step 3: Qualifications, Goals & Partner Video Link *
                             </label>
                             <input
                               type="url"
-                              placeholder="https://drive.google.com/file/d/..."
+                              placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/..."
                               value={credentialsLink}
                               onChange={(e) => setCredentialsLink(e.target.value)}
-                              className="w-full bg-zinc-50 dark:bg-zinc-850 text-zinc-800 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-xs focus:outline-hidden focus:border-brand-yellow font-sans"
+                              className="w-full bg-zinc-50 dark:bg-zinc-850 text-zinc-800 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-805 rounded-xl px-3 py-2.5 text-xs focus:outline-hidden focus:border-brand-yellow font-sans"
+                              required
                             />
+                            <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1 italic font-light leading-snug">
+                              Must only be a link from a video about your qualifications and experience, your goals for students, and why you chose to partner with Sabicrest as a trainer-mentor for aspiring professionals and business owners.
+                            </p>
                           </div>
                           <div className="flex items-start gap-2 pt-1">
                             <input
@@ -2148,15 +2152,19 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                           </div>
                           <div>
                             <label className="block text-[10px] uppercase font-mono tracking-wider text-zinc-500 dark:text-zinc-400 mb-1 font-bold">
-                              Mastery Certification or Technical Registration Link (Optional)
+                              Step 3: Qualifications, Goals & Partner Video Link *
                             </label>
                             <input
                               type="url"
-                              placeholder="https://drive.google.com/file/d/..."
+                              placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/..."
                               value={credentialsLink}
                               onChange={(e) => setCredentialsLink(e.target.value)}
                               className="w-full bg-zinc-50 dark:bg-zinc-850 text-zinc-805 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-xs focus:outline-hidden focus:border-brand-yellow font-sans"
+                              required
                             />
+                            <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1 italic font-light leading-snug">
+                              Must only be a link from a video about your qualifications and experience, your goals for students, and why you chose to partner with Sabicrest as a trainer-mentor for aspiring professionals and business owners.
+                            </p>
                           </div>
                           <div className="flex items-start gap-2 pt-1">
                             <input

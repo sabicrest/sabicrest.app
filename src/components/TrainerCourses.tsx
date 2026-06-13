@@ -497,7 +497,9 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
         >
           <Users size={14} /> Cohort History & Roster Audits
         </button>
-          {currentTab === 'courses' ? (
+      </div>
+
+      {currentTab === 'courses' ? (
         <>
           {/* Control filters panel - highly touch and mobile optimized */}
           <div className="space-y-3">
@@ -1109,7 +1111,6 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
           </div>
         </div>
       )}
-    </div>
 
       {/* Propose/Edit Course Modal Window - Implements Collapsible Form Fold Sections */}
       {showProposalModal && (
