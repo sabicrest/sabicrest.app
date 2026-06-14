@@ -257,18 +257,18 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
       
       {/* Settings Alerts Toast Pop-up */}
       {toastMessage && (
-        <div id="toast-modal-overlay-settings" className="fixed inset-0 bg-zinc-950/40 backdrop-blur-xs flex items-center justify-center p-4 z-55 animate-in fade-in duration-150 select-none">
-          <div className="bg-white border border-zinc-150 rounded-2xl p-6 shadow-xl max-w-sm w-full text-center space-y-4 animate-in zoom-in-95 duration-200">
-            <div className="w-12 h-12 rounded-full bg-yellow-50 flex items-center justify-center mx-auto text-brand-yellow">
-              <CheckCircle2 size={24} />
+        <div id="toast-modal-overlay-settings" className="fixed inset-0 bg-zinc-950/20 backdrop-blur-xs flex items-center justify-center p-4 z-55 animate-in fade-in duration-150 select-none">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200/30 rounded-[24px] p-6 shadow-[0_15px_45px_rgba(0,0,0,0.05)] max-w-sm w-full text-center space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-zinc-800 flex items-center justify-center mx-auto text-[#FFCC00]">
+              <CheckCircle2 size={22} strokeWidth={1.3} />
             </div>
             <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-brand-black">Settings Alert</h3>
-              <p className="text-xs font-light text-zinc-650 leading-normal">{toastMessage}</p>
+              <h3 className="text-sm font-bold text-zinc-950 dark:text-white">Settings Alert</h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium leading-normal">{toastMessage}</p>
             </div>
             <button
               onClick={() => setToastMessage(null)}
-              className="bg-brand-black hover:bg-zinc-850 text-white text-xs font-light tracking-wide uppercase px-4 py-2.5 rounded-xl transition-all w-full cursor-pointer"
+              className="bg-[#FFCC00] hover:bg-amber-400 text-zinc-950 text-xs font-bold tracking-wider uppercase px-4 py-2.5 rounded-full transition-all w-full cursor-pointer border border-[#FFCC00]"
             >
               Okay
             </button>
@@ -277,17 +277,17 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
       )}
 
       {/* Header Banner Section */}
-      <div id="student-settings-header" className="bg-brand-black text-white rounded-3xl p-8 mb-8 relative overflow-hidden shadow-xs">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-zinc-800/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+      <div id="student-settings-header" className="bg-gradient-to-b from-[#FFFFFF] to-[#E2EEFF] text-zinc-950 rounded-[24px] p-8 mb-8 relative overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.03)] border border-zinc-200/30">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#FFCC00]/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
         <div className="relative z-10 space-y-2 max-w-2xl">
-          <span className="text-[10px] uppercase font-mono tracking-widest bg-zinc-800 text-white px-3 py-1 rounded-full border border-zinc-700">
-            About me
+          <span className="text-[10px] uppercase font-mono tracking-widest bg-white/80 text-zinc-500 px-3 py-1 rounded-full border border-zinc-200/50 shadow-xs font-bold leading-none select-none">
+            Personal Space
           </span>
-          <h2 className="text-2xl md:text-3xl font-light tracking-tight">
-            Account <span className="font-semibold text-brand-yellow">Settings & Profile</span>
+          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-zinc-950">
+            Profile <span className="text-[#FFCC00]">&</span> Settings
           </h2>
-          <p className="text-xs text-white font-light leading-relaxed opacity-95">
-            Manage your public Sabicrest design portfolio metadata, upload your photo, connect professional social links (Portfolio/Business website and Mobile), and review cloud activity streams.
+          <p className="text-xs text-zinc-450 font-medium leading-relaxed">
+            Update your visual design identity, profile details, and system sound preferences.
           </p>
         </div>
       </div>
@@ -295,49 +295,47 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Settings & Profile form */}
-        <div className="lg:col-span-2 bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs space-y-6">
-          <form onSubmit={handleSaveProfile} className="space-y-6">
+        <div className="lg:col-span-2 bg-white/80 dark:bg-zinc-900/40 backdrop-blur-md rounded-[24px] p-8 shadow-[0_15px_45px_rgba(0,0,0,0.02)] border border-zinc-200/20 space-y-8">
+          <form onSubmit={handleSaveProfile} className="space-y-8">
             
             {/* Custom Photo Avatar Settings */}
-            <div className="border-b border-zinc-50 pb-6 space-y-4">
-              <span className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray">
-                Public Identity Photo
+            <div className="border-b border-zinc-100/50 pb-6 space-y-4">
+              <span className="block text-[10px] uppercase tracking-widest font-bold text-zinc-400">
+                Profile Photo
               </span>
               
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+              <div className="flex flex-col sm:flex-row items-center gap-6">
                 
-                {/* Custom active view */}
-                <div className="md:col-span-3 flex justify-center">
-                  <div className="relative group">
-                    {profileAvatar ? (
-                      <img 
-                        src={profileAvatar} 
-                        className="w-24 h-24 rounded-3xl object-cover border-2 border-zinc-100 shadow-sm transition-transform duration-200 group-hover:scale-102" 
-                        alt="Active profile avatar" 
-                        referrerPolicy="no-referrer" 
-                      />
-                    ) : (
-                      <div className="w-24 h-24 rounded-3xl bg-brand-black text-white flex items-center justify-center text-3xl font-light shadow-inner transition-transform duration-200 group-hover:scale-102">
-                        {profileName ? profileName.charAt(0).toUpperCase() : '?'}
-                      </div>
-                    )}
-                    <div className="absolute inset-0 rounded-3xl bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white text-[10px] font-medium" onClick={() => fileInputRef.current?.click()}>
-                      <Camera size={16} className="mb-0.5 mr-1" /> Edit
+                {/* Profile Picture */}
+                <div className="relative group shrink-0">
+                  {profileAvatar ? (
+                    <img 
+                      src={profileAvatar} 
+                      className="w-24 h-24 rounded-full object-cover bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/40 shadow-sm transition-transform duration-200 group-hover:scale-102" 
+                      alt="Active profile avatar" 
+                      referrerPolicy="no-referrer" 
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-zinc-100 dark:bg-zinc-805 text-zinc-500 dark:text-zinc-400 flex items-center justify-center text-3.5xl font-extrabold shadow-inner transition-transform duration-200 group-hover:scale-102 select-none">
+                      {profileName ? profileName.charAt(0).toUpperCase() : '?'}
                     </div>
+                  )}
+                  <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white text-[10px] font-bold" onClick={() => fileInputRef.current?.click()}>
+                    <Camera size={14} strokeWidth={1.3} className="mr-1" /> Edit
                   </div>
                 </div>
 
-                {/* Upload Action Drag and Drop Block */}
-                <div className="md:col-span-9 space-y-3">
+                {/* Upload Zone */}
+                <div className="flex-1 w-full">
                   <div 
                     onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                     onDragLeave={() => setIsDragging(false)}
                     onDrop={handleDrop}
                     onClick={() => fileInputRef.current?.click()}
-                    className={`border border-dashed rounded-2xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[80px] ${
+                    className={`border border-dashed rounded-[24px] p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[96px] ${
                       isDragging 
-                        ? 'border-brand-yellow bg-yellow-50/15' 
-                        : 'border-zinc-250 hover:border-zinc-400 bg-zinc-50/50'
+                        ? 'border-[#FFCC00] bg-[#FFCC00]/5' 
+                        : 'border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-400 bg-white/50 dark:bg-zinc-900/50'
                     }`}
                   >
                     <input 
@@ -347,107 +345,93 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
                       className="hidden" 
                       accept="image/*" 
                     />
-                    <Upload size={16} className="text-zinc-400 mb-1" />
-                    <span className="text-[10px] text-zinc-650 font-medium">
-                      Drag and drop your photo here or <span className="text-zinc-900 underline font-semibold">browse files</span>
-                    </span>
-                    <span className="text-[8px] text-zinc-400 font-light mt-0.5">
-                      Recommended limits: PNG or JPG under 1.2MB.
+                    <Upload size={16} strokeWidth={1.3} className="text-zinc-400 mb-1" />
+                    <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                      Drag or <span className="text-[#FFCC00] underline font-bold">browse</span> image file
                     </span>
                   </div>
-
-                  <span className="text-[10px] text-zinc-500 font-sans italic block mt-1.5">
-                    Your uploaded image is saved inside the Supabase database partition and immediately made visible to all users across the Sabicrest platform.
-                  </span>
                 </div>
 
               </div>
             </div>
 
             {/* Profile fields input card row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">Display Name</label>
+                <label className="block text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-2">Display Name</label>
                 <input
                   type="text"
                   value={profileName}
                   disabled
-                  className="w-full text-xs font-light bg-zinc-50 border border-zinc-100 rounded-xl px-3.5 py-2.5 text-zinc-400 cursor-not-allowed"
+                  className="w-full text-xs font-medium bg-zinc-50/50 dark:bg-zinc-950/50 border border-zinc-200/30 rounded-full px-5 py-3 text-zinc-400 cursor-not-allowed"
                   required
                 />
-                <span className="text-[9px] text-zinc-450 italic mt-0.5 block">Display name is locked (managed by your administrator).</span>
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">Primary Email Address</label>
+                <label className="block text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-2">Primary Email</label>
                 <input
                   type="email"
                   value={currentUser.email}
                   disabled
-                  className="w-full text-xs font-light bg-zinc-50 border border-zinc-100 rounded-xl px-3.5 py-2.5 text-zinc-400 cursor-not-allowed"
+                  className="w-full text-xs font-medium bg-zinc-50/50 dark:bg-zinc-950/50 border border-zinc-200/30 rounded-full px-5 py-3 text-zinc-400 cursor-not-allowed"
                 />
-                <span className="text-[9px] text-zinc-450 italic mt-0.5 block">Email is locked and validated (managed via SSO OAuth identity).</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">WhatsApp Number with Country Code</label>
+                <label className="block text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-2">WhatsApp Number</label>
                 <input
                   type="text"
-                  placeholder="e.g. 2348012345678 (numbers only)"
                   value={profilePhone}
                   onChange={(e) => setProfilePhone(e.target.value)}
-                  className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-black transition-all"
+                  className="w-full text-xs font-medium bg-zinc-50/30 dark:bg-zinc-900/10 border border-zinc-200/60 dark:border-zinc-800 rounded-full px-5 py-3 focus:outline-hidden focus:ring-1 focus:ring-[#FFCC00] focus:border-[#FFCC00] text-zinc-850 dark:text-white transition-all w-full"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">Portfolio or Business Link</label>
+                <label className="block text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-2">Portfolio Link</label>
                 <input
                   type="text"
-                  placeholder="e.g. portfolio.com or linkedin.com/in/username"
                   value={profileSlack}
                   onChange={(e) => setProfileSlack(e.target.value)}
-                  className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-black transition-all"
+                  className="w-full text-xs font-medium bg-zinc-50/30 dark:bg-zinc-900/10 border border-zinc-200/60 dark:border-zinc-800 rounded-full px-5 py-3 focus:outline-hidden focus:ring-1 focus:ring-[#FFCC00] focus:border-[#FFCC00] text-zinc-850 dark:text-white transition-all w-full"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">Physical Location</label>
+                <label className="block text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-2">Location</label>
                 <input
                   type="text"
-                  placeholder="e.g. SF Bay Area"
                   value={profileLoc}
                   onChange={(e) => setProfileLoc(e.target.value)}
-                  className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-black transition-all"
+                  className="w-full text-xs font-medium bg-zinc-50/30 dark:bg-zinc-900/10 border border-zinc-200/60 dark:border-zinc-800 rounded-full px-5 py-3 focus:outline-hidden focus:ring-1 focus:ring-[#FFCC00] focus:border-[#FFCC00] text-zinc-850 dark:text-white transition-all w-full"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">Brief Visual Design Bio</label>
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-2">Bio</label>
               <textarea
-                placeholder="Describe your design interest, spatial preferences, or cloud privacy experience..."
                 value={profileBio}
                 onChange={(e) => setProfileBio(e.target.value)}
-                className="w-full min-h-20 text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-black resize-none transition-all"
+                className="w-full min-h-24 text-xs font-medium bg-zinc-50/30 dark:bg-zinc-900/10 border border-zinc-200/60 dark:border-zinc-800 rounded-[24px] px-5 py-3 focus:outline-hidden focus:ring-1 focus:ring-[#FFCC00] focus:border-[#FFCC00] text-zinc-850 dark:text-white resize-none transition-all"
               ></textarea>
             </div>
 
             <div>
-              <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">Specific Design Skills (comma-separated list)</label>
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-2">Design Skills (comma-separated)</label>
               <input
                 type="text"
-                placeholder="Figma, Spatial Alignment, Micro-interactions, Typography"
                 value={profileSkillsText}
                 onChange={(e) => setProfileSkillsText(e.target.value)}
-                className="w-full text-xs font-light bg-brand-light border border-zinc-100 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-black transition-all"
+                className="w-full text-xs font-medium bg-zinc-50/30 dark:bg-zinc-900/10 border border-zinc-200/60 dark:border-zinc-800 rounded-full px-5 py-3 focus:outline-hidden focus:ring-1 focus:ring-[#FFCC00] focus:border-[#FFCC00] text-zinc-850 dark:text-white transition-all w-full"
               />
               {profileSkillsText.trim() && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
+                <div className="flex flex-wrap gap-1.5 mt-3">
                   {profileSkillsText.split(',').map(s => s.trim()).filter(s => s.length > 0).map((skill, si) => (
-                    <span key={si} className="text-[10px] font-mono tracking-wide bg-zinc-100 text-brand-black px-2 py-0.5 rounded-md uppercase">
+                    <span key={si} className="text-[9px] font-bold tracking-wider bg-[#FFCC00]/10 text-zinc-800 dark:text-[#FFCC00] px-3 py-1 rounded-full uppercase">
                       {skill}
                     </span>
                   ))}
@@ -455,12 +439,12 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
               )}
             </div>
 
-            <div className="pt-4 border-t border-zinc-50 flex gap-3">
+            <div className="pt-4 border-t border-zinc-150/40 flex gap-3">
               <button
                 type="submit"
-                className="bg-brand-black hover:bg-zinc-900 text-white px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider cursor-pointer font-light transition-colors"
+                className="bg-[#FFCC00] hover:bg-amber-400 text-zinc-950 font-bold px-8 py-3.5 rounded-full text-xs uppercase tracking-widest cursor-pointer transition-all duration-150 border border-[#FFCC00]"
               >
-                Save profile
+                Save Profile
               </button>
             </div>
 
@@ -471,116 +455,141 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
         <div className="lg:col-span-1 space-y-6">
           
           {/* Preference options widgets */}
-          <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs space-y-4">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-brand-black border-b border-zinc-50 pb-2 flex items-center gap-1.5 font-light">
-              <Sliders size={13} className="text-brand-yellow" /> System Preferences
+          <div className="bg-white/80 dark:bg-zinc-900/40 backdrop-blur-md rounded-[24px] p-6 shadow-[0_15px_45px_rgba(0,0,0,0.02)] border border-zinc-200/20 space-y-4">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-950 dark:text-white border-b border-zinc-100/50 pb-2 flex items-center gap-1.5">
+              <Sliders size={13} strokeWidth={1.3} className="text-[#FFCC00]" /> Preferences
             </h4>
 
-            <div className="space-y-3 pt-1">
+            <div className="space-y-4 pt-1">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[11px] font-medium text-brand-black block leading-none">Email Alerts</span>
-                  <span className="text-[9px] text-zinc-400 block">Deliver daily curriculum review schedules</span>
+                  <span className="text-[11px] font-bold text-zinc-850 dark:text-zinc-200 block leading-none">Email Alerts</span>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={prefEmailAlerts}
-                  onChange={(e) => setPrefEmailAlerts(e.target.checked)}
-                  className="accent-brand-yellow focus:outline-hidden w-4 h-4 cursor-pointer"
-                />
+                <button
+                  type="button"
+                  onClick={() => setPrefEmailAlerts(!prefEmailAlerts)}
+                  className="p-1 cursor-pointer"
+                >
+                  {prefEmailAlerts ? (
+                    <span className="w-[18px] h-[18px] rounded-full border border-[#FFCC00] bg-[#FFCC00]/10 flex items-center justify-center animate-in zoom-in-75 duration-100">
+                      <div className="w-[8px] h-[8px] rounded-full bg-[#FFCC00]" />
+                    </span>
+                  ) : (
+                    <div className="w-[18px] h-[18px] rounded-full border border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 transition-colors" />
+                  )}
+                </button>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[11px] font-medium text-brand-black block leading-none">Portfolio Webhook Sync</span>
-                  <span className="text-[9px] text-zinc-400 block">Publish portfolio and grade updates to professional streams</span>
+                  <span className="text-[11px] font-bold text-zinc-850 dark:text-zinc-200 block leading-none">Webhook Sync</span>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={prefSlackSync}
-                  onChange={(e) => setPrefSlackSync(e.target.checked)}
-                  className="accent-brand-yellow focus:outline-hidden w-4 h-4 cursor-pointer"
-                />
+                <button
+                  type="button"
+                  onClick={() => setPrefSlackSync(!prefSlackSync)}
+                  className="p-1 cursor-pointer"
+                >
+                  {prefSlackSync ? (
+                    <span className="w-[18px] h-[18px] rounded-full border border-[#FFCC00] bg-[#FFCC00]/10 flex items-center justify-center animate-in zoom-in-75 duration-100">
+                      <div className="w-[8px] h-[8px] rounded-full bg-[#FFCC00]" />
+                    </span>
+                  ) : (
+                    <div className="w-[18px] h-[18px] rounded-full border border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 transition-colors" />
+                  )}
+                </button>
               </div>
 
-              <div className="flex items-center justify-between border-t border-zinc-50 pt-3 mt-1">
+              <div className="flex items-center justify-between border-t border-zinc-150/40 pt-3 mt-1">
                 <div>
-                  <span className="text-[11px] font-medium text-brand-black block leading-none">Notification Sound FX</span>
-                  <span className="text-[9px] text-zinc-400 block">Acoustic chime triggers on new assignments</span>
+                  <span className="text-[11px] font-bold text-zinc-850 dark:text-zinc-200 block leading-none">Sound FX</span>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={prefSoundEffects}
-                  onChange={(e) => setPrefSoundEffects(e.target.checked)}
-                  className="accent-brand-yellow focus:outline-hidden w-4 h-4 cursor-pointer"
-                />
+                <button
+                  type="button"
+                  onClick={() => setPrefSoundEffects(!prefSoundEffects)}
+                  className="p-1 cursor-pointer"
+                >
+                  {prefSoundEffects ? (
+                    <span className="w-[18px] h-[18px] rounded-full border border-[#FFCC00] bg-[#FFCC00]/10 flex items-center justify-center animate-in zoom-in-75 duration-100">
+                      <div className="w-[8px] h-[8px] rounded-full bg-[#FFCC00]" />
+                    </span>
+                  ) : (
+                    <div className="w-[18px] h-[18px] rounded-full border border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 transition-colors" />
+                  )}
+                </button>
               </div>
 
               {/* Chat Message Sound Cues */}
-              <div className="border-t border-zinc-50 pt-3 mt-3 space-y-2.5">
+              <div className="border-t border-zinc-150/40 pt-3 mt-3 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[11px] font-medium text-brand-black block leading-none flex items-center gap-1.5">
-                      {msgSoundEnabled ? <Volume2 size={12} className="text-brand-yellow animate-pulse" /> : <VolumeX size={12} className="text-zinc-400" />}
-                      Message Audio Cues
+                    <span className="text-[11px] font-bold text-zinc-850 dark:text-zinc-200 block leading-none flex items-center gap-1.5">
+                      {msgSoundEnabled ? <Volume2 size={13} strokeWidth={1.3} className="text-[#FFCC00] animate-pulse" /> : <VolumeX size={13} strokeWidth={1.3} className="text-zinc-400" />}
+                      Message Audio
                     </span>
-                    <span className="text-[9px] text-zinc-400 block">Subtle acoustics when chat messages arrive</span>
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={msgSoundEnabled}
-                    onChange={(e) => {
-                      setMsgSoundEnabled(e.target.checked);
-                      localStorage.setItem('sabicrest_msg_sound_enabled', String(e.target.checked));
-                      if (e.target.checked) {
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMsgSoundEnabled(!msgSoundEnabled);
+                      localStorage.setItem('sabicrest_msg_sound_enabled', String(!msgSoundEnabled));
+                      if (!msgSoundEnabled) {
                         audio.playSound(msgSoundId);
                       }
                     }}
-                    className="accent-brand-yellow focus:outline-hidden w-4 h-4 cursor-pointer"
-                  />
+                    className="p-1 cursor-pointer"
+                  >
+                    {msgSoundEnabled ? (
+                      <span className="w-[18px] h-[18px] rounded-full border border-[#FFCC00] bg-[#FFCC00]/10 flex items-center justify-center animate-in zoom-in-75 duration-100">
+                        <div className="w-[8px] h-[8px] rounded-full bg-[#FFCC00]" />
+                      </span>
+                    ) : (
+                      <div className="w-[18px] h-[18px] rounded-full border border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 transition-colors" />
+                    )}
+                  </button>
                 </div>
 
                 {msgSoundEnabled && (
                   <div className="space-y-1.5 animate-in slide-in-from-top-1.5 duration-150">
-                    <label className="block text-[9px] uppercase tracking-wider font-semibold text-zinc-400">Select Message Sound</label>
-                    <div className="grid grid-cols-1 gap-1.5 bg-zinc-50/50 p-2 rounded-xl border border-zinc-100">
+                    <div className="grid grid-cols-1 gap-1.5 bg-zinc-50/20 dark:bg-zinc-950/20 p-2 rounded-[16px] border border-zinc-200/20">
                       {[
-                        { id: 'cosmic-chime', label: 'Cosmic Chime 🌌', desc: 'Harmonious sine waves' },
-                        { id: 'digital-bubble', label: 'Digital Bubble 🫧', desc: 'High sweep blip' },
-                        { id: 'gentle-woodblock', label: 'Gentle Woodblock 🪵', desc: 'Crisp organic knock' },
-                        { id: 'retro-pip', label: 'Retro Pip 👾', desc: 'Nostalgic 8-bit pulse' },
-                        { id: 'modern-synth', label: 'Modern Synth 🎹', desc: 'Warm dual chord filter' }
-                      ].map((sound) => (
-                        <div 
-                          key={sound.id}
-                          onClick={() => {
-                            setMsgSoundId(sound.id);
-                            localStorage.setItem('sabicrest_msg_sound_id', sound.id);
-                            audio.playSound(sound.id);
-                          }}
-                          className={`flex items-center justify-between p-1.5 px-2 rounded-lg cursor-pointer transition-all border ${
-                            msgSoundId === sound.id 
-                              ? 'bg-white border-brand-yellow/50 shadow-2xs' 
-                              : 'bg-transparent border-transparent hover:bg-white/40'
-                          }`}
-                        >
-                          <div>
-                            <span className="text-[10px] font-medium text-brand-black block leading-none">{sound.label}</span>
-                            <span className="text-[8px] text-zinc-400 block font-light leading-none mt-1">{sound.desc}</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
+                        { id: 'cosmic-chime', label: 'Cosmic Chime' },
+                        { id: 'digital-bubble', label: 'Digital Bubble' },
+                        { id: 'gentle-woodblock', label: 'Gentle Woodblock' },
+                        { id: 'retro-pip', label: 'Retro Pip' },
+                        { id: 'modern-synth', label: 'Modern Synth' }
+                      ].map((sound) => {
+                        const isSelected = msgSoundId === sound.id;
+                        return (
+                          <div 
+                            key={sound.id}
+                            onClick={() => {
+                              setMsgSoundId(sound.id);
+                              localStorage.setItem('sabicrest_msg_sound_id', sound.id);
                               audio.playSound(sound.id);
                             }}
-                            className="p-1 text-zinc-400 hover:text-brand-black hover:bg-zinc-100 rounded-md transition-all cursor-pointer flex items-center justify-center shrink-0 border border-zinc-100 bg-white"
-                            title="Play Preview"
+                            className={`flex items-center justify-between p-2.5 px-3 rounded-[12px] cursor-pointer transition-all border ${
+                              isSelected 
+                                ? 'bg-white dark:bg-zinc-800 border-[#FFCC00]/40' 
+                                : 'bg-transparent border-transparent hover:bg-zinc-100/30'
+                            }`}
                           >
-                            <Play size={10} className="fill-current" />
-                          </button>
-                        </div>
-                      ))}
+                            <div className="flex items-center gap-2">
+                              <Volume2 size={13} strokeWidth={1.3} className={isSelected ? 'text-[#FFCC00]' : 'text-zinc-450'} />
+                              <span className="text-[11px] font-bold text-zinc-800 dark:text-zinc-200">{sound.label}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                audio.playSound(sound.id);
+                              }}
+                              className="p-1 text-zinc-400 hover:text-zinc-950 dark:hover:text-white"
+                            >
+                              <Play size={8} strokeWidth={1.3} className="fill-current" />
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -589,27 +598,27 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
           </div>
 
           {/* Notification logs list */}
-          <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs space-y-4">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-brand-black border-b border-zinc-50 pb-2 flex items-center justify-between font-light">
+          <div className="bg-white/80 dark:bg-zinc-900/40 backdrop-blur-md rounded-[24px] p-6 shadow-[0_15px_45px_rgba(0,0,0,0.02)] border border-zinc-200/20 space-y-4">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-950 dark:text-white border-b border-zinc-100/50 pb-2 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <Bell size={13} className="text-brand-yellow" /> Security & Notification Alerts
+                <Bell size={13} strokeWidth={1.3} className="text-[#FFCC00]" /> Alerts log
               </span>
-              <span className="text-[9px] text-zinc-400 font-mono font-light">({studentNotifs.length})</span>
+              <span className="text-[9px] text-zinc-400 font-mono font-bold">({studentNotifs.length})</span>
             </h4>
 
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
               {studentNotifs.length === 0 ? (
-                <div className="text-center py-6 text-zinc-400 text-[10px] italic">
-                  No active notifications log.
+                <div className="text-center py-6 text-zinc-405 text-[10px] italic">
+                  No active alerts.
                 </div>
               ) : (
                 studentNotifs.map((n, index) => (
-                  <div key={n.id || index} className="p-2 border border-zinc-100 bg-zinc-50/50 rounded-lg text-[10px] leading-relaxed animate-in fade-in duration-150">
-                    <div className="flex justify-between items-center text-brand-black font-semibold mb-0.5 animate-in slide-in-from-right-1">
+                  <div key={n.id || index} className="p-3 border border-zinc-200/20 bg-zinc-50/30 dark:bg-zinc-950/30 rounded-[16px] text-[10px] leading-relaxed animate-in fade-in duration-150">
+                    <div className="flex justify-between items-center text-zinc-800 dark:text-zinc-200 font-bold mb-0.5">
                       <span className="truncate max-w-[130px]">{n.title}</span>
-                      <span className="text-zinc-400 text-[8px] font-light">Just now</span>
+                      <span className="text-zinc-400 text-[8px] font-medium">Just now</span>
                     </div>
-                    <p className="text-zinc-500 font-light text-[9.5px]">{n.message}</p>
+                    <p className="text-zinc-500 dark:text-zinc-400 font-medium text-[9px]">{n.message}</p>
                   </div>
                 ))
               )}
