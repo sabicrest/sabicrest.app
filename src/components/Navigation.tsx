@@ -466,7 +466,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
 
       {/* Pristine Full-Height Slide-Out Drawer with Generous Padding */}
       <AnimatePresence>
-        {true && (
+        {mobileMenuOpen && (
           <>
             {/* Backdrop blur with light background tint - active on mobile with low-opacity */}
             <motion.div
@@ -474,7 +474,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden fixed inset-0 bg-transparent z-45 pointer-events-none"
+              className="md:hidden fixed inset-0 bg-zinc-950/20 backdrop-blur-xs z-45"
             />
             {/* Drawer layout */}
             <motion.div
@@ -482,7 +482,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-              className="fixed inset-y-0 right-0 w-[320px] h-full bg-white shadow-[0_0_60px_rgba(0,0,0,0.03)] border-l border-zinc-100/50 flex flex-col justify-between p-10 z-55 overflow-y-auto rounded-l-[28px]"
+              className="md:hidden fixed inset-y-0 right-0 w-[320px] h-full bg-white shadow-[0_0_60px_rgba(0,0,0,0.03)] border-l border-zinc-100/50 flex flex-col justify-between p-10 z-55 overflow-y-auto rounded-l-[28px]"
             >
               <div className="flex flex-col space-y-12">
                 {/* Drawer Header - minimalistic without clutter, with lots of negative space */}
@@ -490,7 +490,12 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
                   <span className="text-[10px] font-mono tracking-widest text-zinc-400 uppercase select-none">
                     Navigation Menu
                   </span>
-                  <span className="w-1.5 h-1.5 bg-[#FFCC00] rounded-full animate-pulse" />
+                  <button
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-1 px-1.5 hover:bg-zinc-100 rounded-full text-zinc-400 hover:text-zinc-650 transition-colors cursor-pointer"
+                  >
+                    <X size={16} strokeWidth={1.5} />
+                  </button>
                 </div>
 
                 {/* User Info Brief - visually clean and decluttered */}
@@ -518,6 +523,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
                         key={tab.id}
                         onClick={() => {
                           setActiveTab(tab.id);
+                          setMobileMenuOpen(false);
                         }}
                         className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-xs transition-all uppercase tracking-widest text-left font-sans cursor-pointer group relative ${
                           isActive 
@@ -573,6 +579,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
 
                 <button
                   onClick={() => {
+                    setMobileMenuOpen(false);
                     setShowLogoutConfirm(true);
                   }}
                   className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl text-[10px] font-bold uppercase tracking-wider transition-all text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 border border-zinc-100 cursor-pointer"
