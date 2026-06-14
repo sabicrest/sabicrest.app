@@ -31,7 +31,14 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
 
   // Theme states & responsive bindings
   const [themeMode, setThemeMode] = useState<'dark' | 'light' | 'system'>(() => {
-    return (localStorage.getItem('sabicrest_theme_mode') as 'dark' | 'light' | 'system') || 'light';
+    const existing = localStorage.getItem('sabicrest_theme_mode');
+    if (!existing) {
+      try {
+        localStorage.setItem('sabicrest_theme_mode', 'light');
+      } catch (e) {}
+      return 'light';
+    }
+    return existing as 'dark' | 'light' | 'system';
   });
   const [showThemeDropdown, setShowThemeDropdown] = useState(false);
   const themeContainerRef = useRef<HTMLDivElement>(null);

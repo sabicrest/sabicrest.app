@@ -423,6 +423,23 @@ app.get('/api/supabase/list/:collectionId', async (req, res) => {
   let localDBStatusMessage = '';
 
   if (collectionId === 'users') {
+    const bypassActive = getSupabaseBypassStatus();
+    if (bypassActive) {
+      console.log(`[Autonomous DB Engine] Listing bypassed for 'users' to avoid cloud limits.`);
+      try {
+        const db = loadLocalDB();
+        const localList = (db.users || []) as any[];
+        return res.json({
+          documents: localList,
+          total: localList.length,
+          fromLocalDBStore: true,
+          offlineReason: 'Autonomous mode active'
+        });
+      } catch (localFileErr) {
+        return res.json({ documents: [] });
+      }
+    }
+
     try {
       const { data, error } = await supabase
         .from('users')
@@ -448,11 +465,20 @@ app.get('/api/supabase/list/:collectionId', async (req, res) => {
         total: formattedDocs.length
       });
     } catch (err: any) {
-      console.error('[CRITICAL] Direct users fetch fail:', err.message || err);
-      return res.status(500).json({
-        success: false,
-        error: `Database unavailable: ${err.message || err}`
-      });
+      console.error('[CRITICAL] Direct users fetch fail, falling back to local file store:', err.message || err);
+      detectAndTriggerBypass(500, 'List users', err.message);
+      try {
+        const db = loadLocalDB();
+        const localList = (db.users || []) as any[];
+        return res.json({
+          documents: localList,
+          total: localList.length,
+          fromLocalDBStore: true,
+          offlineReason: err.message
+        });
+      } catch (localFileErr) {
+        return res.json({ documents: [] });
+      }
     }
   }
 
@@ -530,63 +556,6 @@ app.get('/api/supabase/list/:collectionId', async (req, res) => {
 // API Proxy Route for Saving or Deleting Documents
 app.post('/api/supabase/save', async (req, res) => {
   const { collectionId, documentId, data: documentData, isDelete } = req.body;
-
-  if (collectionId === 'users') {
-    try {
-      if (isDelete) {
-        const { error } = await supabase
-          .from('users')
-          .delete()
-          .eq('id', documentId);
-
-        if (error) {
-          console.error('[CRITICAL] Delete user in Supabase error:', error.message);
-          throw error;
-        }
-
-        return res.json({
-          success: true,
-          message: 'User deleted successfully via Supabase'
-        });
-      }
-
-      // Prepare payload with id set as Primary Key
-      const payload = {
-        id: documentId,
-        ...documentData
-      };
-      
-      // Filter out any Appwrite metadata fields starting with $
-      for (const k of Object.keys(payload)) {
-        if (k.startsWith('$')) {
-          delete payload[k];
-        }
-      }
-
-      const snakePayload = convertTopLevelKeysToSnake(payload);
-
-      const { error } = await supabase
-        .from('users')
-        .upsert(snakePayload);
-
-      if (error) {
-        console.error('[CRITICAL] Supabase upsert error on users:', error.message);
-        throw error;
-      }
-
-      return res.json({
-        success: true,
-        action: 'upsert',
-        document: payload
-      });
-    } catch (err: any) {
-      console.error('[CRITICAL] Direct user write to Supabase failed:', err.message || err);
-      return res.status(500).json({
-        success: false,
-        error: `Failed to commit user profile/registration to database: ${err.message || err}`
-      });
-    }
-  }
 
   let localSavedSuccessfully = false;
 

@@ -36,13 +36,20 @@ export default function App() {
   });
 
   const [themeMode, setThemeMode] = useState<'dark' | 'light' | 'system'>(() => {
-    return (localStorage.getItem('sabicrest_theme_mode') as 'dark' | 'light' | 'system') || 'light';
+    const existing = localStorage.getItem('sabicrest_theme_mode');
+    if (!existing) {
+      try {
+        localStorage.setItem('sabicrest_theme_mode', 'light');
+      } catch (e) {}
+      return 'light';
+    }
+    return existing as 'dark' | 'light' | 'system';
   });
 
   // Keep saved theme mode synchronized and responsive to system preference shifts
   useEffect(() => {
     const applyTheme = () => {
-      let active: 'dark' | 'light' = 'dark';
+      let active: 'dark' | 'light' = 'light';
       if (themeMode === 'system') {
         const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         active = isSystemDark ? 'dark' : 'light';
