@@ -525,23 +525,23 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
       ) : (
         <>
           {/* Header Banner - Upgraded to match Student/Trainer aesthetics */}
-          <div id="admin-hero-banner" className="bg-brand-black dark:bg-brand-yellow text-white dark:text-black rounded-3xl p-8 mb-8 relative overflow-hidden shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border border-transparent dark:border-white animate-in fade-in duration-200">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-zinc-805/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+          <div id="admin-hero-banner" className="bg-white text-zinc-950 rounded-[28px] p-8 mb-8 relative overflow-hidden border border-zinc-200/50 shadow-[0_15px_45px_rgba(0,0,0,0.015)] flex flex-col md:flex-row justify-between items-start md:items-center gap-6 duration-200">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-[#FFCC00]/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
             <div className="relative z-10 space-y-2 max-w-2xl">
-              <span className="text-[10px] uppercase font-mono tracking-widest bg-zinc-800 dark:bg-black/10 text-white dark:text-black px-3 py-1 rounded-full border border-zinc-700 dark:border-black/20">
-                Welcome back
+              <span className="text-[9px] uppercase font-mono tracking-widest bg-[#FFCC00]/10 text-[#FFCC00] px-3 py-1 rounded-full border border-[#FFCC00]/25 font-extrabold shadow-2xs pb-1 inline-block">
+                WELCOME BACK
               </span>
-              <h2 className="text-2xl md:text-3xl font-light tracking-tight text-white dark:text-black">
-                Administration dashboard // <span className="font-semibold text-brand-yellow dark:text-black">{currentUser.name}</span>
+              <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-zinc-950">
+                Administration dashboard // <span className="font-extrabold text-[#FFCC00]">{currentUser.name}</span>
               </h2>
-              <p className="text-xs text-white dark:text-black/85 font-light leading-relaxed opacity-95">
+              <p className="text-xs text-zinc-500 font-medium leading-relaxed">
                 {getQuoteOfTheDay()}
               </p>
             </div>
 
             {/* Dynamic header search box */}
             <div className="relative z-10 w-full md:w-64 shrink-0">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-black/60">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400">
                 <Search size={14} />
               </span>
               <input
@@ -549,12 +549,12 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
                 placeholder="Search users or courses..."
                 value={dashboardSearchQuery}
                 onChange={(e) => setDashboardSearchQuery(e.target.value)}
-                className="w-full bg-zinc-900 dark:bg-black/10 border border-zinc-700 dark:border-black/20 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white dark:text-black placeholder-zinc-500 dark:placeholder-black/50 focus:outline-hidden focus:border-brand-yellow dark:focus:border-black font-light shadow-2xs"
+                className="w-full bg-white border border-zinc-200 rounded-full pl-10 pr-10 py-2.5 text-xs text-zinc-950 placeholder-zinc-400 focus:outline-none focus:border-[#FFCC00] focus:ring-1 focus:ring-[#FFCC00] font-light shadow-2xs"
               />
               {dashboardSearchQuery && (
                 <button 
                   onClick={() => setDashboardSearchQuery('')} 
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white dark:text-black/60 dark:hover:text-black cursor-pointer"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-650 cursor-pointer"
                 >
                   <X size={12} />
                 </button>

@@ -460,29 +460,28 @@ html.dark #live-updates-inner-card .text-zinc-400 * {
 
 /* --- PREMIUM MINIMAlIST SEAMLESS SYSTEM --- */
 .premium-card {
-  background-color: rgba(255, 255, 255, 0.7) !important;
-  backdrop-filter: blur(12px) saturate(120%);
-  border: 1px solid rgba(0, 0, 0, 0.04) !important;
-  border-radius: 30px !important;
-  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.02) !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.03) !important;
+  border-radius: 28px !important;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.012) !important;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .premium-card:hover {
   transform: translateY(-2px) !important;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.045) !important;
-  border-color: rgba(255, 204, 0, 0.3) !important;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.025) !important;
+  border-color: rgba(255, 204, 0, 0.4) !important;
 }
 
 html.dark .premium-card {
-  background-color: rgba(18, 18, 20, 0.6) !important;
-  border: 1px solid rgba(255, 255, 255, 0.04) !important;
-  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.15) !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.03) !important;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.012) !important;
 }
 
 html.dark .premium-card:hover {
-  border-color: rgba(255, 204, 0, 0.2) !important;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25) !important;
+  border-color: rgba(255, 204, 0, 0.4) !important;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.025) !important;
 }
 
 /* Base font family force matching default */

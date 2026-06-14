@@ -533,7 +533,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
                       >
                         <Icon 
                           size={16} 
-                          strokeWidth={isActive ? 2.0 : 1.3} 
+                          strokeWidth={1.3} 
                           className={isActive ? 'text-zinc-950' : 'text-zinc-400'} 
                         />
                         <span>{tab.label}</span>

@@ -739,34 +739,33 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
     <div id="trainer-dashboard-root" className="py-6 max-w-7xl mx-auto px-4 select-none">
       
       {/* Header Banner - Upgraded to match Student Dashboard Aesthetics */}
-      <div id="trainer-hero-banner" className="bg-gradient-to-br from-zinc-950 via-zinc-900 to-black dark:bg-brand-yellow dark:from-brand-yellow dark:via-brand-yellow dark:to-brand-yellow text-white dark:text-black rounded-3xl p-5 xs:p-7 md:p-10 mb-8 relative overflow-hidden border border-zinc-800/40 dark:border-white shadow-xl grid grid-cols-1 md:grid-cols-[13fr_7fr] gap-5 md:gap-10 items-stretch">
-        {/* Glow effect & subtle brand highlights */}
-        <div className="absolute -top-32 -right-32 w-80 h-80 bg-brand-yellow/10 rounded-full blur-3xl pointer-events-none dark:hidden" />
-        <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-amber-50/5 rounded-full blur-3xl pointer-events-none dark:hidden" />
-        <div className="absolute right-12 top-4 w-[2px] h-20 bg-gradient-to-b from-brand-yellow/40 to-transparent dark:from-black/10 blur-[1px] pointer-events-none" />
-        <div className="absolute right-24 bottom-4 w-[2px] h-12 bg-gradient-to-t from-amber-500/30 to-transparent dark:from-black/15 blur-[1.5px] pointer-events-none dark:hidden" />
+      <div id="trainer-hero-banner" className="bg-white text-zinc-950 rounded-[28px] p-5 xs:p-7 md:p-10 mb-8 relative overflow-hidden border border-zinc-200/50 shadow-[0_15px_45px_rgba(0,0,0,0.015)] grid grid-cols-1 md:grid-cols-[13fr_7fr] gap-5 md:gap-10 items-stretch">
+        {/* Soft, low-opacity gradient glows for subtle accenting */}
+        <div className="absolute -top-32 -right-32 w-80 h-80 bg-[#FFCC00]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-blue-50/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute right-12 top-4 w-[2px] h-20 bg-gradient-to-b from-[#FFCC00]/25 to-transparent blur-[1px] pointer-events-none" />
         
         {/* Left container: greeting and actions */}
         <div className="relative z-10 flex flex-col justify-between space-y-5">
           <div className="space-y-3 sm:space-y-4">
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-3">
-              <span className="text-[9px] xs:text-[11px] sm:text-xs font-mono tracking-widest uppercase bg-zinc-805/85 dark:bg-black/10 text-brand-yellow dark:text-black px-2 py-0.5 sm:px-3 sm:py-1 rounded-md border border-zinc-700/60 dark:border-black/20 flex items-center gap-1 shrink-0 font-bold">
-                <Sparkles size={10} className="text-brand-yellow dark:text-black animate-pulse" /> Welcome back
+              <span className="text-[9px] xs:text-[11px] sm:text-xs font-mono tracking-widest uppercase bg-[#FFCC00]/10 text-[#FFCC00] px-3 py-1 rounded-full border border-[#FFCC00]/25 flex items-center gap-1 shrink-0 font-extrabold shadow-2xs">
+                <Sparkles size={10} className="text-[#FFCC00] animate-pulse" /> WELCOME BACK
               </span>
-              <span className="text-[9px] xs:text-[11px] sm:text-xs font-mono tracking-widest uppercase bg-zinc-805/50 dark:bg-black/5 text-white dark:text-black/85 px-2 py-0.5 sm:px-3 sm:py-1 rounded-md border border-zinc-800 dark:border-black/10 flex items-center gap-1 shrink-0 font-bold">
+              <span className="text-[9px] xs:text-[11px] sm:text-xs font-mono tracking-widest uppercase bg-zinc-100/80 text-zinc-700 px-3 py-1 rounded-full border border-zinc-200/40 flex items-center gap-1 shrink-0 font-bold select-none">
                 ⭐ {trainerRole}
               </span>
             </div>
             
-            <h2 className="text-[28px] xs:text-[36px] sm:text-[44px] md:text-5xl lg:text-6xl font-light tracking-tight pr-1 leading-tight break-words text-white dark:text-black">
+            <h2 className="text-[28px] xs:text-[36px] sm:text-[44px] md:text-5xl lg:text-6xl font-extrabold tracking-tight pr-1 leading-tight break-words text-zinc-950">
               Hello,{' '}
-              <span className="font-semibold text-brand-yellow dark:text-black bg-gradient-to-r from-brand-yellow via-amber-400 to-amber-300 dark:from-black dark:to-neutral-900 bg-clip-text text-transparent dark:bg-none">
+              <span className="font-extrabold text-[#FFCC00]">
                 {currentUser.name}
               </span>
               {currentUser.verified && <VerifiedBadge />}
             </h2>
             
-            <p className="text-[11px]/[15px] xs:text-[13px]/[18px] sm:text-sm md:text-base text-white dark:text-black/85 font-light leading-relaxed max-w-xl opacity-95">
+            <p className="text-[11px]/[15px] xs:text-[13px]/[18px] sm:text-sm md:text-base text-zinc-500 font-medium leading-relaxed max-w-xl">
               {getQuoteOfTheDay()}
             </p>
           </div>
@@ -775,9 +774,9 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
             <button
               id="assign-assignment-trigger"
               onClick={() => setShowAssignModal(true)}
-              className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-850 text-white border border-zinc-800 rounded-xl py-2.5 px-4 text-xs font-light tracking-wide uppercase transition-all cursor-pointer shadow-xs focus-ring"
+              className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-850 text-white rounded-full py-2.5 px-6 text-xs font-semibold tracking-wide uppercase transition-all cursor-pointer shadow-sm focus-ring border-transparent"
             >
-              <Plus size={14} className="text-zinc-400 font-normal" /> Assign Student Assignment
+              <Plus size={14} className="text-zinc-200 font-bold" /> Assign Student Assignment
             </button>
 
             <button
@@ -790,19 +789,19 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                   setShowCurriculumModal(true);
                 }
               }}
-              className={`flex items-center gap-2 rounded-xl py-2.5 px-4 text-xs font-semibold tracking-wide uppercase transition-all cursor-pointer shadow-xs focus-ring ${
+              className={`flex items-center gap-2 rounded-full py-2.5 px-6 text-xs font-bold tracking-wide uppercase transition-all cursor-pointer shadow-sm focus-ring border-transparent ${
                 currentUser.verified 
-                  ? 'bg-brand-yellow hover:bg-amber-400 text-brand-black'
-                  : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'
+                  ? 'bg-[#FFCC00] hover:bg-amber-400 text-zinc-950'
+                  : 'bg-zinc-200 hover:bg-zinc-300 text-zinc-700 border border-zinc-300/30'
               }`}
             >
               {currentUser.verified ? (
                 <>
-                  <Plus size={14} className="font-semibold text-brand-black" /> Apply as Course Trainer
+                  <Plus size={14} className="font-bold text-zinc-950" /> Apply as Course Trainer
                 </>
               ) : (
                 <>
-                  <Lock size={14} className="text-brand-yellow font-semibold" /> Get Verified
+                  <Lock size={14} className="text-[#FFCC00] font-bold" /> Get Verified
                 </>
               )}
             </button>
@@ -810,22 +809,22 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
         </div>
 
         {/* Right container: Live news and activity feed (Mobile-First responsive) */}
-        <div className="relative z-10 flex flex-col justify-center items-stretch border-t md:border-t-0 md:border-l border-zinc-800/40 dark:border-black/10 pt-5 md:pt-0 pl-0 md:pl-6 lg:pl-10">
+        <div className="relative z-10 flex flex-col justify-center items-stretch border-t md:border-t-0 md:border-l border-zinc-150/40 pt-5 md:pt-0 pl-0 md:pl-6 lg:pl-10">
           <div id="hero-live-ticker-section" className="space-y-4 w-full h-full flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <h3 className="text-[10px] xs:text-[11px] sm:text-xs uppercase font-mono tracking-widest text-brand-yellow dark:text-zinc-900 font-bold flex items-center gap-1.5 select-none">
+              <h3 className="text-[10px] xs:text-[11px] sm:text-xs uppercase font-mono tracking-widest text-[#FFCC00] font-bold flex items-center gap-1.5 select-none">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-yellow dark:bg-black opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-yellow dark:bg-black"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FFCC00] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FFCC00]"></span>
                 </span>
                 Live updates
               </h3>
-              <span className="text-[8px] xs:text-[9px] font-mono font-bold text-zinc-400 dark:text-neutral-500 tracking-wider">
+              <span className="text-[8px] xs:text-[9px] font-mono font-bold text-zinc-400 tracking-wider">
                 AUTO-CYCLE // 10S
               </span>
             </div>
 
-            <div id="live-updates-inner-card" className="bg-black text-white border border-brand-yellow p-4 rounded-2xl min-h-[140px] xs:min-h-[150px] md:h-44 flex flex-col justify-between relative overflow-hidden shadow-lg">
+            <div id="live-updates-inner-card" className="bg-white text-zinc-950 border border-zinc-200/40 p-4 rounded-[24px] min-h-[140px] xs:min-h-[150px] md:h-44 flex flex-col justify-between relative overflow-hidden shadow-xs">
               <AnimatePresence mode="wait">
                 {(() => {
                   const update = liveUpdates[activeUpdateIdx] || liveUpdates[0];
@@ -840,19 +839,19 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                       className="h-full flex flex-col justify-between"
                     >
                       <div>
-                        <span className={`text-[8px] xs:text-[9px] font-mono tracking-widest font-bold px-2 py-0.5 rounded-md inline-block ${
+                        <span className={`text-[8px] xs:text-[9px] font-mono tracking-widest font-bold px-2.5 py-0.5 rounded-full inline-block ${
                           update.type === 'news' 
-                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/10' 
+                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-200/40' 
                             : update.type === 'join'
-                            ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/10'
+                            ? 'bg-indigo-50 text-indigo-600 border border-indigo-200/40'
                             : update.type === 'online'
-                            ? 'bg-amber-400/20 text-brand-yellow border border-amber-400/10'
-                            : 'bg-blue-400/20 text-blue-300 border border-blue-400/10'
+                            ? 'bg-[#FFCC00]/10 text-[#FFCC00] border border-[#FFCC00]/25'
+                            : 'bg-blue-50 text-blue-600 border border-blue-200/40'
                         }`}>
                           {update.category}
                         </span>
                         
-                        <p className="text-[11px] xs:text-xs sm:text-xs md:text-sm text-zinc-105 font-light leading-relaxed mt-2.5 xs:mt-4 line-clamp-3 md:line-clamp-4">
+                        <p className="text-[11px] xs:text-xs text-zinc-650 font-semibold leading-relaxed mt-2.5 xs:mt-4 line-clamp-3 md:line-clamp-4">
                           {update.text}
                         </p>
                       </div>

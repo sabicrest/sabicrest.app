@@ -46,43 +46,24 @@ export default function App() {
     return existing as 'dark' | 'light' | 'system';
   });
 
-  // Keep saved theme mode synchronized and responsive to system preference shifts
+  // Keep saved theme mode synchronized to ensure the screen is always light-themed
   useEffect(() => {
     const applyTheme = () => {
-      let active: 'dark' | 'light' = 'light';
-      if (themeMode === 'system') {
-        const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        active = isSystemDark ? 'dark' : 'light';
-      } else {
-        active = themeMode;
-      }
-
       const root = document.documentElement;
-      if (active === 'dark') {
-        root.classList.add('dark');
-      } else {
-        root.classList.remove('dark');
-      }
+      root.classList.remove('dark');
 
-      // Sync browser accent theme-color with current mode background
+      // Sync browser accent theme-color with light mode background
       let metaThemeColor = document.querySelector('meta[name="theme-color"]');
       if (!metaThemeColor) {
         metaThemeColor = document.createElement('meta');
         metaThemeColor.setAttribute('name', 'theme-color');
         document.head.appendChild(metaThemeColor);
       }
-      metaThemeColor.setAttribute('content', active === 'dark' ? '#0a0a0b' : '#ffffff');
+      metaThemeColor.setAttribute('content', '#F7F9FC');
     };
 
     applyTheme();
-
-    if (themeMode === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const listener = () => applyTheme();
-      mediaQuery.addEventListener('change', listener);
-      return () => mediaQuery.removeEventListener('change', listener);
-    }
-  }, [themeMode]);
+  }, []);
 
   // Keep saved theme settings updated with standard custom custom-events
   useEffect(() => {
@@ -337,7 +318,7 @@ export default function App() {
   };
 
   return (
-    <div id="app-viewport-enclosure" className="min-h-screen bg-gradient-to-b from-[#FFFFFF] to-[#E2EEFF] pb-24 lg:pb-14 font-sans text-zinc-950 relative">
+    <div id="app-viewport-enclosure" className="min-h-screen bg-gradient-to-b from-[#F7F9FC] to-[#E2EEFF] pb-24 lg:pb-14 font-sans text-zinc-950 relative">
       
       {/* Top Header layout */}
       <Navigation
@@ -357,11 +338,11 @@ export default function App() {
       {(currentUser.role === 'student' || currentUser.role === 'trainer') && (
         <div 
           id="sabicrest-mobile-bottom-nav" 
-          className="lg:hidden fixed bottom-6 left-6 right-6 z-50 h-16 bg-white/95 backdrop-blur-md border border-zinc-200/40 shadow-[0_15px_50px_rgba(0,0,0,0.06)] rounded-[30px] flex items-center justify-around px-2 transition-all"
+          className="lg:hidden fixed bottom-8 left-8 right-8 z-50 h-[76px] bg-white border border-zinc-200/40 shadow-[0_25px_60px_rgba(0,0,0,0.07)] rounded-[38px] flex items-center justify-around px-4 transition-all"
         >
           {(currentUser.role === 'student'
             ? [
-                { id: 'dashboard', label: 'Home', icon: Home },
+                { id: 'dashboard', label: 'Space', icon: Home },
                 { id: 'courses', label: 'Courses', icon: BookOpen },
                 { id: 'messaging', label: 'Chats', icon: MessageSquare, badge: chatCount > 0 ? chatCount : 0 },
                 { id: 'tasks', label: 'Tasks', icon: FileText },
@@ -403,11 +384,11 @@ export default function App() {
                   <div className="relative">
                     <Icon 
                       size={24} 
-                      strokeWidth={1.5}
+                      strokeWidth={1.3}
                       className={`transition-colors ${
                         isActive 
                           ? 'text-black' 
-                          : 'text-zinc-500 dark:text-brand-yellow'
+                          : 'text-zinc-500'
                       }`} 
                     />
                     {item.badge !== undefined && item.badge > 0 && (
@@ -422,7 +403,7 @@ export default function App() {
                   </div>
                   <span 
                     className={`text-[9px] tracking-tight font-medium mt-0.5 transition-colors leading-none select-none ${
-                      isActive ? 'text-black font-bold' : 'text-zinc-500 dark:text-zinc-350 font-normal'
+                      isActive ? 'text-black font-bold' : 'text-zinc-500 font-normal'
                     }`}
                   >
                     {item.label}
