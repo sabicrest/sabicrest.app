@@ -466,15 +466,15 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
 
       {/* Pristine Full-Height Slide-Out Drawer with Generous Padding */}
       <AnimatePresence>
-        {mobileMenuOpen && (
+        {true && (
           <>
-            {/* Backdrop blur with light background tint */}
+            {/* Backdrop blur with light background tint - active on mobile with low-opacity */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileMenuOpen(false)}
-              className="md:hidden fixed inset-0 bg-zinc-950/20 backdrop-blur-xs z-45"
+              className="lg:hidden fixed inset-0 bg-transparent z-45 pointer-events-none"
             />
             {/* Drawer layout */}
             <motion.div
@@ -482,39 +482,34 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-              className="md:hidden fixed inset-y-0 right-0 w-[290px] h-full bg-white/95 backdrop-blur-md shadow-[0_0_50px_rgba(0,0,0,0.06)] border-l border-zinc-150/40 flex flex-col justify-between p-8 z-55 overflow-y-auto"
+              className="fixed inset-y-0 right-0 w-[320px] h-full bg-white shadow-[0_0_60px_rgba(0,0,0,0.03)] border-l border-zinc-100/50 flex flex-col justify-between p-10 z-55 overflow-y-auto rounded-l-[28px]"
             >
-              <div className="space-y-8">
-                {/* Drawer Header */}
-                <div className="flex items-center justify-between pointer-events-auto">
-                  <span className="text-xs font-bold tracking-widest text-zinc-400 uppercase select-none">
-                    Navigation
+              <div className="flex flex-col space-y-12">
+                {/* Drawer Header - minimalistic without clutter, with lots of negative space */}
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono tracking-widest text-zinc-400 uppercase select-none">
+                    Navigation Menu
                   </span>
-                  <button
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="p-1 px-1.5 hover:bg-zinc-100/50 rounded-full text-zinc-400 hover:text-zinc-650 transition-colors"
-                  >
-                    <X size={16} strokeWidth={1.5} />
-                  </button>
+                  <span className="w-1.5 h-1.5 bg-[#FFCC00] rounded-full animate-pulse" />
                 </div>
 
-                {/* User Info Brief */}
-                <div className="flex items-center gap-3 py-3 border-b border-zinc-100/80">
+                {/* User Info Brief - visually clean and decluttered */}
+                <div className="flex items-center gap-4.5 py-2">
                   {currentUser.avatar ? (
-                    <img src={currentUser.avatar} alt="avatar" className="w-10 h-10 rounded-full object-cover border border-zinc-200/50" />
+                    <img src={currentUser.avatar} alt="avatar" className="w-12 h-12 rounded-full object-cover border border-zinc-100 shadow-2xs" />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-zinc-900 text-white flex items-center justify-center text-xs font-bold uppercase select-none">
+                    <div className="w-12 h-12 rounded-full bg-zinc-950 text-white flex items-center justify-center text-sm font-light select-none font-sans">
                       {currentUser.name.charAt(0)}
                     </div>
                   )}
                   <div className="text-left leading-tight">
-                    <div className="text-xs font-bold text-zinc-950">{currentUser.name}</div>
-                    <div className="text-[9px] text-[#FFCC00] font-mono uppercase font-bold tracking-wider mt-0.5">{currentUser.role}</div>
+                    <div className="text-sm font-medium text-zinc-900 tracking-tight">{currentUser.name}</div>
+                    <div className="text-[9px] text-zinc-400 font-mono uppercase tracking-wider mt-1">{currentUser.role}</div>
                   </div>
                 </div>
 
                 {/* Navigation Links with uniform thin wireframe icons */}
-                <div className="space-y-1 pt-2">
+                <div className="space-y-3 pt-4">
                   {tabs.map(tab => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -523,20 +518,25 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
                         key={tab.id}
                         onClick={() => {
                           setActiveTab(tab.id);
-                          setMobileMenuOpen(false);
                         }}
-                        className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-full text-xs transition-all uppercase tracking-wider text-left ${
+                        className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-xs transition-all uppercase tracking-widest text-left font-sans cursor-pointer group relative ${
                           isActive 
-                            ? 'bg-[#FFCC00] text-zinc-950 font-bold shadow-xs' 
-                            : 'text-zinc-400 hover:text-zinc-950 hover:bg-zinc-50'
+                            ? 'bg-[#FFCC00]/8 text-zinc-900 font-medium' 
+                            : 'text-zinc-500 hover:text-zinc-950 hover:bg-zinc-50'
                         }`}
                       >
-                        <Icon 
-                          size={16} 
-                          strokeWidth={1.3} 
-                          className={isActive ? 'text-zinc-950' : 'text-zinc-400'} 
-                        />
-                        <span>{tab.label}</span>
+                        <div className="flex items-center gap-4">
+                          <Icon 
+                            size={16} 
+                            strokeWidth={1.2} 
+                            className={`transition-colors ${isActive ? 'text-[#FFCC00]' : 'text-zinc-400 group-hover:text-zinc-800'}`} 
+                          />
+                          <span className="font-sans leading-none">{tab.label}</span>
+                        </div>
+                        
+                        {isActive && (
+                          <span className="w-1.5 h-1.5 bg-[#FFCC00] rounded-full absolute right-5 top-1/2 -translate-y-1/2" />
+                        )}
                       </button>
                     );
                   })}
@@ -544,11 +544,11 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
               </div>
 
               {/* Drawer Footer controls */}
-              <div className="space-y-4 pt-6 border-t border-zinc-150/40">
-                {/* Mobile Theme Selector Settings */}
-                <div className="flex flex-col gap-2">
-                  <span className="text-[9px] uppercase tracking-wider font-semibold text-zinc-400 px-1 select-none">Theme Mode</span>
-                  <div className="grid grid-cols-3 gap-1 bg-zinc-50 border border-zinc-100 p-0.5 rounded-full">
+              <div className="space-y-8 pt-8">
+                {/* Theme Selector Settings */}
+                <div className="flex flex-col gap-3">
+                  <span className="text-[9px] uppercase tracking-wider font-semibold text-zinc-400 select-none">Appearance</span>
+                  <div className="grid grid-cols-3 gap-1 bg-zinc-50/80 p-0.5 rounded-full border border-zinc-100/50">
                     {[
                       { id: 'dark', label: 'Dark', icon: Moon },
                       { id: 'light', label: 'Light', icon: Sun },
@@ -560,11 +560,11 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
                         <button
                           key={item.id}
                           onClick={() => handleThemeChange(item.id as any)}
-                          className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-full text-[9px] font-light transition-all cursor-pointer ${
-                            isSelected ? 'bg-zinc-950 text-white font-medium' : 'text-zinc-400 hover:text-zinc-800'
+                          className={`flex items-center justify-center gap-1 py-2 px-2.5 rounded-full text-[9px] font-light transition-all cursor-pointer ${
+                            isSelected ? 'bg-zinc-950 text-white font-medium shadow-xs' : 'text-zinc-400 hover:text-zinc-800'
                           }`}
                         >
-                          <ItemIcon size={11} className={isSelected ? 'text-[#FFCC00]' : 'text-zinc-400'} />
+                          <ItemIcon size={12} strokeWidth={1.3} className={isSelected ? 'text-[#FFCC00]' : 'text-zinc-400'} />
                         </button>
                       );
                     })}
@@ -573,13 +573,12 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
 
                 <button
                   onClick={() => {
-                    setMobileMenuOpen(false);
                     setShowLogoutConfirm(true);
                   }}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-full text-xs font-bold uppercase transition-all text-red-500 hover:bg-red-50 hover:text-red-600 border border-red-150/20 cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl text-[10px] font-bold uppercase tracking-wider transition-all text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 border border-zinc-100 cursor-pointer"
                 >
-                  <LogOut size={13} className="text-red-500" />
-                  <span>Sign Out Session</span>
+                  <LogOut size={13} strokeWidth={1.3} className="text-zinc-400" />
+                  <span>Dismiss Session</span>
                 </button>
               </div>
             </motion.div>
