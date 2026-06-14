@@ -1274,43 +1274,45 @@ export default function Messaging({ currentUser }: MessagingProps) {
           )}
 
           {/* Secure text submission box */}
-          <form id="secure-input-form" onSubmit={handleSend} className="p-4 border-t border-brand-yellow/30 md:border-zinc-100 dark:border-zinc-800 bg-white/30 dark:bg-black flex gap-2 items-center">
-            
-            {/* hidden upload input */}
-            <input 
-              ref={fileInputRef}
-              type="file" 
-              className="hidden" 
-              onChange={handleFileChange}
-              accept="image/*,application/pdf,application/zip,text/*" 
-            />
+          <div className="p-4 bg-white dark:bg-black/40 border-t border-zinc-100 dark:border-zinc-900">
+            <form id="secure-input-form" onSubmit={handleSend} className="max-w-4xl mx-auto bg-zinc-50/60 dark:bg-zinc-950/40 border border-zinc-200/50 dark:border-zinc-800 rounded-[30px] p-2 pl-3 flex gap-2 items-center shadow-[0_10px_30px_rgba(0,0,0,0.02)] transition-all focus-within:shadow-[0_10px_35px_rgba(0,0,0,0.04)] focus-within:border-[#FFCC00]/40">
+              
+              {/* hidden upload input */}
+              <input 
+                ref={fileInputRef}
+                type="file" 
+                className="hidden" 
+                onChange={handleFileChange}
+                accept="image/*,application/pdf,application/zip,text/*" 
+              />
 
-            {/* trigger buttons */}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="p-3 bg-zinc-50 dark:bg-black hover:bg-zinc-150 dark:hover:bg-zinc-900 border border-zinc-100/80 dark:border-zinc-800 rounded-xl transition-all cursor-pointer text-zinc-500 dark:text-zinc-300 hover:text-black dark:hover:text-white"
-              title="Add Image or File attachment"
-            >
-              <Paperclip size={13} />
-            </button>
-            
-            <input
-              id="chat-typed-msg"
-              value={typedMsg}
-              onChange={(e) => setTypedMsg(e.target.value)}
-              placeholder={attachment ? "Add caption to your attachment..." : "Send a secure message..."}
-              className="flex-1 bg-brand-light dark:bg-black border border-zinc-105 dark:border-zinc-800 rounded-xl px-4 py-3 text-xs text-zinc-805 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-hidden focus:border-brand-yellow dark:focus:border-brand-yellow transition-all"
-            />
-            
-            <button
-              id="chat-submit-btn"
-              type="submit"
-              className="bg-brand-black dark:bg-zinc-800 hover:bg-zinc-900 dark:hover:bg-zinc-700 text-white p-3 rounded-xl transition-all cursor-pointer flex items-center justify-center shrink-0 focus-ring"
-            >
-              <Send size={14} className="text-brand-yellow" />
-            </button>
-          </form>
+              {/* trigger buttons */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="p-3 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200/40 dark:border-zinc-800 rounded-full transition-all cursor-pointer text-zinc-400 hover:text-zinc-800 dark:hover:text-white"
+                title="Add Image or File attachment"
+              >
+                <Paperclip size={14} strokeWidth={1.3} className="text-zinc-400 hover:text-zinc-700" />
+              </button>
+              
+              <input
+                id="chat-typed-msg"
+                value={typedMsg}
+                onChange={(e) => setTypedMsg(e.target.value)}
+                placeholder={attachment ? "Add caption to your attachment..." : "Send a secure message..."}
+                className="flex-1 bg-transparent border-0 ring-0 focus:ring-0 outline-hidden focus:outline-hidden py-3 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 transition-all"
+              />
+              
+              <button
+                id="chat-submit-btn"
+                type="submit"
+                className="bg-[#FFCC00] hover:bg-amber-400 text-zinc-950 p-3 rounded-full transition-all cursor-pointer flex items-center justify-center shrink-0 shadow-xs border border-[#FFCC00]"
+              >
+                <Send size={14} strokeWidth={2} className="text-zinc-950" />
+              </button>
+            </form>
+          </div>
 
         </div>
       </div>

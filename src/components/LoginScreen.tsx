@@ -269,26 +269,26 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     };
 
     return (
-      <div id="login-container-card" className="min-h-screen bg-white flex flex-col justify-center items-center px-4 relative overflow-hidden">
+      <div id="login-container-card" className="min-h-screen bg-gradient-to-b from-[#FFFFFF] to-[#E2EEFF] flex flex-col justify-center items-center px-4 relative overflow-hidden">
         
         {/* Decorative clean ambient ring */}
-        <div id="ambient-ring-login" className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-brand-yellow/5 pointer-events-none blur-3xl"></div>
-        <div id="ambient-ring-login-2" className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-brand-yellow/5 pointer-events-none blur-3xl"></div>
+        <div id="ambient-ring-login" className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-[#FFCC00]/5 pointer-events-none blur-3xl"></div>
+        <div id="ambient-ring-login-2" className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-[#FFCC00]/5 pointer-events-none blur-3xl"></div>
 
-        <div id="login-inner-workspace" className="w-full max-w-md bg-white border border-zinc-100 rounded-3xl p-8 shadow-sm transition-all duration-300 animate-in fade-in zoom-in-95 duration-200">
+        <div id="login-inner-workspace" className="w-full max-w-md bg-white border border-zinc-200/40 rounded-[30px] p-8 md:p-10 shadow-[0_15px_45px_rgba(0,0,0,0.04)] transition-all duration-300 animate-in fade-in zoom-in-95 duration-200">
           
           {/* Brand Logo Alignment */}
           <div id="login-brand-heading" className="text-center mb-8 flex flex-col items-center">
-            <h1 id="sabicrest-logo-text" className="text-3xl font-bold tracking-tight text-black">
+            <h1 id="sabicrest-logo-text" className="text-3xl font-extrabold tracking-tight text-zinc-950">
               Sabicrest
             </h1>
-            <p id="sabicrest-tagline" className="text-xs font-medium text-amber-500 tracking-wide mt-1 uppercase flex items-center gap-1.5 justify-center">
-              <Shield size={12} /> Admin Security Portal
+            <p id="sabicrest-tagline" className="text-[10px] font-bold text-zinc-400 tracking-wider mt-1 uppercase flex items-center gap-1.5 justify-center">
+              <Shield size={12} strokeWidth={1.3} className="text-[#FFCC00]" /> Admin Security Portal
             </p>
           </div>
 
           {errorMessage && (
-            <div id="login-error-alert" className="mb-4 p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-xs flex items-center gap-2 font-light">
+            <div id="login-error-alert" className="mb-4 p-3 bg-red-50/50 border border-red-100 text-red-600 rounded-2xl text-xs flex items-center gap-2 font-light">
               <AlertCircle size={14} className="shrink-0" />
               <span>{errorMessage}</span>
             </div>
@@ -296,38 +296,38 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
           <form id="admin-unified-form" onSubmit={handleAdminSubmit} className="space-y-4">
             <div id="admin-field-email">
-              <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">Administrator Email</label>
+              <label className="block text-[10px] uppercase tracking-wider font-semibold text-zinc-400 mb-1">Administrator Email</label>
               <div className="relative">
-                <Mail size={14} className="absolute left-4 top-4 text-zinc-300" />
+                <Mail size={14} strokeWidth={1.3} className="absolute left-4 top-4 text-zinc-400" />
                 <input
                   id="admin-input-email"
                   type="email"
                   placeholder={`E.g., CAO ${getAdminEmails()[0] || 'officialsabicrest@gmail.com'}`}
                   value={adminEmail}
                   onChange={(e) => setAdminEmail(e.target.value)}
-                  className="w-full text-sm font-light bg-brand-light border border-zinc-100 rounded-xl pl-10 pr-4 py-3 focus:outline-hidden focus:border-brand-yellow transition-all text-black"
+                  className="w-full text-xs font-light bg-zinc-50/50 border border-zinc-200/40 rounded-full pl-10 pr-4 py-3 focus:outline-hidden focus:border-[#FFCC00] transition-all text-zinc-805"
                   required
                 />
               </div>
             </div>
 
             <div id="admin-field-password">
-              <label className="block text-[10px] uppercase tracking-wider font-semibold text-brand-gray mb-1">Security Password</label>
+              <label className="block text-[10px] uppercase tracking-wider font-semibold text-zinc-400 mb-1">Security Password</label>
               <div className="relative">
-                <Lock size={14} className="absolute left-4 top-4 text-zinc-300" />
+                <Lock size={14} strokeWidth={1.3} className="absolute left-4 top-4 text-zinc-400" />
                 <input
                   id="admin-input-password"
                   type={showAdminPassword ? 'text' : 'password'}
                   placeholder="Enter Security Password"
                   value={adminPassword}
                   onChange={(e) => setAdminPassword(e.target.value)}
-                  className="w-full text-sm font-light bg-brand-light border border-zinc-100 rounded-xl pl-10 pr-10 py-3 focus:outline-hidden focus:border-brand-yellow transition-all text-black"
+                  className="w-full text-xs font-light bg-zinc-50/50 border border-zinc-200/40 rounded-full pl-10 pr-10 py-3 focus:outline-hidden focus:border-[#FFCC00] transition-all text-zinc-805"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowAdminPassword(!showAdminPassword)}
-                  className="absolute right-4 top-4 text-zinc-400 hover:text-zinc-600 focus:outline-hidden"
+                  className="absolute right-4 top-4 text-zinc-400 hover:text-zinc-650 focus:outline-hidden"
                 >
                   {showAdminPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -338,16 +338,16 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               id="admin-login-btn"
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-brand-black hover:bg-zinc-900 text-white rounded-xl text-xs uppercase tracking-wider transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer focus-ring mt-4 font-semibold"
+              className="w-full py-3 px-6 bg-[#FFCC00] hover:bg-amber-400 text-zinc-950 font-bold rounded-full text-xs uppercase tracking-widest transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer mt-4"
             >
               {loading ? (
-                <span className="flex items-center gap-1.5">
-                  <Shield size={12} className="animate-spin text-brand-yellow" />
+                <span className="flex items-center gap-1.5 font-bold">
+                  <Shield size={12} className="animate-spin text-zinc-950" />
                   Verifying Admin...
                 </span>
               ) : (
-                <span className="flex items-center gap-1.5">
-                  <Key size={12} className="text-brand-yellow" />
+                <span className="flex items-center gap-1.5 font-bold">
+                  <Key size={12} className="text-zinc-950" />
                   Verify & Unlock Portal
                 </span>
               )}
@@ -355,7 +355,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           </form>
 
           {/* Core Navigation Back */}
-          <div id="admin-back-portal" className="mt-6 text-center pt-4 border-t border-zinc-50">
+          <div id="admin-back-portal" className="mt-6 text-center pt-4 border-t border-zinc-100">
             <button
               id="back-student-portal-btn"
               type="button"
@@ -364,7 +364,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 setErrorMessage('');
                 setAdminPassword('');
               }}
-              className="text-xs font-light text-zinc-400 hover:text-brand-black transition-colors underline underline-offset-4 disabled:opacity-50"
+              className="text-xs font-medium text-zinc-450 hover:text-zinc-950 transition-colors underline underline-offset-4 disabled:opacity-50"
             >
               Return to Student or Tutor Access
             </button>
@@ -373,7 +373,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         </div>
 
         {/* Modern, minimalist footer branding details */}
-        <div id="login-footer-info" className="mt-6 text-[10px] font-light text-zinc-300 tracking-wider uppercase text-center flex flex-col gap-1">
+        <div id="login-footer-info" className="mt-6 text-[10px] font-light text-zinc-400 tracking-wider uppercase text-center flex flex-col gap-1 select-none">
           <span>Sabicrest Administrator Gateway // Restricted Core Access</span>
           <span>Supabase Account Credentials Validation Layer</span>
         </div>
@@ -383,49 +383,49 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   }
 
   return (
-    <div id="login-container-card" className="min-h-screen bg-white flex flex-col justify-center items-center px-4 relative overflow-hidden">
+    <div id="login-container-card" className="min-h-screen bg-gradient-to-b from-[#FFFFFF] to-[#E2EEFF] flex flex-col justify-center items-center px-4 relative overflow-hidden">
       
       {/* Decorative clean ambient ring */}
-      <div id="ambient-ring-login" className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-brand-yellow/5 pointer-events-none blur-3xl"></div>
-      <div id="ambient-ring-login-2" className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-brand-yellow/5 pointer-events-none blur-3xl"></div>
+      <div id="ambient-ring-login" className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-[#FFCC00]/5 pointer-events-none blur-3xl"></div>
+      <div id="ambient-ring-login-2" className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-[#FFCC00]/5 pointer-events-none blur-3xl"></div>
 
-      <div id="login-inner-workspace" className="w-full max-w-md bg-white border border-zinc-100 rounded-3xl p-8 shadow-sm transition-all duration-300">
+      <div id="login-inner-workspace" className="w-full max-w-md bg-white border border-zinc-200/40 rounded-[30px] p-8 md:p-10 shadow-[0_15px_45px_rgba(0,0,0,0.04)] transition-all duration-300">
         
         {/* Brand Logo Alignment */}
         <div id="login-brand-heading" className="text-center mb-8 flex flex-col items-center">
           {lastAvatar && (
-            <div className="w-16 h-16 rounded-full overflow-hidden border border-zinc-200 shadow-md mb-4 animate-in zoom-in-75 duration-200">
+            <div className="w-16 h-16 rounded-full overflow-hidden border border-zinc-200/50 shadow-md mb-4 animate-in zoom-in-75 duration-200">
               <img src={lastAvatar} alt="user avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             </div>
           )}
-          <h1 id="sabicrest-logo-text" className="text-3xl font-bold tracking-tight text-black">
+          <h1 id="sabicrest-logo-text" className="text-3xl font-extrabold tracking-tight text-zinc-950">
             Sabicrest
           </h1>
-          <p id="sabicrest-tagline" className="text-xs font-medium text-black tracking-wide mt-1 uppercase">
+          <p id="sabicrest-tagline" className="text-[10px] font-bold text-zinc-400 tracking-wider mt-1 uppercase">
             Access your dashboard
           </p>
         </div>
 
         {/* Tab Toggle for Register vs login */}
-        <div id="login-tab-selector" className="flex border-b border-zinc-100 pb-3 mb-6 font-light text-sm text-zinc-400">
+        <div id="login-tab-selector" className="flex border-b border-zinc-100 pb-3 mb-6 font-light text-xs text-zinc-400 tracking-wider uppercase">
           <button
             id="tab-signin-btn"
             onClick={() => { setIsRegistering(false); setErrorMessage(''); }}
-            className={`flex-1 py-1 text-center transition-all ${!isRegistering ? 'text-brand-black border-b-2 border-brand-black font-semibold' : 'hover:text-zinc-600'}`}
+            className={`flex-1 py-1 text-center transition-all ${!isRegistering ? 'text-zinc-950 border-b-2 border-[#FFCC00] font-bold' : 'hover:text-zinc-650'}`}
           >
             Sign In
           </button>
           <button
             id="tab-signup-btn"
             onClick={() => { setIsRegistering(true); setErrorMessage(''); }}
-            className={`flex-1 py-1 text-center transition-all ${isRegistering ? 'text-brand-black border-b-2 border-brand-black font-semibold' : 'hover:text-zinc-600'}`}
+            className={`flex-1 py-1 text-center transition-all ${isRegistering ? 'text-zinc-950 border-b-2 border-[#FFCC00] font-bold' : 'hover:text-zinc-650'}`}
           >
             Create Account
           </button>
         </div>
 
         {errorMessage && (
-          <div id="login-error-alert" className="mb-4 p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-xs flex items-center gap-2 font-light">
+          <div id="login-error-alert" className="mb-4 p-3 bg-red-50/50 border border-red-100 text-red-600 rounded-2xl text-xs flex items-center gap-2 font-light">
             <AlertCircle size={14} className="shrink-0" />
             <span>{errorMessage}</span>
           </div>
@@ -435,7 +435,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         <form id="login-cred-form" onSubmit={handleCustomSubmit} className="space-y-4">
           {isRegistering && (
             <div id="register-field-name">
-              <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Full Name</label>
+              <label className="block text-[10px] uppercase tracking-wider font-semibold text-zinc-400 mb-1">Full Name</label>
               <div className="relative">
                 <input
                   id="reg-input-name"
@@ -443,7 +443,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                   placeholder="E.g., Dr. Sarah Sterling"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full text-sm font-light bg-brand-light border border-zinc-100 rounded-xl px-4 py-3 focus:outline-hidden focus:border-brand-yellow transition-all"
+                  className="w-full text-xs font-light bg-zinc-50/50 border border-zinc-200/40 rounded-full px-4 py-3 focus:outline-hidden focus:border-[#FFCC00] transition-all text-zinc-805"
                   required
                 />
               </div>
@@ -451,11 +451,11 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           )}
 
           <div id="login-field-email">
-            <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">
+            <label className="block text-[10px] uppercase tracking-wider font-semibold text-zinc-400 mb-1">
               {isRegistering ? "Email Address" : "Academic Email Address"}
             </label>
             <div className="relative">
-              <Mail size={14} className="absolute left-4 top-4 text-zinc-300" />
+              <Mail size={14} strokeWidth={1.3} className="absolute left-4 top-4 text-zinc-400" />
               <input
                 id="login-input-email"
                 type="email"
@@ -463,30 +463,30 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 placeholder={isRegistering ? "enter your email" : "name@edu.sabicrest.com"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full text-sm font-light bg-brand-light border border-zinc-100 rounded-xl pl-10 pr-4 py-3 focus:outline-hidden focus:border-brand-yellow transition-all"
+                className="w-full text-xs font-light bg-zinc-50/50 border border-zinc-200/40 rounded-full pl-10 pr-4 py-3 focus:outline-hidden focus:border-[#FFCC00] transition-all text-zinc-805"
                 required
               />
             </div>
           </div>
 
           <div id="login-field-password">
-            <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-1">Password</label>
+            <label className="block text-[10px] uppercase tracking-wider font-semibold text-zinc-400 mb-1">Password</label>
             <div className="relative">
-              <Lock size={14} className="absolute left-4 top-4 text-zinc-300" />
+              <Lock size={14} strokeWidth={1.3} className="absolute left-4 top-4 text-zinc-400" />
               <input
                 id="login-input-pass"
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full text-sm font-light bg-brand-light border border-zinc-100 rounded-xl pl-10 pr-10 py-3 focus:outline-hidden focus:border-brand-yellow transition-all"
+                className="w-full text-xs font-light bg-zinc-50/50 border border-zinc-200/40 rounded-full pl-10 pr-10 py-3 focus:outline-hidden focus:border-[#FFCC00] transition-all text-zinc-805"
                 required
               />
               <button
                 type="button"
                 id="login-password-toggle-btn"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-3.5 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer"
+                className="absolute right-3.5 top-3.5 text-zinc-400 hover:text-zinc-650 transition-colors cursor-pointer"
                 title={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -496,28 +496,28 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
           {isRegistering && (
             <div id="register-role-selection" className="pt-1">
-              <label className="block text-[10px] uppercase tracking-wider font-light text-brand-gray mb-2">Select Account Role</label>
+              <label className="block text-[10px] uppercase tracking-wider font-semibold text-zinc-400 mb-2">Select Account Role</label>
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <button
                   id="reg-role-student"
                   type="button"
                   onClick={() => setRole('student')}
-                  className={`p-3 border rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all ${
-                    role === 'student' ? 'border-brand-yellow bg-amber-50/20 font-medium text-brand-black' : 'border-zinc-100 text-brand-gray hover:bg-zinc-50'
+                  className={`p-3 border rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    role === 'student' ? 'border-[#FFCC00] bg-[#FFCC00]/10 font-bold text-zinc-950' : 'border-zinc-200/40 text-zinc-400 hover:bg-zinc-50'
                   }`}
                 >
-                  <Sparkles size={14} className={role === 'student' ? 'text-brand-yellow' : 'text-zinc-300'} />
+                  <Sparkles size={14} strokeWidth={1.3} className={role === 'student' ? 'text-[#FFCC00]' : 'text-zinc-400'} />
                   <span>Student Mentee</span>
                 </button>
                 <button
                   id="reg-role-trainer"
                   type="button"
                   onClick={() => setRole('trainer')}
-                  className={`p-3 border rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all ${
-                    role === 'trainer' ? 'border-brand-yellow bg-amber-50/20 font-medium text-brand-black' : 'border-zinc-100 text-brand-gray hover:bg-zinc-50'
+                  className={`p-3 border rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    role === 'trainer' ? 'border-[#FFCC00] bg-[#FFCC00]/10 font-bold text-zinc-950' : 'border-zinc-200/40 text-zinc-400 hover:bg-zinc-50'
                   }`}
                 >
-                  <Shield size={14} className={role === 'trainer' ? 'text-brand-yellow' : 'text-zinc-300'} />
+                  <Shield size={14} strokeWidth={1.3} className={role === 'trainer' ? 'text-[#FFCC00]' : 'text-zinc-400'} />
                   <span>Trainer / Mentor</span>
                 </button>
               </div>
@@ -528,26 +528,24 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             id="login-submit-btn"
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 bg-brand-black hover:bg-zinc-900 text-white rounded-xl text-xs uppercase tracking-wider transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer focus-ring mt-2"
+            className="w-full py-3 px-6 bg-[#FFCC00] hover:bg-amber-400 text-zinc-950 font-bold rounded-full text-xs uppercase tracking-widest transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer border border-[#FFCC00] focus:ring-2 focus:ring-[#FFCC00]/50"
           >
             {loading ? (
-              <span className="flex items-center gap-1.5">
-                <Shield size={12} className="animate-spin text-brand-yellow" />
+              <span className="flex items-center gap-1.5 font-bold">
+                <Shield size={12} className="animate-spin text-zinc-950" />
                 {oauthProvider ? `Connecting with ${oauthProvider}...` : 'Verifying details...'}
               </span>
             ) : (
-              <span className="flex items-center gap-1.5">
-                <Key size={12} className="text-brand-yellow" />
+              <span className="flex items-center gap-1.5 font-bold">
+                <Key size={12} className="text-zinc-950" />
                 {isRegistering ? 'Register Account' : 'Sign In'}
               </span>
             )}
           </button>
         </form>
 
-
-
         {/* Administrator Gateway Button */}
-        <div id="admin-portal-access" className="mt-8 pt-5 border-t border-zinc-50 text-center">
+        <div id="admin-portal-access" className="mt-8 pt-5 border-t border-zinc-100 text-center">
           <button
             id="toggle-admin-portal-btn"
             type="button"
@@ -557,7 +555,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               setIsEmailVerified(false);
               setAdminPassword('');
             }}
-            className="text-xs font-light text-brand-black hover:text-amber-500 underline underline-offset-4 cursor-pointer transition-colors"
+            className="text-xs font-medium text-zinc-400 hover:text-[#FFCC00] underline underline-offset-4 cursor-pointer transition-colors"
           >
             Are you an Administrator? Access Admin Portal
           </button>
@@ -566,7 +564,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       </div>
 
       {/* Modern, minimalist footer branding details */}
-      <div id="login-footer-info" className="mt-6 text-[10px] font-light text-zinc-300 tracking-wider uppercase text-center flex flex-col gap-1">
+      <div id="login-footer-info" className="mt-6 text-[10px] font-light text-zinc-400 tracking-wider uppercase text-center flex flex-col gap-1 select-none">
         <span>Sabicrest Platform // Secure Connection Active</span>
         <span>A professional workspace for learning and collaboration</span>
       </div>

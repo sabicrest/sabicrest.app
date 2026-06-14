@@ -171,28 +171,28 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
   };
 
   return (
-    <nav id="sabicrest-nav" className="bg-white border-b border-zinc-100 fixed top-0 left-0 right-0 z-40 select-none shadow-xs">
+    <nav id="sabicrest-nav" className="bg-white/95 backdrop-blur-md border-b border-zinc-200/30 fixed top-0 left-0 right-0 z-40 select-none transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           
           {/* Logo & Platform Title */}
           <div className="flex items-center gap-10">
             <div id="nav-brand" className="flex items-center gap-2.5 cursor-pointer" onClick={() => setActiveTab(tabs[0].id)}>
-              <div className="w-8 h-8 bg-zinc-100 border border-zinc-200 flex items-center justify-center rounded-none overflow-hidden shadow-xs">
+              <div className="w-8 h-8 bg-white border border-zinc-200/50 flex items-center justify-center rounded-lg overflow-hidden">
                 <img
                   src={sabicrestLogo}
                   alt="Sabicrest Logo"
-                  className="w-full h-full rounded-none object-cover"
+                  className="w-full h-full object-cover"
                   referrerPolicy="no-referrer"
                 />
               </div>
-              <span className="text-xl font-bold tracking-tight text-black">
+              <span className="text-xl font-extrabold tracking-tight text-zinc-950">
                 Sabicrest
               </span>
             </div>
 
             {/* Desktop Navigation Links */}
-            <div className="hidden md:flex space-x-1.5">
+            <div className="hidden md:flex space-x-1">
               {tabs.map(tab => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -201,13 +201,13 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
                     key={tab.id}
                     id={`nav-link-${tab.id}`}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-light tracking-wide transition-all uppercase cursor-pointer ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs tracking-wider transition-all uppercase cursor-pointer ${
                       isActive
-                        ? 'bg-brand-black text-white font-medium'
-                        : 'text-zinc-500 hover:text-brand-black hover:bg-zinc-50'
+                        ? 'bg-[#FFCC00] text-zinc-950 font-bold shadow-xs'
+                        : 'text-zinc-400 hover:text-zinc-800 hover:bg-zinc-50'
                     }`}
                   >
-                    <Icon size={14} className={isActive ? 'text-brand-yellow' : 'text-zinc-400'} />
+                    <Icon size={14} strokeWidth={isActive ? 2 : 1.3} className={isActive ? 'text-zinc-950' : 'text-zinc-400'} />
                     <span>{tab.label}</span>
                   </button>
                 );
@@ -464,69 +464,128 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
         </div>
       </div>
 
-      {/* Mobile Menu Draw Down Panel */}
-      {mobileMenuOpen && (
-        <div id="mobile-navigation-links" className="md:hidden border-t border-zinc-100 bg-white px-4 py-3 space-y-1.5 animate-in slide-in-from-top-5 duration-200">
-          {tabs.map(tab => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id);
-                  setMobileMenuOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-light tracking-wide uppercase text-left transition-all ${
-                  isActive ? 'bg-brand-black text-white font-medium' : 'text-zinc-500 hover:bg-zinc-50'
-                }`}
-              >
-                <Icon size={14} className={isActive ? 'text-brand-yellow' : 'text-zinc-400'} />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-
-          {/* Mobile Theme Selector Settings */}
-          <div className="pt-2 pb-1 border-t border-zinc-100 flex flex-col gap-2">
-            <span className="text-[10px] uppercase tracking-wider font-light text-brand-gray px-4">Workspace Theme</span>
-            <div className="flex gap-1 bg-zinc-50 border border-zinc-100 p-1 rounded-2xl mx-2">
-              {[
-                { id: 'dark', label: 'Dark', icon: Moon },
-                { id: 'light', label: 'Light', icon: Sun },
-                { id: 'system', label: 'System', icon: Monitor }
-              ].map(item => {
-                const ItemIcon = item.icon;
-                const isSelected = themeMode === item.id;
-                return (
+      {/* Pristine Full-Height Slide-Out Drawer with Generous Padding */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            {/* Backdrop blur with light background tint */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="md:hidden fixed inset-0 bg-zinc-950/20 backdrop-blur-xs z-45"
+            />
+            {/* Drawer layout */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+              className="md:hidden fixed inset-y-0 right-0 w-[290px] h-full bg-white/95 backdrop-blur-md shadow-[0_0_50px_rgba(0,0,0,0.06)] border-l border-zinc-150/40 flex flex-col justify-between p-8 z-55 overflow-y-auto"
+            >
+              <div className="space-y-8">
+                {/* Drawer Header */}
+                <div className="flex items-center justify-between pointer-events-auto">
+                  <span className="text-xs font-bold tracking-widest text-zinc-400 uppercase select-none">
+                    Navigation
+                  </span>
                   <button
-                    key={item.id}
-                    onClick={() => handleThemeChange(item.id as any)}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-light transition-all cursor-pointer ${
-                      isSelected ? 'bg-brand-black text-white font-medium' : 'text-zinc-500 hover:text-zinc-800'
-                    }`}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-1 px-1.5 hover:bg-zinc-100/50 rounded-full text-zinc-400 hover:text-zinc-650 transition-colors"
                   >
-                    <ItemIcon size={12} className={isSelected ? 'text-brand-yellow' : 'text-zinc-400'} />
-                    <span>{item.label}</span>
+                    <X size={16} strokeWidth={1.5} />
                   </button>
-                );
-              })}
-            </div>
-          </div>
+                </div>
 
-          {/* Mobile & Tablet Logout Action Button Item */}
-          <button
-            onClick={() => {
-              setMobileMenuOpen(false);
-              setShowLogoutConfirm(true);
-            }}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide uppercase text-left transition-all text-red-500 hover:bg-red-50 bg-red-50/10 cursor-pointer"
-          >
-            <LogOut size={14} className="text-red-500" />
-            <span>Sign Out Session</span>
-          </button>
-        </div>
-      )}
+                {/* User Info Brief */}
+                <div className="flex items-center gap-3 py-3 border-b border-zinc-100/80">
+                  {currentUser.avatar ? (
+                    <img src={currentUser.avatar} alt="avatar" className="w-10 h-10 rounded-full object-cover border border-zinc-200/50" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-zinc-900 text-white flex items-center justify-center text-xs font-bold uppercase select-none">
+                      {currentUser.name.charAt(0)}
+                    </div>
+                  )}
+                  <div className="text-left leading-tight">
+                    <div className="text-xs font-bold text-zinc-950">{currentUser.name}</div>
+                    <div className="text-[9px] text-[#FFCC00] font-mono uppercase font-bold tracking-wider mt-0.5">{currentUser.role}</div>
+                  </div>
+                </div>
+
+                {/* Navigation Links with uniform thin wireframe icons */}
+                <div className="space-y-1 pt-2">
+                  {tabs.map(tab => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => {
+                          setActiveTab(tab.id);
+                          setMobileMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-full text-xs transition-all uppercase tracking-wider text-left ${
+                          isActive 
+                            ? 'bg-[#FFCC00] text-zinc-950 font-bold shadow-xs' 
+                            : 'text-zinc-400 hover:text-zinc-950 hover:bg-zinc-50'
+                        }`}
+                      >
+                        <Icon 
+                          size={16} 
+                          strokeWidth={isActive ? 2.0 : 1.3} 
+                          className={isActive ? 'text-zinc-950' : 'text-zinc-400'} 
+                        />
+                        <span>{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Drawer Footer controls */}
+              <div className="space-y-4 pt-6 border-t border-zinc-150/40">
+                {/* Mobile Theme Selector Settings */}
+                <div className="flex flex-col gap-2">
+                  <span className="text-[9px] uppercase tracking-wider font-semibold text-zinc-400 px-1 select-none">Theme Mode</span>
+                  <div className="grid grid-cols-3 gap-1 bg-zinc-50 border border-zinc-100 p-0.5 rounded-full">
+                    {[
+                      { id: 'dark', label: 'Dark', icon: Moon },
+                      { id: 'light', label: 'Light', icon: Sun },
+                      { id: 'system', label: 'System', icon: Monitor }
+                    ].map(item => {
+                      const ItemIcon = item.icon;
+                      const isSelected = themeMode === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => handleThemeChange(item.id as any)}
+                          className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-full text-[9px] font-light transition-all cursor-pointer ${
+                            isSelected ? 'bg-zinc-950 text-white font-medium' : 'text-zinc-400 hover:text-zinc-800'
+                          }`}
+                        >
+                          <ItemIcon size={11} className={isSelected ? 'text-[#FFCC00]' : 'text-zinc-400'} />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setShowLogoutConfirm(true);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-full text-xs font-bold uppercase transition-all text-red-500 hover:bg-red-50 hover:text-red-600 border border-red-150/20 cursor-pointer"
+                >
+                  <LogOut size={13} className="text-red-500" />
+                  <span>Sign Out Session</span>
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Logout Confirmation popover overlay modal */}
       {showLogoutConfirm && (

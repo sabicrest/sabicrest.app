@@ -337,7 +337,7 @@ export default function App() {
   };
 
   return (
-    <div id="app-viewport-enclosure" className="min-h-screen bg-white pb-24 lg:pb-14 font-sans text-brand-black relative">
+    <div id="app-viewport-enclosure" className="min-h-screen bg-gradient-to-b from-[#FFFFFF] to-[#E2EEFF] pb-24 lg:pb-14 font-sans text-zinc-950 relative">
       
       {/* Top Header layout */}
       <Navigation
@@ -357,7 +357,7 @@ export default function App() {
       {(currentUser.role === 'student' || currentUser.role === 'trainer') && (
         <div 
           id="sabicrest-mobile-bottom-nav" 
-          className="lg:hidden fixed bottom-4 left-4 right-4 z-50 h-16 bg-white dark:bg-zinc-950 border border-zinc-200/50 dark:border-zinc-800/60 shadow-[0_8px_32px_rgba(0,0,0,0.12)] rounded-2xl flex items-center justify-around px-2"
+          className="lg:hidden fixed bottom-6 left-6 right-6 z-50 h-16 bg-white/95 backdrop-blur-md border border-zinc-200/40 shadow-[0_15px_50px_rgba(0,0,0,0.06)] rounded-[30px] flex items-center justify-around px-2 transition-all"
         >
           {(currentUser.role === 'student'
             ? [
@@ -394,10 +394,10 @@ export default function App() {
                 className="flex-1 flex items-center justify-center h-full py-1 relative cursor-pointer"
               >
                 <div 
-                  className={`flex flex-col items-center justify-center py-1 px-3.5 rounded-xl transition-all duration-300 w-full max-w-[76px] h-[85%] ${
+                  className={`flex flex-col items-center justify-center py-1 px-3 rounded-full transition-all duration-300 w-full max-w-[76px] h-[85%] ${
                     isActive 
-                      ? 'bg-brand-yellow text-black font-semibold scale-105 active-nav-item' 
-                      : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-350 dark:hover:text-white inactive-nav-item'
+                      ? 'bg-[#FFCC00] text-zinc-950 font-bold scale-105 active-nav-item' 
+                      : 'text-zinc-400 hover:text-zinc-700 dark:text-zinc-350 dark:hover:text-white inactive-nav-item'
                   }`}
                 >
                   <div className="relative">

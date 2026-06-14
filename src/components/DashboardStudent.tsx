@@ -1182,77 +1182,79 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
             {/* Card 1: Assignment Progress */}
             <div 
               onClick={() => onNavigateChange('tasks')}
-              className="group bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 p-5 sm:p-7 md:p-9 rounded-2xl shadow-sm hover:shadow-md cursor-pointer hover:border-brand-yellow dark:hover:border-brand-yellow transition-all duration-300 relative overflow-hidden"
+              className="group premium-card p-5 sm:p-7 md:p-9 cursor-pointer relative overflow-hidden flex flex-col justify-between"
             >
               <div className="flex items-center justify-between text-zinc-400 mb-3 sm:mb-4">
-                <span className="text-[9px] xs:text-[11px] sm:text-xs md:text-sm uppercase font-mono tracking-widest text-zinc-500 dark:text-zinc-450 font-semibold">Task Progress</span>
+                <span className="text-[9px] xs:text-[11px] sm:text-xs md:text-sm uppercase font-mono tracking-widest text-zinc-400 font-bold">Task Progress</span>
                 <div className="flex items-center gap-1 sm:gap-1.5">
-                  <FileText className="text-brand-yellow w-4 h-4 sm:w-[17px] sm:h-[17px]" />
-                  <ArrowUpRight className="text-zinc-300 group-hover:text-brand-black dark:group-hover:text-white transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <FileText className="text-[#FFCC00] w-4 h-4 sm:w-[17px] sm:h-[17px]" />
+                  <ArrowUpRight className="text-zinc-450 group-hover:text-zinc-950 dark:group-hover:text-white transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150 w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
               </div>
-              <div className="text-xl xs:text-2xl sm:text-3.5xl md:text-4.5xl lg:text-5xl font-light text-brand-black dark:text-white tracking-tight flex items-baseline gap-2 leading-tight">
-                <span className="font-extrabold">{gradeRate}%</span>
-                <span className="text-[10px] xs:text-xs sm:text-sm text-zinc-450 dark:text-zinc-550 font-mono font-medium">({finishedCount}/{totalCount})</span>
+              <div>
+                <div className="text-xl xs:text-2xl sm:text-3.5xl md:text-4.5xl lg:text-5xl font-extrabold text-zinc-950 dark:text-white tracking-tight flex items-baseline gap-2 leading-tight">
+                  <span>{gradeRate}%</span>
+                  <span className="text-[10px] xs:text-xs sm:text-sm text-zinc-450 dark:text-zinc-550 font-mono font-bold">({finishedCount}/{totalCount})</span>
+                </div>
+                <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-1.5 sm:h-2 mt-4 sm:mt-5 overflow-hidden">
+                  <div className="bg-[#FFCC00] h-1.5 sm:h-2 rounded-full transition-all duration-500" style={{ width: `${gradeRate}%` }}></div>
+                </div>
               </div>
-              <div className="w-full bg-zinc-150 dark:bg-zinc-805 rounded-full h-1.5 sm:h-2 mt-4 sm:mt-5 overflow-hidden">
-                <div className="bg-gradient-to-r from-brand-yellow to-amber-500 h-1.5 sm:h-2 rounded-full transition-all duration-500" style={{ width: `${gradeRate}%` }}></div>
-              </div>
-              <p className="text-[9.5px]/[14px] xs:text-[11px]/[16px] sm:text-xs md:text-sm text-zinc-500 dark:text-zinc-400 font-light mt-3 sm:mt-4">Active course completion ratings.</p>
+              <p className="text-[9.5px]/[14px] xs:text-[11px]/[16px] sm:text-xs md:text-sm text-zinc-400 dark:text-zinc-400 font-medium mt-3 sm:mt-4">Active course completion ratings.</p>
             </div>
-
+ 
             {/* Card 2: Earned Certificates */}
             <div 
               onClick={() => onNavigateChange('tasks')}
-              className="group bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 p-5 sm:p-7 md:p-9 rounded-2xl shadow-sm hover:shadow-md cursor-pointer hover:border-brand-yellow dark:hover:border-brand-yellow transition-all duration-300 relative overflow-hidden"
+              className="group premium-card p-5 sm:p-7 md:p-9 cursor-pointer relative overflow-hidden flex flex-col justify-between"
             >
               <div className="flex items-center justify-between text-zinc-400 mb-3 sm:mb-4">
-                <span className="text-[9px] xs:text-[11px] sm:text-xs md:text-sm uppercase font-mono tracking-widest text-zinc-500 dark:text-zinc-450 font-semibold">Certificates</span>
+                <span className="text-[9px] xs:text-[11px] sm:text-xs md:text-sm uppercase font-mono tracking-widest text-zinc-400 font-bold">Certificates</span>
                 <div className="flex items-center gap-1 sm:gap-1.5">
-                  <Award className="text-brand-yellow w-4 h-4 sm:w-[17px] sm:h-[17px]" />
-                  <ArrowUpRight className="text-zinc-300 group-hover:text-brand-black dark:group-hover:text-white transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <Award className="text-[#FFCC00] w-4 h-4 sm:w-[17px] sm:h-[17px]" />
+                  <ArrowUpRight className="text-zinc-450 group-hover:text-zinc-950 dark:group-hover:text-white transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150 w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
               </div>
-              <div className="text-xl xs:text-2xl sm:text-3.5xl md:text-4.5xl lg:text-5xl font-light text-brand-black dark:text-white tracking-tight flex items-baseline gap-2 leading-tight">
-                <span className="font-extrabold">{certs.length}</span>
-                <span className="text-[9px] xs:text-[10px] sm:text-xs md:text-sm text-brand-yellow font-mono font-bold uppercase tracking-wider">Credentials</span>
+              <div className="text-xl xs:text-2xl sm:text-3.5xl md:text-4.5xl lg:text-5xl font-extrabold text-zinc-950 dark:text-white tracking-tight flex items-baseline gap-2 leading-tight">
+                <span>{certs.length}</span>
+                <span className="text-[9px] xs:text-[10px] sm:text-xs md:text-sm text-[#FFCC00] font-mono font-bold uppercase tracking-wider">Credentials</span>
               </div>
-              <div className="w-full h-[1px] bg-zinc-150 dark:bg-zinc-800 mt-4 sm:mt-5" />
-              <p className="text-[9.5px]/[14px] xs:text-[11px]/[16px] sm:text-xs md:text-sm text-zinc-500 dark:text-zinc-400 font-light mt-3 sm:mt-4">Jointly verified with Sabicrest Syndicate.</p>
+              <div className="w-full h-[1px] bg-zinc-100 dark:bg-zinc-800 mt-4 sm:mt-5" />
+              <p className="text-[9.5px]/[14px] xs:text-[11px]/[16px] sm:text-xs md:text-sm text-zinc-400 dark:text-zinc-400 font-medium mt-3 sm:mt-4">Jointly verified with Sabicrest Syndicate.</p>
             </div>
-
+ 
             {/* Card 3: Current Topic */}
             <div 
               onClick={() => onNavigateChange('courses')}
-              className="group bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 p-5 sm:p-7 md:p-9 rounded-2xl shadow-sm hover:shadow-md cursor-pointer hover:border-brand-yellow dark:hover:border-brand-yellow transition-all duration-300 relative overflow-hidden"
+              className="group premium-card p-5 sm:p-7 md:p-9 cursor-pointer relative overflow-hidden flex flex-col justify-between"
             >
               <div className="flex items-center justify-between text-zinc-400 mb-3 sm:mb-4">
-                <span className="text-[9px] xs:text-[11px] sm:text-xs md:text-sm uppercase font-mono tracking-widest text-zinc-500 dark:text-zinc-450 font-semibold">Active Topic</span>
+                <span className="text-[9px] xs:text-[11px] sm:text-xs md:text-sm uppercase font-mono tracking-widest text-zinc-400 font-bold">Active Topic</span>
                 <div className="flex items-center gap-1 sm:gap-1.5">
-                  <BookOpen className="text-brand-yellow w-4 h-4 sm:w-[17px] sm:h-[17px]" />
-                  <ArrowUpRight className="text-zinc-300 group-hover:text-brand-black dark:group-hover:text-white transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <BookOpen className="text-[#FFCC00] w-4 h-4 sm:w-[17px] sm:h-[17px]" />
+                  <ArrowUpRight className="text-zinc-450 group-hover:text-zinc-950 dark:group-hover:text-white transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150 w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
               </div>
-              <div className="text-sm xs:text-base sm:text-xl md:text-2xl lg:text-[26px] font-semibold tracking-tight text-brand-black dark:text-white truncate leading-tight">
+              <div className="text-sm xs:text-base sm:text-xl md:text-2xl lg:text-[26px] font-extrabold tracking-tight text-zinc-950 dark:text-white truncate leading-tight">
                 {activeTopicTitle}
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2 mt-3 sm:mt-4">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[9px] xs:text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-400 font-bold font-mono uppercase tracking-wider">{activeTopicStatus}</span>
+                <div className="w-2 h-2 rounded-full bg-[#FFCC00] animate-pulse" />
+                <span className="text-[9px] xs:text-[10px] sm:text-xs text-zinc-800 dark:text-[#FFCC00] font-extrabold font-mono uppercase tracking-wider">{activeTopicStatus}</span>
               </div>
-              <p className="text-[9.5px]/[14px] xs:text-[11px]/[16px] sm:text-xs md:text-sm text-zinc-500 dark:text-zinc-400 font-light mt-2 sm:mt-3">{activeTopicDesc}</p>
+              <p className="text-[9.5px]/[14px] xs:text-[11px]/[16px] sm:text-xs md:text-sm text-zinc-400 dark:text-zinc-400 font-medium mt-2 sm:mt-3">{activeTopicDesc}</p>
             </div>
-
+ 
             {/* Card 4: Grade History */}
             <div 
               onClick={() => onNavigateChange('tasks')}
-              className="group bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 p-5 sm:p-7 md:p-9 rounded-2xl shadow-sm hover:shadow-md cursor-pointer hover:border-brand-yellow dark:hover:border-brand-yellow transition-all duration-300 relative overflow-hidden"
+              className="group premium-card p-5 sm:p-7 md:p-9 cursor-pointer relative overflow-hidden flex flex-col justify-between"
             >
               <div className="flex items-center justify-between text-zinc-400 mb-3">
-                <span className="text-[9px] xs:text-[11px] sm:text-xs md:text-sm uppercase font-mono tracking-widest text-zinc-550 dark:text-zinc-450 font-semibold">Grade Log</span>
+                <span className="text-[9px] xs:text-[11px] sm:text-xs md:text-sm uppercase font-mono tracking-widest text-zinc-400 font-bold">Grade Log</span>
                 <div className="flex items-center gap-1 sm:gap-1.5">
-                  <span className="text-[9px] xs:text-[10px] sm:text-xs font-mono text-emerald-600 dark:text-emerald-400 font-bold truncate max-w-[60px] xs:max-w-none">Live Trend</span>
-                  <ArrowUpRight className="text-zinc-300 group-hover:text-brand-black dark:group-hover:text-white transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="text-[9px] xs:text-[10px] sm:text-xs font-mono text-[#FFCC00] font-bold truncate max-w-[60px] xs:max-w-none">Live Trend</span>
+                  <ArrowUpRight className="text-zinc-455 group-hover:text-zinc-950 dark:group-hover:text-white transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150 w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
               </div>
               
@@ -1262,7 +1264,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                     <svg className="w-full h-full p-1.5" viewBox="0 0 100 60">
                       <polyline
                         fill="none"
-                        stroke="#FBBF1E"
+                        stroke="#FFCC00"
                         strokeWidth="2"
                         points={linePoints.join(' ')}
                         strokeLinecap="round"
@@ -1270,16 +1272,16 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                       />
                     </svg>
                   ) : (
-                    <span className="text-[9px] sm:text-xs text-zinc-400 italic">No grade data</span>
+                    <span className="text-[9px] sm:text-xs text-zinc-405 italic">No grade data</span>
                   )}
                 </div>
                 <div className="text-right shrink-0">
                   <span className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-zinc-200">A+</span>
-                  <p className="text-[9px] xs:text-[10px] sm:text-xs font-mono text-zinc-450">Class Avg</p>
+                  <p className="text-[9px] xs:text-[10px] sm:text-xs font-mono text-zinc-450 font-bold">Class Avg</p>
                 </div>
               </div>
               
-              <p className="text-[9.5px]/[14px] xs:text-[11px]/[16px] sm:text-xs md:text-sm text-zinc-500 dark:text-zinc-400 font-light mt-3 sm:mt-4">Real-time performance scores ledger.</p>
+              <p className="text-[9.5px]/[14px] xs:text-[11px]/[16px] sm:text-xs md:text-sm text-zinc-405 dark:text-zinc-400 font-medium mt-3 sm:mt-4">Real-time performance scores ledger.</p>
             </div>
 
           </div>
@@ -1358,7 +1360,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                   const completionPercent = hasAssignments ? Math.round((gradedTasks.length / courseTasks.length) * 100) : 0;
                   
                   return (
-                    <div key={course.id} className="border border-zinc-150 dark:border-zinc-800/80 rounded-2xl p-4 bg-white dark:bg-zinc-900/50 flex items-center justify-between gap-4">
+                    <div key={course.id} className="premium-card p-4 flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3 overflow-hidden">
                         <div className="w-10 h-8 rounded-lg overflow-hidden shrink-0 border border-zinc-100 dark:border-zinc-850">
                           <img 

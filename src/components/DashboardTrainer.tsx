@@ -933,56 +933,56 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
               document.getElementById('trainer-main-grid')?.scrollIntoView({ behavior: 'smooth' });
             }, 50);
           }}
-          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+          className="group premium-card p-5 cursor-pointer relative overflow-hidden flex flex-col justify-between"
         >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
-            <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Awaiting Evaluation</span>
+            <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Awaiting Evaluation</span>
             <div className="flex items-center gap-1.5">
-              <ClipboardCheck size={16} className="text-brand-yellow" />
-              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
+              <ClipboardCheck size={16} className="text-[#FFCC00]" />
+              <ArrowUpRight size={13} className="text-zinc-450 group-hover:text-zinc-950 dark:group-hover:text-white transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
             </div>
           </div>
-          <div className="text-3xl font-light text-brand-black tracking-tight flex items-baseline gap-1.5">
+          <div className="text-3xl font-extrabold text-zinc-950 dark:text-white tracking-tight flex items-baseline gap-1.5">
             <span>{pendingGradingCount}</span>
-            <span className="text-xs text-brand-gray font-light uppercase">submissions</span>
+            <span className="text-xs text-zinc-450 font-bold uppercase">submissions</span>
           </div>
-          <p className="text-[10px] font-light text-brand-gray mt-2">Active student submissions currently waiting for review.</p>
+          <p className="text-[10px] font-medium text-zinc-400 dark:text-zinc-400 mt-2">Active student submissions currently waiting for review.</p>
         </div>
 
         <div 
           onClick={() => setShowGradedListModal(true)}
-          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+          className="group premium-card p-5 cursor-pointer relative overflow-hidden flex flex-col justify-between"
         >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
-            <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">Assignments Graded</span>
+            <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Assignments Graded</span>
             <div className="flex items-center gap-1.5">
-              <CheckCircle2 size={16} className="text-brand-yellow" />
-              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
+              <CheckCircle2 size={16} className="text-[#FFCC00]" />
+              <ArrowUpRight size={13} className="text-zinc-450 group-hover:text-zinc-950 dark:group-hover:text-white transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
             </div>
           </div>
-          <div className="text-3xl font-light text-brand-black tracking-tight cursor-pointer">
+          <div className="text-3xl font-extrabold text-zinc-950 dark:text-white tracking-tight cursor-pointer">
             <span>{gradedCount}</span>
-            <span className="text-xs text-emerald-600 font-mono ml-2 font-light">Completed</span>
+            <span className="text-xs text-[#FFCC00] font-mono ml-2 font-bold uppercase">Completed</span>
           </div>
-          <p className="text-[10px] font-light text-brand-gray mt-2">Grading records are registered and saved securely.</p>
+          <p className="text-[10px] font-medium text-zinc-400 dark:text-zinc-400 mt-2">Grading records are registered and saved securely.</p>
         </div>
 
         <div 
           onClick={() => setShowStudentsListModal(true)}
-          className="group bg-white border border-zinc-100 p-5 rounded-2xl shadow-xs cursor-pointer hover:border-brand-yellow hover:scale-[1.01] hover:shadow-xs transition-all duration-150"
+          className="group premium-card p-5 cursor-pointer relative overflow-hidden flex flex-col justify-between"
         >
           <div className="flex items-center justify-between text-zinc-400 mb-3">
-            <span className="text-[10px] uppercase font-semibold text-brand-gray tracking-wider">My Students</span>
+            <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">My Students</span>
             <div className="flex items-center gap-1.5">
-              <FileText size={16} className="text-brand-yellow" />
-              <ArrowUpRight size={13} className="text-zinc-300 group-hover:text-brand-black transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
+              <FileText size={16} className="text-[#FFCC00]" />
+              <ArrowUpRight size={13} className="text-zinc-450 group-hover:text-zinc-950 dark:group-hover:text-white transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-150" />
             </div>
           </div>
-          <div className="text-3xl font-light text-brand-black tracking-tight">
+          <div className="text-3xl font-extrabold text-zinc-950 dark:text-white tracking-tight">
               <span>{coachedStudentsCount}</span>
-              <span className="text-xs text-indigo-600 ml-2 font-light">Students</span>
+              <span className="text-xs text-[#FFCC00] ml-2 font-bold uppercase">Students</span>
             </div>
-            <p className="text-[10px] font-light text-brand-gray mt-2">Connecting students and trainers together for learning and sharing work.</p>
+            <p className="text-[10px] font-medium text-zinc-400 dark:text-zinc-400 mt-2">Connecting students and trainers together for learning and sharing work.</p>
         </div>
 
       </div>
