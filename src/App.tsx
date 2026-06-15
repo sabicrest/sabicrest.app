@@ -318,7 +318,7 @@ export default function App() {
   };
 
   return (
-    <div id="app-viewport-enclosure" className="min-h-screen bg-gradient-to-b from-[#F7F9FC] to-[#E2EEFF] pb-24 lg:pb-14 font-sans text-zinc-950 relative">
+    <div id="app-viewport-enclosure" className="min-h-screen bg-gradient-to-b from-[#FFFFFF] to-[#E2EEFF] pb-24 lg:pb-14 font-sans text-zinc-950 relative">
       
       {/* Top Header layout */}
       <Navigation
@@ -338,7 +338,7 @@ export default function App() {
       {(currentUser.role === 'student' || currentUser.role === 'trainer') && (
         <div 
           id="sabicrest-mobile-bottom-nav" 
-          className="lg:hidden fixed bottom-8 left-8 right-8 z-50 h-[76px] bg-white border border-zinc-200/40 shadow-[0_25px_60px_rgba(0,0,0,0.07)] rounded-[38px] flex items-center justify-around px-4 transition-all"
+          className="lg:hidden fixed bottom-8 left-8 right-8 z-50 h-[76px] bg-white border border-zinc-250/20 shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[38px] flex items-center justify-around px-4 transition-all"
         >
           {(currentUser.role === 'student'
             ? [
@@ -372,42 +372,36 @@ export default function App() {
                     }
                   }
                 }}
-                className="flex-1 flex items-center justify-center h-full py-1 relative cursor-pointer"
+                className="flex-1 flex items-center justify-center h-full relative cursor-pointer"
               >
                 <div 
-                  className={`flex flex-col items-center justify-center py-1 px-3 rounded-full transition-all duration-300 w-full max-w-[76px] h-[85%] ${
+                  className={`flex flex-col items-center justify-center transition-all duration-300 ${
                     isActive 
-                      ? 'bg-[#FFCC00] text-zinc-950 font-bold scale-105 active-nav-item' 
-                      : 'text-zinc-400 hover:text-zinc-700 dark:text-zinc-350 dark:hover:text-white inactive-nav-item'
+                      ? 'bg-[#FFCC00] text-zinc-950 font-bold scale-105 rounded-full w-12 h-12 shadow-[0_4px_12px_rgba(255,204,0,0.25)]' 
+                      : 'text-zinc-400 hover:text-zinc-700'
                   }`}
                 >
                   <div className="relative">
                     <Icon 
-                      size={24} 
-                      strokeWidth={1.3}
-                      className={`transition-colors ${
-                        isActive 
-                          ? 'text-black' 
-                          : 'text-zinc-500'
-                      }`} 
+                      size={20} 
+                      strokeWidth={isActive ? 1.8 : 1.3}
+                      className={isActive ? 'text-zinc-950' : 'text-zinc-500'} 
                     />
                     {item.badge !== undefined && item.badge > 0 && (
-                      <span className={`absolute -top-1.5 -right-2.5 min-w-[15px] h-3.5 px-1 text-[8px] font-extrabold rounded-full flex items-center justify-center shadow-xs border ${
+                      <span className={`absolute -top-1.5 -right-2.5 min-w-[14px] h-3.5 px-1 text-[8px] font-extrabold rounded-full flex items-center justify-center shadow-2xs border ${
                         isActive 
-                          ? 'bg-black text-brand-yellow border-brand-yellow/30' 
-                          : 'bg-brand-yellow text-brand-black border-transparent'
+                          ? 'bg-zinc-950 text-[#FFCC00] border-zinc-950' 
+                          : 'bg-[#FFCC00] text-zinc-950 border-transparent'
                       }`}>
                         {item.badge}
                       </span>
                     )}
                   </div>
-                  <span 
-                    className={`text-[9px] tracking-tight font-medium mt-0.5 transition-colors leading-none select-none ${
-                      isActive ? 'text-black font-bold' : 'text-zinc-500 font-normal'
-                    }`}
-                  >
-                    {item.label}
-                  </span>
+                  {!isActive && (
+                    <span className="text-[8.5px] tracking-tight font-medium mt-0.5 transition-colors leading-none select-none text-zinc-500">
+                      {item.label}
+                    </span>
+                  )}
                 </div>
               </button>
             );
