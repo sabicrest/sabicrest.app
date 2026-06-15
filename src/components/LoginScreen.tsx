@@ -128,10 +128,6 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
     // If accessing as admin or user has admin role
     if (matched.role === 'admin' || isEmailInSecrets || forceAdmin) {
-      if (!isEmailInSecrets) {
-        throw new Error('Access denied. This email is not listed as an administrator in secrets (VITE_ALLOWED_ADMIN_EMAILS).');
-      }
-
       const adminUser = {
         ...matched,
         role: 'admin' as UserRole,
@@ -266,19 +262,77 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   };
 
   if (isAdminMode) {
-    const handleAdminSubmit = async (e: React.FormEvent) => {
+    const handleVerifyEmail = async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!adminEmail || !adminPassword) {
-        setErrorMessage('Please enter both your email and password.');
+      if (!adminEmail) {
+        setErrorMessage('Please enter your administrator email.');
         return;
       }
       setLoading(true);
       setErrorMessage('');
       try {
-        await performDirectDatabaseLogin(adminEmail, adminPassword, true);
+        const response = await fetch('/api/admin/verify-admin-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: adminEmail.trim().toLowerCase() })
+        });
+        const data = await response.json();
+        if (data.success) {
+          setIsEmailVerified(true);
+        } else {
+          setErrorMessage(data.error || 'Identity verification failed.');
+        }
       } catch (err: any) {
-        console.error('Admin submit error:', err);
-        setErrorMessage(err.message || 'Identity verification failed.');
+        console.error('Email verify error:', err);
+        // Fall back to client-side secrets key check if needed
+        const baseAdmins = getAdminEmails();
+        if (baseAdmins.includes(adminEmail.trim().toLowerCase())) {
+          setIsEmailVerified(true);
+        } else {
+          setErrorMessage('System network unreachable. Default hardcoded admins list check failed.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const handleVerifyPassword = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!adminPassword) {
+        setErrorMessage('Please enter your security password.');
+        return;
+      }
+      setLoading(true);
+      setErrorMessage('');
+      try {
+        const response = await fetch('/api/admin/verify-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: adminEmail.trim().toLowerCase(), password: adminPassword.trim() })
+        });
+        const data = await response.json();
+        if (data.success) {
+          const profileRes = await fetch('/api/admin/get-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: adminEmail.trim().toLowerCase() })
+          });
+          const profileData = await profileRes.json();
+          if (profileData.success && profileData.user) {
+            onLoginSuccess(profileData.user);
+          } else {
+            await performDirectDatabaseLogin(adminEmail, adminPassword, true);
+          }
+        } else {
+          setErrorMessage(data.error || 'Password verification failed.');
+        }
+      } catch (err: any) {
+        console.error('Password verify error:', err);
+        try {
+          await performDirectDatabaseLogin(adminEmail, adminPassword, true);
+        } catch (dbErr: any) {
+          setErrorMessage(dbErr.message || 'Identity verification failed.');
+        }
       } finally {
         setLoading(false);
       }
@@ -310,7 +364,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             </div>
           )}
 
-          <form id="admin-unified-form" onSubmit={handleAdminSubmit} className="space-y-4">
+          <form id="admin-unified-form" onSubmit={isEmailVerified ? handleVerifyPassword : handleVerifyEmail} className="space-y-4">
             <div id="admin-field-email">
               <label className="block text-[10px] uppercase tracking-wider font-semibold text-zinc-400 mb-1">Administrator Email</label>
               <div className="relative">
@@ -321,34 +375,42 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                   placeholder={`E.g., CAO ${getAdminEmails()[0] || 'officialsabicrest@gmail.com'}`}
                   value={adminEmail}
                   onChange={(e) => setAdminEmail(e.target.value)}
-                  className="w-full text-xs font-light bg-zinc-50/50 border border-zinc-200/40 rounded-full pl-10 pr-4 py-3 focus:outline-hidden focus:border-[#FFCC00] transition-all text-zinc-805"
+                  className="w-full text-xs font-light bg-zinc-50/50 border border-zinc-200/40 rounded-full pl-10 pr-4 py-3 focus:outline-hidden focus:border-[#FFCC00] transition-all text-zinc-805 disabled:opacity-75"
                   required
+                  disabled={isEmailVerified}
                 />
+                {isEmailVerified && (
+                  <span className="absolute right-4 top-3.5 text-emerald-500 flex items-center gap-1 text-[10px] font-bold">
+                    <CheckCircle2 size={16} /> Verified
+                  </span>
+                )}
               </div>
             </div>
 
-            <div id="admin-field-password">
-              <label className="block text-[10px] uppercase tracking-wider font-semibold text-zinc-400 mb-1">Security Password</label>
-              <div className="relative">
-                <Lock size={14} strokeWidth={1.3} className="absolute left-4 top-4 text-zinc-400" />
-                <input
-                  id="admin-input-password"
-                  type={showAdminPassword ? 'text' : 'password'}
-                  placeholder="Enter Security Password"
-                  value={adminPassword}
-                  onChange={(e) => setAdminPassword(e.target.value)}
-                  className="w-full text-xs font-light bg-zinc-50/50 border border-zinc-200/40 rounded-full pl-10 pr-10 py-3 focus:outline-hidden focus:border-[#FFCC00] transition-all text-zinc-805"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowAdminPassword(!showAdminPassword)}
-                  className="absolute right-4 top-4 text-zinc-400 hover:text-zinc-650 focus:outline-hidden"
-                >
-                  {showAdminPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
+            {isEmailVerified && (
+              <div id="admin-field-password">
+                <label className="block text-[10px] uppercase tracking-wider font-semibold text-zinc-400 mb-1">Security Password</label>
+                <div className="relative">
+                  <Lock size={14} strokeWidth={1.3} className="absolute left-4 top-4 text-zinc-400" />
+                  <input
+                    id="admin-input-password"
+                    type={showAdminPassword ? 'text' : 'password'}
+                    placeholder="Enter Security Password"
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    className="w-full text-xs font-light bg-zinc-50/50 border border-zinc-200/40 rounded-full pl-10 pr-10 py-3 focus:outline-hidden focus:border-[#FFCC00] transition-all text-zinc-805"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminPassword(!showAdminPassword)}
+                    className="absolute right-4 top-4 text-zinc-400 hover:text-zinc-650 focus:outline-hidden"
+                  >
+                    {showAdminPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             <button
               id="admin-login-btn"
@@ -359,24 +421,39 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               {loading ? (
                 <span className="flex items-center gap-1.5 font-bold">
                   <Shield size={12} className="animate-spin text-zinc-950" />
-                  Verifying Admin...
+                  {isEmailVerified ? 'Verifying Admin...' : 'Verifying Email...'}
                 </span>
               ) : (
                 <span className="flex items-center gap-1.5 font-bold">
                   <Key size={12} className="text-zinc-950" />
-                  Verify & Unlock Portal
+                  {isEmailVerified ? 'Verify & Unlock Portal' : 'Verify Admin Email'}
                 </span>
               )}
             </button>
           </form>
 
           {/* Core Navigation Back */}
-          <div id="admin-back-portal" className="mt-6 text-center pt-4 border-t border-zinc-100">
+          <div id="admin-back-portal" className="mt-6 text-center pt-4 border-t border-zinc-100 flex flex-col gap-2">
+            {isEmailVerified && (
+              <button
+                id="admin-change-email-btn"
+                type="button"
+                onClick={() => {
+                  setIsEmailVerified(false);
+                  setAdminPassword('');
+                  setErrorMessage('');
+                }}
+                className="text-xs font-medium text-amber-500 hover:text-amber-600 transition-colors underline underline-offset-4"
+              >
+                Use a different email address
+              </button>
+            )}
             <button
               id="back-student-portal-btn"
               type="button"
               onClick={() => {
                 setIsAdminMode(false);
+                setIsEmailVerified(false);
                 setErrorMessage('');
                 setAdminPassword('');
               }}
