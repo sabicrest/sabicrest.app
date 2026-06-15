@@ -338,9 +338,9 @@ export default function App() {
       {currentUser && (currentUser.role === 'student' || currentUser.role === 'trainer' || currentUser.role === 'admin') && (
         <div 
           id="sabicrest-mobile-bottom-nav" 
-          className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-[430px] h-16 bg-white border border-zinc-200/50 shadow-[0_16px_40px_rgba(0,0,0,0.06)] rounded-full flex items-center px-2 transition-all"
+          className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-[460px] h-[80px] bg-white border border-zinc-200/50 shadow-[0_16px_40px_rgba(0,0,0,0.06)] rounded-full flex items-center px-2 transition-all"
         >
-          <div className="flex items-center w-full h-full overflow-x-auto scrollbar-none gap-3.5 px-3 py-1 scroll-smooth snap-x touch-pan-x select-none">
+          <div className="flex items-center w-full h-full overflow-x-auto scrollbar-none gap-2.5 px-2.5 py-1 scroll-smooth snap-x touch-pan-x select-none">
             {(currentUser.role === 'student'
               ? [
                   { id: 'dashboard', label: 'Space', icon: Home },
@@ -382,7 +382,7 @@ export default function App() {
                       }
                     }
                   }}
-                  className={`shrink-0 w-[52px] h-[52px] rounded-full flex flex-col items-center justify-center transition-all duration-200 snap-center cursor-pointer ${
+                  className={`shrink-0 w-[64px] h-[64px] rounded-full flex flex-col items-center justify-center transition-all duration-200 snap-center cursor-pointer ${
                     isActive 
                       ? 'bg-[#FFCC00] text-zinc-950 font-bold shadow-sm' 
                       : 'text-zinc-400 hover:text-zinc-650 hover:bg-zinc-50/50'
@@ -390,13 +390,13 @@ export default function App() {
                 >
                   <div className="relative flex items-center justify-center">
                     <Icon 
-                      size={16} 
+                      size={22} 
                       strokeWidth={isActive ? 1.8 : 1.3}
                       className={isActive ? 'text-zinc-950' : 'text-zinc-400'} 
                       fill="none"
                     />
                     {item.badge !== undefined && item.badge > 0 && (
-                      <span className={`absolute -top-1.5 -right-2.5 min-w-[13px] h-3 px-0.5 text-[7px] font-extrabold rounded-full flex items-center justify-center border font-sans leading-none ${
+                      <span className={`absolute -top-1.5 -right-3.5 min-w-[15px] h-4 px-1 text-[9px] font-extrabold rounded-full flex items-center justify-center border font-sans leading-none ${
                         isActive 
                           ? 'bg-zinc-950 text-[#FFCC00] border-zinc-950 shadow-xs' 
                           : 'bg-[#FFCC00] text-zinc-950 border-white'
@@ -405,7 +405,7 @@ export default function App() {
                       </span>
                     )}
                   </div>
-                  <span className={`text-[9px] font-sans tracking-tight mt-1 leading-none text-center select-none ${
+                  <span className={`text-[11px] font-sans tracking-tight mt-1 leading-none text-center select-none ${
                     isActive ? 'text-zinc-950 font-bold' : 'text-zinc-400 font-medium'
                   }`}>
                     {item.label}
