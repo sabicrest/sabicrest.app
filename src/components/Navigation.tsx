@@ -192,7 +192,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
             </div>
 
             {/* Desktop Navigation Links */}
-            <div className="hidden md:flex space-x-1">
+            <div className="hidden lg:flex space-x-1">
               {tabs.map(tab => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -221,7 +221,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
             {/* Functional Search Icon & Expandable Input Bar */}
             <div className="relative flex items-center">
               {showSearchInput ? (
-                <div className="hidden md:flex items-center gap-1.5 animate-in slide-in-from-right-3 duration-150">
+                <div className="hidden lg:flex items-center gap-1.5 animate-in slide-in-from-right-3 duration-150">
                   <input
                     type="text"
                     id="nav-search-bar-input"
@@ -252,7 +252,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
                 onClick={() => setShowSearchInput(!showSearchInput)}
                 className={`p-2 transition-all cursor-pointer rounded-xl ${
                   showSearchInput 
-                    ? 'text-brand-yellow bg-zinc-900 md:hidden' 
+                    ? 'text-brand-yellow bg-zinc-900 lg:hidden' 
                     : 'text-zinc-400 hover:text-brand-black hover:bg-zinc-50'
                 }`}
                 title={showSearchInput ? "Close Search" : "Search Current View"}
@@ -265,7 +265,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
             <button
               id="header-chats-trigger"
               onClick={() => setActiveTab('messaging')}
-              className={`hidden md:flex p-2 text-zinc-400 hover:text-brand-black hover:bg-zinc-50 rounded-xl transition-all relative cursor-pointer ${
+              className={`hidden lg:flex p-2 text-zinc-400 hover:text-brand-black hover:bg-zinc-50 rounded-xl transition-all relative cursor-pointer ${
                 activeTab === 'messaging' ? 'text-black bg-zinc-100' : ''
               }`}
               title="Open Secure Chats"
@@ -348,7 +348,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
             <button
               id="header-profile-icon"
               onClick={() => setActiveTab('profile')}
-              className={`hidden md:flex w-7 h-7 rounded-full overflow-hidden border transition-all cursor-pointer shrink-0 ${
+              className={`hidden lg:flex w-7 h-7 rounded-full overflow-hidden border transition-all cursor-pointer shrink-0 ${
                 activeTab === 'profile' ? 'border-brand-yellow ring-2 ring-brand-yellow/30' : 'border-zinc-200 hover:border-zinc-400'
               }`}
               title="Aesthetic Profile Settings"
@@ -445,7 +445,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
             <button
               id="logout-btn"
               onClick={() => setShowLogoutConfirm(true)}
-              className="hidden md:flex p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50/40 rounded-xl transition-all cursor-pointer items-center justify-center"
+              className="hidden lg:flex p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50/40 rounded-xl transition-all cursor-pointer items-center justify-center"
               title="End Secure Session"
             >
               <LogOut size={16} />
@@ -455,7 +455,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
             <button
               id="mobile-menu-trigger"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 md:hidden text-zinc-500 hover:text-brand-black rounded-xl transition-all cursor-pointer"
+              className="p-2 lg:hidden text-zinc-500 hover:text-brand-black rounded-xl transition-all cursor-pointer"
             >
               {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
@@ -474,7 +474,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileMenuOpen(false)}
-              className="md:hidden fixed inset-0 bg-zinc-950/20 backdrop-blur-xs z-45"
+              className="lg:hidden fixed inset-0 bg-zinc-950/20 backdrop-blur-xs z-45"
             />
             {/* Drawer layout */}
             <motion.div
@@ -482,7 +482,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-              className="md:hidden fixed inset-y-0 right-0 w-[320px] h-full bg-white shadow-[0_0_60px_rgba(0,0,0,0.03)] border-l border-zinc-100/50 flex flex-col justify-between p-10 z-55 overflow-y-auto rounded-l-[28px]"
+              className="lg:hidden fixed inset-y-0 right-0 w-[320px] h-full bg-white shadow-[0_0_60px_rgba(0,0,0,0.03)] border-l border-zinc-100/50 flex flex-col justify-between p-10 z-55 overflow-y-auto rounded-l-[28px]"
             >
               <div className="flex flex-col space-y-12">
                 {/* Drawer Header - minimalistic without clutter, with lots of negative space */}
@@ -651,7 +651,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
             animate={{ height: 'auto', opacity: 1, y: 0 }}
             exit={{ height: 0, opacity: 0, y: -20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 180 }}
-            className="md:hidden absolute top-[64px] left-0 right-0 bg-white/70 backdrop-blur-md border-b border-zinc-200/50 py-3.5 px-4 shadow-lg z-35 overflow-hidden"
+            className="lg:hidden absolute top-[64px] left-0 right-0 bg-white/70 backdrop-blur-md border-b border-zinc-200/50 py-3.5 px-4 shadow-lg z-35 overflow-hidden"
           >
             <div className="flex items-center gap-2 max-w-lg mx-auto">
               <div className="relative flex-1">
