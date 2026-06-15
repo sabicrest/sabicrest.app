@@ -344,76 +344,6 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
               )}
             </div>
 
-            {/* Clickable Header Profile Icon (desktop/tablet/mobile) */}
-            <button
-              id="header-profile-icon"
-              onClick={() => setActiveTab('profile')}
-              className={`hidden lg:flex w-7 h-7 rounded-full overflow-hidden border transition-all cursor-pointer shrink-0 ${
-                activeTab === 'profile' ? 'border-brand-yellow ring-2 ring-brand-yellow/30' : 'border-zinc-200 hover:border-zinc-400'
-              }`}
-              title="Aesthetic Profile Settings"
-            >
-              {currentUser.avatar ? (
-                <img 
-                  src={currentUser.avatar} 
-                  alt="Current workspace user" 
-                  className="w-full h-full object-cover" 
-                  referrerPolicy="no-referrer" 
-                />
-              ) : (
-                <div className="w-full h-full bg-brand-black text-white flex items-center justify-center text-[10px] font-bold font-mono">
-                  {currentUser.name.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </button>
-
-            {/* Interactive Theme Selector Dropdown */}
-            <div className="relative flex items-center" ref={themeContainerRef}>
-              <button
-                id="theme-menu-trigger"
-                onClick={() => setShowThemeDropdown(!showThemeDropdown)}
-                className="p-2 text-zinc-400 hover:text-brand-black hover:bg-zinc-50 rounded-xl transition-all relative cursor-pointer flex items-center justify-center"
-                title="Choose Theme Preset"
-              >
-                {themeMode === 'light' && <Sun size={17} />}
-                {themeMode === 'dark' && <Moon size={17} />}
-                {themeMode === 'system' && <Monitor size={17} />}
-              </button>
-              {showThemeDropdown && (
-                <div 
-                  id="theme-dropdown-box" 
-                  className="absolute right-0 top-11 w-36 bg-white border border-zinc-100 rounded-2xl shadow-lg py-1.5 z-50 animate-in face-in slide-in-from-top-2 duration-150"
-                >
-                  <div className="px-3 py-1 text-[9px] uppercase tracking-wider font-light text-brand-gray border-b border-zinc-50 mb-1 select-none">
-                    Theme Mode
-                  </div>
-                  {[
-                    { id: 'dark', label: 'Dark Style', icon: Moon },
-                    { id: 'light', label: 'Light Style', icon: Sun },
-                    { id: 'system', label: 'System Sync', icon: Monitor }
-                  ].map(item => {
-                    const ItemIcon = item.icon;
-                    const isSelected = themeMode === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => {
-                          handleThemeChange(item.id as any);
-                          setShowThemeDropdown(false);
-                        }}
-                        className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left transition-colors cursor-pointer font-light ${
-                          isSelected ? 'bg-zinc-50 font-medium text-brand-black' : 'text-zinc-650 hover:bg-zinc-50/50'
-                        }`}
-                      >
-                        <ItemIcon size={13} className={isSelected ? 'text-brand-yellow' : 'text-zinc-400'} />
-                        <span>{item.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
             {/* Profile Brief Badge clickable */}
             <div
               id="nav-profile-badge"
@@ -422,7 +352,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
               title="View Profile Settings"
             >
               {currentUser.avatar ? (
-                <img src={currentUser.avatar} alt="avatar" className="w-6 h-6 rounded-full object-cover border border-zinc-200 referrerPolicy='no-referrer'" />
+                <img src={currentUser.avatar} alt="avatar" className="w-6 h-6 rounded-full object-cover border border-zinc-200" referrerpolicy="no-referrer" />
               ) : (
                 <div className="w-6 h-6 rounded-full bg-brand-black text-white flex items-center justify-center text-[10px] font-bold">
                   {currentUser.name.charAt(0)}
@@ -451,147 +381,9 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
               <LogOut size={16} />
             </button>
 
-            {/* Mobile Menu Toggle Button */}
-            <button
-              id="mobile-menu-trigger"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 lg:hidden text-zinc-500 hover:text-brand-black rounded-xl transition-all cursor-pointer"
-            >
-              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
-            </button>
-
           </div>
         </div>
       </div>
-
-      {/* Pristine Full-Height Slide-Out Drawer with Generous Padding */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <>
-            {/* Backdrop blur with light background tint - active on mobile with low-opacity */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden fixed inset-0 bg-zinc-950/20 backdrop-blur-xs z-45"
-            />
-            {/* Drawer layout */}
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-              className="lg:hidden fixed inset-y-0 right-0 w-[80%] h-full bg-white shadow-[0_0_60px_rgba(0,0,0,0.03)] border-l border-zinc-100/50 flex flex-col justify-between p-10 z-55 overflow-y-auto rounded-l-[28px]"
-            >
-              <div className="flex flex-col space-y-12">
-                {/* Drawer Header - minimalistic without clutter, with lots of negative space */}
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono tracking-widest text-zinc-400 uppercase select-none">
-                    Navigation Menu
-                  </span>
-                  <button
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="p-1 px-1.5 hover:bg-zinc-100 rounded-full text-zinc-400 hover:text-zinc-650 transition-colors cursor-pointer"
-                  >
-                    <X size={16} strokeWidth={1.5} />
-                  </button>
-                </div>
-
-                {/* User Info Brief - visually clean and decluttered */}
-                <div className="flex items-center gap-4.5 py-2">
-                  {currentUser.avatar ? (
-                    <img src={currentUser.avatar} alt="avatar" className="w-12 h-12 rounded-full object-cover border border-zinc-100 shadow-2xs" />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-zinc-950 text-white flex items-center justify-center text-sm font-light select-none font-sans">
-                      {currentUser.name.charAt(0)}
-                    </div>
-                  )}
-                  <div className="text-left leading-tight">
-                    <div className="text-sm font-medium text-zinc-900 tracking-tight">{currentUser.name}</div>
-                    <div className="text-[9px] text-zinc-400 font-mono uppercase tracking-wider mt-1">{currentUser.role}</div>
-                  </div>
-                </div>
-
-                {/* Navigation Links with uniform thin wireframe icons */}
-                <div className="space-y-3 pt-4">
-                  {tabs.map(tab => {
-                    const Icon = tab.icon;
-                    const isActive = activeTab === tab.id;
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => {
-                          setActiveTab(tab.id);
-                          setMobileMenuOpen(false);
-                        }}
-                        className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-xs transition-all uppercase tracking-widest text-left font-sans cursor-pointer group relative ${
-                          isActive 
-                            ? 'bg-[#FFCC00]/8 text-zinc-900 font-medium' 
-                            : 'text-zinc-500 hover:text-zinc-950 hover:bg-zinc-50'
-                        }`}
-                      >
-                        <div className="flex items-center gap-4">
-                          <Icon 
-                            size={16} 
-                            strokeWidth={1.2} 
-                            className={`transition-colors ${isActive ? 'text-[#FFCC00]' : 'text-zinc-400 group-hover:text-zinc-800'}`} 
-                          />
-                          <span className="font-sans leading-none">{tab.label}</span>
-                        </div>
-                        
-                        {isActive && (
-                          <span className="w-1.5 h-1.5 bg-[#FFCC00] rounded-full absolute right-5 top-1/2 -translate-y-1/2" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Drawer Footer controls */}
-              <div className="space-y-8 pt-8">
-                {/* Theme Selector Settings */}
-                <div className="flex flex-col gap-3">
-                  <span className="text-[9px] uppercase tracking-wider font-semibold text-zinc-400 select-none">Appearance</span>
-                  <div className="grid grid-cols-3 gap-1 bg-zinc-50/80 p-0.5 rounded-full border border-zinc-100/50">
-                    {[
-                      { id: 'dark', label: 'Dark', icon: Moon },
-                      { id: 'light', label: 'Light', icon: Sun },
-                      { id: 'system', label: 'System', icon: Monitor }
-                    ].map(item => {
-                      const ItemIcon = item.icon;
-                      const isSelected = themeMode === item.id;
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={() => handleThemeChange(item.id as any)}
-                          className={`flex items-center justify-center gap-1 py-2 px-2.5 rounded-full text-[9px] font-light transition-all cursor-pointer ${
-                            isSelected ? 'bg-zinc-950 text-white font-medium shadow-xs' : 'text-zinc-400 hover:text-zinc-800'
-                          }`}
-                        >
-                          <ItemIcon size={12} strokeWidth={1.3} className={isSelected ? 'text-[#FFCC00]' : 'text-zinc-400'} />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    setShowLogoutConfirm(true);
-                  }}
-                  className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl text-[10px] font-bold uppercase tracking-wider transition-all text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 border border-zinc-100 cursor-pointer"
-                >
-                  <LogOut size={13} strokeWidth={1.3} className="text-zinc-400" />
-                  <span>Dismiss Session</span>
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
 
       {/* Logout Confirmation popover overlay modal */}
       {showLogoutConfirm && (

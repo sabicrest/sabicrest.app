@@ -28,6 +28,15 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   font-family: var(--font-display) !important;
 }
 
+/* Hide scrollbars but keep functionality */
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
 /* Dark Mode Overrides */
 html.dark {
   color-scheme: dark;
