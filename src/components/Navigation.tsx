@@ -482,7 +482,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-              className="lg:hidden fixed inset-y-0 right-0 w-[320px] h-full bg-white shadow-[0_0_60px_rgba(0,0,0,0.03)] border-l border-zinc-100/50 flex flex-col justify-between p-10 z-55 overflow-y-auto rounded-l-[28px]"
+              className="lg:hidden fixed inset-y-0 right-0 w-[80%] h-full bg-white shadow-[0_0_60px_rgba(0,0,0,0.03)] border-l border-zinc-100/50 flex flex-col justify-between p-10 z-55 overflow-y-auto rounded-l-[28px]"
             >
               <div className="flex flex-col space-y-12">
                 {/* Drawer Header - minimalistic without clutter, with lots of negative space */}
