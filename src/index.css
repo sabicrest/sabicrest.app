@@ -461,62 +461,43 @@ html.dark #live-updates-inner-card .text-zinc-400 * {
 /* --- PREMIUM MINIMAlIST SEAMLESS SYSTEM --- */
 .premium-card {
   background-color: #FFFFFF !important;
-  border: 1px solid rgba(0, 0, 0, 0.035) !important;
-  border-radius: 24px !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.012) !important;
+  border: 1px solid rgba(0, 0, 0, 0.03) !important;
+  border-radius: 28px !important;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.012) !important;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .premium-card:hover {
   transform: translateY(-2px) !important;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.018) !important;
-  border-color: rgba(255, 204, 0, 0.45) !important;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.025) !important;
+  border-color: rgba(255, 204, 0, 0.4) !important;
 }
 
 html.dark .premium-card {
   background-color: #FFFFFF !important;
-  border: 1px solid rgba(0, 0, 0, 0.035) !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.012) !important;
-  border-radius: 24px !important;
+  border: 1px solid rgba(0, 0, 0, 0.03) !important;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.012) !important;
 }
 
 html.dark .premium-card:hover {
-  border-color: rgba(255, 204, 0, 0.45) !important;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.018) !important;
+  border-color: rgba(255, 204, 0, 0.4) !important;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.025) !important;
 }
 
-/* Base font family force matching default to Manrope */
+/* Base font family force matching default */
 * {
-  font-family: 'Manrope', system-ui, sans-serif !important;
-}
-
-/* On mobile, format all primary H1 headers to look bold and authoritative with tight letter-spacing and compact line height, avoiding oversized text styling. */
-@media (max-width: 1023px) {
-  h1, 
-  [id*="hero-banner"] h1,
-  [class*="font-heading"],
-  .text-2xl, 
-  .text-3xl, 
-  .text-4xl, 
-  [class*="text-2xl"], 
-  [class*="text-3xl"], 
-  [class*="text-4xl"] {
-    font-size: 1.35rem !important; /* avoid oversized text styling */
-    font-weight: 800 !important; /* bold and authoritative */
-    letter-spacing: -0.04em !important; /* tight letter-spacing */
-    line-height: 1.15 !important; /* compact line height */
-  }
+  font-family: 'Manrope', sans-serif !important;
 }
 
 /* Specific class names for custom inputs with large pill borders */
 .premium-input {
-  border-radius: 30px !important;
+  border-radius: 9999px !important;
   padding-left: 1.25rem !important;
   padding-right: 1.25rem !important;
   padding-top: 0.75rem !important;
   padding-bottom: 0.75rem !important;
   border: 1px solid rgba(0, 0, 0, 0.06) !important;
-  background-color: rgba(255, 255, 255, 0.8) !important;
+  background-color: rgba(255, 255, 255, 0.4) !important;
   backdrop-filter: blur(4px) !important;
   font-size: 0.75rem !important;
   color: #0c0a09 !important;
@@ -527,22 +508,22 @@ html.dark .premium-card:hover {
 .premium-input:focus {
   border-color: #FFCC00 !important;
   box-shadow: 0 0 0 2px rgba(255, 204, 0, 0.12) !important;
-  background-color: rgba(255, 255, 255, 0.95) !important;
+  background-color: rgba(255, 255, 255, 0.8) !important;
 }
 
 html.dark .premium-input {
-  border: 1px solid rgba(0, 0, 0, 0.06) !important;
-  background-color: rgba(255, 255, 255, 0.8) !important;
-  color: #0c0a09 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background-color: rgba(10, 10, 11, 0.4) !important;
+  color: #ffffff !important;
 }
 
 html.dark .premium-input:focus {
-  background-color: rgba(255, 255, 255, 0.95) !important;
+  background-color: rgba(10, 10, 11, 0.8) !important;
 }
 
-/* Bold buttons styled with absolute golden custom colors and massive 30px curves */
+/* Bold buttons styled with absolute golden custom colors */
 .premium-btn-primary {
-  border-radius: 30px !important;
+  border-radius: 9999px !important;
   background-color: #FFCC00 !important;
   border: 1px solid #FFCC00 !important;
   color: #0c0a09 !important;
@@ -564,7 +545,7 @@ html.dark .premium-input:focus {
 }
 
 .premium-btn-secondary {
-  border-radius: 30px !important;
+  border-radius: 9999px !important;
   background-color: transparent !important;
   border: 1px solid rgba(0, 0, 0, 0.06) !important;
   color: #4b5563 !important;
@@ -584,121 +565,15 @@ html.dark .premium-input:focus {
 }
 
 html.dark .premium-btn-secondary {
-  border: 1px solid rgba(0, 0, 0, 0.06) !important;
-  color: #4b5563 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #a1a1aa !important;
 }
 
 html.dark .premium-btn-secondary:hover {
-  background-color: rgba(0, 0, 0, 0.02) !important;
-  color: #0c0a09 !important;
-  border-color: rgba(0, 0, 0, 0.12) !important;
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
 }
-
-/* Convert text input areas, category selectors, and primary buttons into distinct pill shapes with massive 30px rounded edges. */
-input[type="text"],
-input[type="search"],
-input[type="email"],
-input[type="password"],
-input[type="tel"],
-textarea,
-select,
-form input,
-#login-inner-workspace input,
-#student-certification-hub button,
-#dashboard-search-bar,
-#conversation-search-input,
-#chat-typed-msg,
-#admin-metrics-row button,
-[class*="category-selector"],
-[id*="category"],
-[id*="selector"],
-button[class*="bg-[#FFCC00]"],
-button[class*="bg-brand-yellow"],
-[class*="btn-"],
-/* Unselected items desaturated gray indicators */
-.inactive-nav-item,
-.text-zinc-400,
-.text-zinc-500 {
-  border-radius: 30px !important;
-}
-
-/* Eliminate heavy boxes, solid card backgrounds, and thick borders.
-   Instead, enclose sections within spacious floating containers featuring smooth 24px rounded corners and barely-visible micro-shadows. */
-.bg-white,
-[class*="bg-white"],
-[className*="bg-white"],
-.bg-zinc-50,
-[class*="bg-zinc-50"],
-.border,
-[class*="border-zinc-"],
-[class*="border-gray-"],
-#student-certification-hub,
-#earned-certificates-section,
-#course-offering-catalog,
-#suspended-security-panel > div,
-#student-bento-row > div,
-#trainer-stats-row > div,
-#admin-metrics-row > div,
-#about-the-trainer-panel,
-#chat-sidebar,
-#chat-stream-panel,
-#conversation-list-container,
-#student-hero-banner,
-#admin-hero-banner,
-#trainer-hero-banner {
-  background-color: #FFFFFF !important;
-  border: 1px solid rgba(0, 0, 0, 0.035) !important;
-  border-radius: 24px !important;
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.012) !important;
-}
-
-/* Solid white background for overlays, maintaining absolute clean light look */
-.bg-white\/95,
-.bg-white\/70,
-#sabicrest-nav,
-#sabicrest-unauth-frame {
-  background-color: #FFFFFF !important;
-}
-
-/* Desaturate unselected text elements into desaturated gray */
-.text-zinc-300,
-.text-zinc-400,
-.text-zinc-500,
-.text-zinc-600,
-.text-zinc-650 {
-  color: #71717A !important;
-}
-
-/* Restore bold authoritative look to titles in clean charcoal */
-.text-zinc-950,
-.text-zinc-900,
-.text-zinc-800,
-.text-zinc-850 {
-  color: #0F0F10 !important;
-}
-
-/* Apply brand yellow strictly as high-contrast accent for essential active indicators */
-.text-[#FFCC00],
-.text-brand-yellow,
-.text-yellow-500,
-.text-amber-500 {
-  color: #E5B800 !important;
-}
-
-/* Replace all icons with thin-line, minimalist outline styles with zero solid color fills. */
-svg.lucide,
-.lucide,
-svg,
-svg line,
-svg path,
-svg circle,
-svg rect,
-svg polyline,
-svg polygon {
-  stroke-width: 1.15 !important; /* Beautiful thin line */
-  fill: none !important; /* zero solid color fill */
-}
-
 
 
 
