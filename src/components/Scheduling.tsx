@@ -104,13 +104,12 @@ export default function Scheduling({ currentUser }: SchedulingProps) {
     <div id="scheduling-root-container" className="py-6 max-w-7xl mx-auto px-4 select-none">
       
       {/* Header layout */}
-      <div id="scheduler-header" className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-zinc-100 pb-6 mb-8 gap-4">
-        <div id="scheduler-headline">
-          <h2 className="text-2xl font-light tracking-tight text-brand-black flex items-center gap-2">
-            <Calendar className="text-brand-yellow font-normal" size={22} />
-            Built-In <span className="font-semibold">Scheduling Hub</span>
+      <div id="scheduler-header" className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-zinc-150 dark:border-zinc-800 pb-5">
+        <div className="flex-1">
+          <h2 className="text-2xl font-semibold tracking-tight text-brand-black dark:text-white leading-tight font-sans">
+            Schedules
           </h2>
-          <p className="text-xs font-light tracking-wide text-brand-gray uppercase mt-1">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-1 max-w-2xl leading-relaxed">
             Secure video conferencing slots, office hours, and collaborative task reviews
           </p>
         </div>

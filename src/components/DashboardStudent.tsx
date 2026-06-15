@@ -1331,12 +1331,12 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
       {/* STANDALONE TASKS/EVALUATION PAGE */}
       {activeTab === 'tasks' && (
         <div id="student-main-content-standalone-tasks" className="space-y-6 animate-in fade-in duration-200">
-          <div className="mb-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4 border-b border-zinc-100 dark:border-zinc-800/60 pb-5">
-            <div>
-              <h2 className="text-2xl font-light tracking-tight text-brand-black dark:text-white leading-tight">
-                Tasks & <span className="font-semibold text-brand-yellow">Assignments</span>
+          <div className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-zinc-150 dark:border-zinc-800 pb-5">
+            <div className="flex-1">
+              <h2 className="text-2xl font-semibold tracking-tight text-brand-black dark:text-white leading-tight font-sans">
+                Tasks
               </h2>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-1">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-1 max-w-2xl leading-relaxed">
                 See and follow up on tasks and assignments given to you by your past and current trainers.
               </p>
             </div>

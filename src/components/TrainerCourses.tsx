@@ -366,41 +366,38 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
     <div id="trainer-courses-viewport" className="py-6 max-w-7xl mx-auto px-4 select-none font-sans space-y-6">
       
       {/* Upper Dashboard Banner - Mobile-First */}
-      <div className="flex flex-col gap-4 border-b border-zinc-100 dark:border-zinc-900 pb-5">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-light tracking-tight text-neutral-900 dark:text-zinc-50 flex items-center gap-2">
-              <BookOpen className="text-brand-yellow shrink-0" size={24} />
-              My <span className="font-semibold">Courses Hub</span>
-            </h1>
-            <p className="text-[11px] text-zinc-400 uppercase tracking-widest mt-1">
-              Curriculum building & verification control workspace
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowAgreementModal(true)}
-              className="flex items-center gap-1.5 bg-white border border-zinc-200 hover:bg-zinc-50 dark:bg-zinc-900 dark:border-zinc-850 dark:hover:bg-zinc-800 text-neutral-800 dark:text-zinc-200 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all shadow-2xs"
-            >
-              <FileText size={14} className="text-brand-yellow" /> Agreement
-            </button>
-            <button
-              onClick={() => {
-                setEditingCurriculum(null);
-                setCurrTitle('');
-                setCurrDesc('');
-                setCurrPrice(150000);
-                setCurrImageUrl('');
-                setModuleList([]);
-                setProposalActiveSection('info');
-                setShowProposalModal(true);
-              }}
-              className="flex items-center gap-1.5 bg-neutral-900 hover:bg-neutral-850 dark:bg-brand-yellow dark:text-neutral-950 text-white px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all shadow-xs"
-            >
-              <Plus size={14} className="stroke-[2.5]" /> Propose
-            </button>
-          </div>
+      <div className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-zinc-150 dark:border-zinc-800 pb-5">
+        <div className="flex-1">
+          <h2 className="text-2xl font-semibold tracking-tight text-neutral-900 dark:text-zinc-50 leading-tight font-sans">
+            Courses
+          </h2>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-1 max-w-2xl leading-relaxed">
+            Curriculum building and verification control workspace. Propose, manage, and edit your active courses.
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowAgreementModal(true)}
+            className="flex items-center gap-1.5 bg-white border border-zinc-200 hover:bg-zinc-50 dark:bg-zinc-900 dark:border-zinc-850 dark:hover:bg-zinc-800 text-neutral-800 dark:text-zinc-200 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all shadow-2xs"
+          >
+            <FileText size={14} className="text-brand-yellow" /> Agreement
+          </button>
+          <button
+            onClick={() => {
+              setEditingCurriculum(null);
+              setCurrTitle('');
+              setCurrDesc('');
+              setCurrPrice(150000);
+              setCurrImageUrl('');
+              setModuleList([]);
+              setProposalActiveSection('info');
+              setShowProposalModal(true);
+            }}
+            className="flex items-center gap-1.5 bg-neutral-900 hover:bg-neutral-850 dark:bg-brand-yellow dark:text-neutral-950 text-white px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all shadow-xs"
+          >
+            <Plus size={14} className="stroke-[2.5]" /> Propose
+          </button>
         </div>
       </div>
 

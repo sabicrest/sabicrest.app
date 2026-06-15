@@ -28,14 +28,15 @@ export default function TeamCollaboration({ currentUser }: TeamCollaborationProp
       <div id="team-collab-root" className="py-6 max-w-7xl mx-auto px-4 select-none">
         
         {/* Header Panel */}
-        <div id="collab-header" className="border-b border-zinc-150 pb-6 mb-8 dark:border-zinc-805">
-          <h2 className="text-2xl font-light tracking-tight text-brand-black dark:text-white flex items-center gap-2">
-            <Users className="text-brand-yellow font-normal" size={22} />
-            Student <span className="font-semibold">Team Collaboration</span>
-          </h2>
-          <p className="text-xs font-light tracking-wide text-zinc-500 dark:text-zinc-400 uppercase mt-1">
-            Synchronize on joint project tasks, divide task responsibilities, and edit research canvas boards
-          </p>
+        <div id="collab-header" className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-zinc-150 dark:border-zinc-800 pb-5">
+          <div className="flex-1">
+            <h2 className="text-2xl font-semibold tracking-tight text-brand-black dark:text-white leading-tight font-sans">
+              Collaboration
+            </h2>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-1 max-w-2xl leading-relaxed">
+              Synchronize on joint project tasks, divide task responsibilities, and edit research canvas boards.
+            </p>
+          </div>
         </div>
 
         <div className="bg-white dark:bg-zinc-950 border border-zinc-150 dark:border-zinc-850 rounded-2xl p-12 text-center text-zinc-400 font-light flex flex-col items-center gap-2 shadow-2xs">
@@ -150,14 +151,15 @@ export default function TeamCollaboration({ currentUser }: TeamCollaborationProp
     <div id="team-collab-root" className="py-6 max-w-7xl mx-auto px-4 select-none">
       
       {/* Header Panel */}
-      <div id="collab-header" className="border-b border-zinc-100 pb-6 mb-8">
-        <h2 className="text-2xl font-light tracking-tight text-brand-black flex items-center gap-2">
-          <Users className="text-brand-yellow font-normal" size={22} />
-          Student <span className="font-semibold">Team Collaboration</span>
-        </h2>
-        <p className="text-xs font-light tracking-wide text-brand-gray uppercase mt-1">
-          Synchronize on joint project tasks, divide task responsibilities, and edit research canvas boards
-        </p>
+      <div id="collab-header" className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-zinc-150 dark:border-zinc-800 pb-5">
+        <div className="flex-1">
+          <h2 className="text-2xl font-semibold tracking-tight text-brand-black dark:text-white leading-tight font-sans">
+            Collaboration
+          </h2>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-1 max-w-2xl leading-relaxed">
+            Synchronize on joint project tasks, divide task responsibilities, and edit research canvas boards.
+          </p>
+        </div>
       </div>
 
       <div id="collab-board-grid" className="grid grid-cols-1 lg:grid-cols-3 gap-8">

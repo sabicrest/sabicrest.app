@@ -660,6 +660,18 @@ export default function Messaging({ currentUser }: MessagingProps) {
 
   return (
     <div id="messaging-root" className="max-w-7xl mx-auto px-4 py-6 select-none text-brand-black dark:text-white">
+      
+      <div className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-zinc-150 dark:border-zinc-800 pb-5">
+        <div className="flex-1">
+          <h2 className="text-2xl font-semibold tracking-tight text-brand-black dark:text-white leading-tight font-sans">
+            Chats
+          </h2>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-1 max-w-2xl leading-relaxed">
+            Secure real-time communications, project and course channels with your mentors and colleagues.
+          </p>
+        </div>
+      </div>
+
       <div className="rounded-3xl p-[1px] bg-gradient-to-tr from-zinc-300 via-brand-yellow/80 to-zinc-300 dark:from-zinc-800 dark:via-brand-yellow/40 dark:to-zinc-800 shadow-xs">
         <div id="messaging-layout-grid" className="grid grid-cols-1 md:grid-cols-4 rounded-[calc(1.5rem-1px)] overflow-hidden bg-white/95 dark:bg-black min-h-[500px]">
         

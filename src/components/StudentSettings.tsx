@@ -277,16 +277,12 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
       )}
 
       {/* Header Banner Section */}
-      <div id="student-settings-header" className="bg-gradient-to-b from-[#FFFFFF] to-[#E2EEFF] text-zinc-950 rounded-[24px] p-8 mb-8 relative overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.03)] border border-zinc-200/30">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#FFCC00]/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
-        <div className="relative z-10 space-y-2 max-w-2xl">
-          <span className="text-[10px] uppercase font-mono tracking-widest bg-white/80 text-zinc-500 px-3 py-1 rounded-full border border-zinc-200/50 shadow-xs font-bold leading-none select-none">
-            Personal Space
-          </span>
-          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-zinc-950">
-            Profile <span className="text-[#FFCC00]">&</span> Settings
+      <div className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-zinc-150 dark:border-zinc-800 pb-5">
+        <div className="flex-1">
+          <h2 className="text-2xl font-semibold tracking-tight text-brand-black dark:text-white leading-tight font-sans">
+            Settings
           </h2>
-          <p className="text-xs text-zinc-450 font-medium leading-relaxed">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-1 max-w-2xl leading-relaxed">
             Update your visual design identity, profile details, and system sound preferences.
           </p>
         </div>
