@@ -527,7 +527,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
                         }}
                         className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-xs transition-all uppercase tracking-widest text-left font-sans cursor-pointer group relative ${
                           isActive 
-                            ? 'bg-[#FFCC00]/8 text-zinc-900 font-medium' 
+                            ? 'bg-[#FFCC00]/10 text-zinc-900 font-medium' 
                             : 'text-zinc-500 hover:text-zinc-950 hover:bg-zinc-50'
                         }`}
                       >
