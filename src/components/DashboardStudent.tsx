@@ -1084,31 +1084,13 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
       {/* DASHBOARD TAB (HOME) */}
       {activeTab === 'dashboard' && (
         <div className="animate-in fade-in duration-250">
-          {/* Premium Hero Welcome Banner */}
-          <div id="student-hero-banner" className="bg-white text-zinc-950 rounded-[28px] p-6 xs:p-8 md:p-10 mb-8 relative overflow-hidden border border-zinc-200/50 shadow-[0_15px_45px_rgba(0,0,0,0.015)] flex flex-col gap-6">
-            {/* Soft, low-opacity gradient glows for subtle accenting */}
-            <div className="absolute -top-32 -right-32 w-80 h-80 bg-[#FFCC00]/5 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-blue-50/5 rounded-full blur-3xl pointer-events-none" />
-            
-            {/* greeting and motivational stats */}
-            <div className="relative z-10 flex flex-col space-y-3 sm:space-y-4">
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-3">
-                <span className="text-[9px] xs:text-[11px] sm:text-xs font-mono tracking-widest uppercase bg-[#FFCC00]/10 text-[#FFCC00] px-3 py-1 rounded-full border border-[#FFCC00]/25 flex items-center gap-1 shrink-0 font-extrabold shadow-2xs">
-                  <Sparkles size={10} className="text-[#FFCC00] animate-pulse" /> WELCOME BACK
-                </span>
-                <span className="text-[9px] xs:text-[11px] sm:text-xs font-mono tracking-widest uppercase bg-zinc-100/80 text-zinc-700 px-3 py-1 rounded-full border border-zinc-200/40 flex items-center gap-1 shrink-0 font-bold select-none">
-                  🏆 Rank #3
-                </span>
-              </div>
-              
-              <h2 className="text-[28px] xs:text-[36px] sm:text-[44px] md:text-5xl font-extrabold tracking-tight pr-1 leading-tight break-words text-zinc-950">
-                <span className="inline">Hello,</span>{' '}
-                <span className="inline font-extrabold text-[#FFCC00]">
-                  {currentUser.name ? currentUser.name.split(' ')[0] : 'Developer'}
-                </span>
+          {/* Redesigned Welcome Banner matching the minimal Courses view style */}
+          <div className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-zinc-150 dark:border-zinc-800 pb-5">
+            <div className="flex-1">
+              <h2 className="text-2xl font-semibold tracking-tight text-brand-black dark:text-white leading-tight font-sans">
+                Hello, <span className="text-[#FFCC00]">{currentUser.name ? currentUser.name.split(' ')[0] : 'Developer'}</span>
               </h2>
-              
-              <p className="text-[11px]/[15px] xs:text-[13px]/[18px] sm:text-sm md:text-base text-zinc-500 font-medium leading-relaxed max-w-3xl">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-1 max-w-2xl leading-relaxed">
                 {getQuoteOfTheDay()}
               </p>
             </div>

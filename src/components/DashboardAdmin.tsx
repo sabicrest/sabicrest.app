@@ -524,24 +524,20 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
         />
       ) : (
         <>
-          {/* Header Banner - Upgraded to match Student/Trainer aesthetics */}
-          <div id="admin-hero-banner" className="bg-white text-zinc-950 rounded-[28px] p-8 mb-8 relative overflow-hidden border border-zinc-200/50 shadow-[0_15px_45px_rgba(0,0,0,0.015)] flex flex-col md:flex-row justify-between items-start md:items-center gap-6 duration-200">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-[#FFCC00]/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
-            <div className="relative z-10 space-y-2 max-w-2xl">
-              <span className="text-[9px] uppercase font-mono tracking-widest bg-[#FFCC00]/10 text-[#FFCC00] px-3 py-1 rounded-full border border-[#FFCC00]/25 font-extrabold shadow-2xs pb-1 inline-block">
-                WELCOME BACK
-              </span>
-              <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-zinc-950">
-                Administration dashboard // <span className="font-extrabold text-[#FFCC00]">{currentUser.name}</span>
+          {/* Redesigned Welcome Banner matching the minimal Courses view style */}
+          <div className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-zinc-150 dark:border-zinc-800 pb-5">
+            <div className="flex-1">
+              <h2 className="text-2xl font-semibold tracking-tight text-neutral-900 dark:text-zinc-50 leading-tight font-sans">
+                Administration // <span className="text-[#FFCC00] font-semibold">{currentUser.name}</span>
               </h2>
-              <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-1 max-w-2xl leading-relaxed">
                 {getQuoteOfTheDay()}
               </p>
             </div>
 
-            {/* Dynamic header search box */}
-            <div className="relative z-10 w-full md:w-64 shrink-0">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400">
+            {/* Dynamic header search box matching Courses search style */}
+            <div className="relative w-full lg:w-64 shrink-0">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-550 pointer-events-none">
                 <Search size={14} />
               </span>
               <input
@@ -549,14 +545,14 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
                 placeholder="Search users or courses..."
                 value={dashboardSearchQuery}
                 onChange={(e) => setDashboardSearchQuery(e.target.value)}
-                className="w-full bg-white border border-zinc-200 rounded-full pl-10 pr-10 py-2.5 text-xs text-zinc-950 placeholder-zinc-400 focus:outline-none focus:border-[#FFCC00] focus:ring-1 focus:ring-[#FFCC00] font-light shadow-2xs"
+                className="w-full bg-white dark:bg-zinc-950 border border-zinc-250 dark:border-zinc-800 rounded-xl pl-9 pr-8 py-2 text-xs text-brand-black dark:text-white placeholder-zinc-400 dark:placeholder-zinc-550 focus:outline-hidden focus:border-brand-yellow font-light shadow-2xs"
               />
               {dashboardSearchQuery && (
                 <button 
                   onClick={() => setDashboardSearchQuery('')} 
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-650 cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-brand-black dark:hover:text-white cursor-pointer"
                 >
-                  <X size={12} />
+                  <X size={11} />
                 </button>
               )}
             </div>

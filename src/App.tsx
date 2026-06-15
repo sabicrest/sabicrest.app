@@ -338,9 +338,9 @@ export default function App() {
       {currentUser && (currentUser.role === 'student' || currentUser.role === 'trainer' || currentUser.role === 'admin') && (
         <div 
           id="sabicrest-mobile-bottom-nav" 
-          className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-[510px] h-[88px] bg-white border border-zinc-200/50 shadow-[0_16px_40px_rgba(0,0,0,0.06)] rounded-full flex items-center px-2 transition-all"
+          className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-[510px] h-[76px] bg-white border border-zinc-200/50 shadow-[0_16px_40px_rgba(0,0,0,0.06)] rounded-full flex items-center px-[2px] transition-all"
         >
-          <div className="flex items-center w-full h-full overflow-x-auto scrollbar-none gap-3 px-3 py-1 scroll-smooth snap-x touch-pan-x select-none">
+          <div className="flex items-center w-full h-full overflow-x-auto scrollbar-none gap-1 py-[2px] px-1 scroll-smooth snap-x touch-pan-x select-none">
             {(currentUser.role === 'student'
               ? [
                   { id: 'dashboard', label: 'Space', icon: Home },
