@@ -269,7 +269,7 @@ export default function App() {
         return [
           { id: 'dashboard', label: 'Space', icon: LayoutDashboard },
           { id: 'messaging', label: 'Chats', icon: MessageSquare },
-          { id: 'scheduling', label: 'Schedules', icon: CalendarDays },
+          { id: 'scheduling', label: 'Events', icon: CalendarDays },
           { id: 'profile', label: 'Settings', icon: Settings }
         ];
       default:
@@ -310,7 +310,7 @@ export default function App() {
         return <div className="p-8 text-center text-zinc-400">Collaboration panels restricted to students.</div>;
 
       case 'profile':
-        return <StudentSettings currentUser={currentUser} onUserUpdate={setCurrentUser} />;
+        return <StudentSettings currentUser={currentUser} onUserUpdate={setCurrentUser} onLogout={handleLogout} />;
 
       default:
         return <div className="p-8 text-center text-zinc-400">View segment not found in compilation path.</div>;
@@ -338,9 +338,9 @@ export default function App() {
       {currentUser && (currentUser.role === 'student' || currentUser.role === 'trainer' || currentUser.role === 'admin') && (
         <div 
           id="sabicrest-mobile-bottom-nav" 
-          className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-[460px] h-[80px] bg-white border border-zinc-200/50 shadow-[0_16px_40px_rgba(0,0,0,0.06)] rounded-full flex items-center px-2 transition-all"
+          className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-[510px] h-[88px] bg-white border border-zinc-200/50 shadow-[0_16px_40px_rgba(0,0,0,0.06)] rounded-full flex items-center px-2 transition-all"
         >
-          <div className="flex items-center w-full h-full overflow-x-auto scrollbar-none gap-2.5 px-2.5 py-1 scroll-smooth snap-x touch-pan-x select-none">
+          <div className="flex items-center w-full h-full overflow-x-auto scrollbar-none gap-3 px-3 py-1 scroll-smooth snap-x touch-pan-x select-none">
             {(currentUser.role === 'student'
               ? [
                   { id: 'dashboard', label: 'Space', icon: Home },
@@ -348,7 +348,7 @@ export default function App() {
                   { id: 'messaging', label: 'Chats', icon: MessageSquare, badge: chatCount > 0 ? chatCount : 0 },
                   { id: 'tasks', label: 'Tasks', icon: FileText },
                   { id: 'collaboration', label: 'Collab', icon: Users },
-                  { id: 'scheduling', label: 'Schedules', icon: CalendarDays },
+                  { id: 'scheduling', label: 'Events', icon: CalendarDays },
                   { id: 'profile', label: 'Profile', icon: UserIcon },
                 ]
               : currentUser.role === 'trainer'
@@ -361,7 +361,7 @@ export default function App() {
               : [
                   { id: 'dashboard', label: 'Space', icon: LayoutDashboard },
                   { id: 'messaging', label: 'Chats', icon: MessageSquare, badge: chatCount > 0 ? chatCount : 0 },
-                  { id: 'scheduling', label: 'Schedules', icon: CalendarDays },
+                  { id: 'scheduling', label: 'Events', icon: CalendarDays },
                   { id: 'profile', label: 'Settings', icon: Settings },
                 ]
             ).map(item => {
@@ -382,21 +382,21 @@ export default function App() {
                       }
                     }
                   }}
-                  className={`shrink-0 w-[64px] h-[64px] rounded-full flex flex-col items-center justify-center transition-all duration-200 snap-center cursor-pointer ${
+                  className={`shrink-0 w-[72px] h-[72px] rounded-full flex flex-col items-center justify-center transition-all duration-200 snap-center cursor-pointer ${
                     isActive 
-                      ? 'bg-[#FFCC00] text-zinc-950 font-bold shadow-sm' 
+                      ? 'bg-[#FFCC00] text-zinc-950 font-bold shadow-md' 
                       : 'text-zinc-400 hover:text-zinc-650 hover:bg-zinc-50/50'
                   }`}
                 >
                   <div className="relative flex items-center justify-center">
                     <Icon 
-                      size={22} 
-                      strokeWidth={isActive ? 1.8 : 1.3}
+                      size={25} 
+                      strokeWidth={isActive ? 1.9 : 1.35}
                       className={isActive ? 'text-zinc-950' : 'text-zinc-400'} 
                       fill="none"
                     />
                     {item.badge !== undefined && item.badge > 0 && (
-                      <span className={`absolute -top-1.5 -right-3.5 min-w-[15px] h-4 px-1 text-[9px] font-extrabold rounded-full flex items-center justify-center border font-sans leading-none ${
+                      <span className={`absolute -top-1.5 -right-4 min-w-[15px] h-4 px-1 text-[9px] font-extrabold rounded-full flex items-center justify-center border font-sans leading-none ${
                         isActive 
                           ? 'bg-zinc-950 text-[#FFCC00] border-zinc-950 shadow-xs' 
                           : 'bg-[#FFCC00] text-zinc-950 border-white'
@@ -405,7 +405,7 @@ export default function App() {
                       </span>
                     )}
                   </div>
-                  <span className={`text-[11px] font-sans tracking-tight mt-1 leading-none text-center select-none ${
+                  <span className={`text-[12px] font-sans tracking-tight mt-1 leading-none text-center select-none ${
                     isActive ? 'text-zinc-950 font-bold' : 'text-zinc-400 font-medium'
                   }`}>
                     {item.label}

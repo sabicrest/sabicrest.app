@@ -107,7 +107,7 @@ export default function Scheduling({ currentUser }: SchedulingProps) {
       <div id="scheduler-header" className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-zinc-150 dark:border-zinc-800 pb-5">
         <div className="flex-1">
           <h2 className="text-2xl font-semibold tracking-tight text-brand-black dark:text-white leading-tight font-sans">
-            Schedules
+            Events
           </h2>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-1 max-w-2xl leading-relaxed">
             Secure video conferencing slots, office hours, and collaborative task reviews

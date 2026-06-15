@@ -25,15 +25,17 @@ import {
   Upload,
   Volume2,
   VolumeX,
-  Play
+  Play,
+  LogOut
 } from 'lucide-react';
 
 interface StudentSettingsProps {
   currentUser: User;
   onUserUpdate?: (user: User) => void;
+  onLogout?: () => void;
 }
 
-export default function StudentSettings({ currentUser, onUserUpdate }: StudentSettingsProps) {
+export default function StudentSettings({ currentUser, onUserUpdate, onLogout }: StudentSettingsProps) {
   // Profile fields state
   const [profileName, setProfileName] = useState(currentUser.name);
   const [profilePhone, setProfilePhone] = useState(currentUser.phone || '');
@@ -624,6 +626,19 @@ export default function StudentSettings({ currentUser, onUserUpdate }: StudentSe
         </div>
 
       </div>
+
+      {onLogout && (
+        <div className="mt-8 flex justify-center pb-4">
+          <button
+            id="settings-logout-btn"
+            onClick={onLogout}
+            className="flex items-center gap-2 px-10 py-3.5 bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white font-bold text-xs uppercase tracking-widest rounded-full transition-all duration-150 cursor-pointer shadow-[0_4px_12px_rgba(239,68,68,0.25)]"
+          >
+            <LogOut size={14} strokeWidth={2.2} />
+            <span>Logout Session</span>
+          </button>
+        </div>
+      )}
 
     </div>
   );
