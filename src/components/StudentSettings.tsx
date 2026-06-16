@@ -36,6 +36,7 @@ interface StudentSettingsProps {
 }
 
 export default function StudentSettings({ currentUser, onUserUpdate, onLogout }: StudentSettingsProps) {
+  const [showConfirmDropdown, setShowConfirmDropdown] = useState(false);
   // Profile fields state
   const [profileName, setProfileName] = useState(currentUser.name);
   const [profilePhone, setProfilePhone] = useState(currentUser.phone || '');
@@ -628,15 +629,38 @@ export default function StudentSettings({ currentUser, onUserUpdate, onLogout }:
       </div>
 
       {onLogout && (
-        <div className="mt-8 flex justify-center pb-4">
+        <div className="mt-8 flex flex-col items-center justify-center pb-4 space-y-3">
           <button
             id="settings-logout-btn"
-            onClick={onLogout}
+            onClick={() => setShowConfirmDropdown(!showConfirmDropdown)}
             className="flex items-center gap-2 px-10 py-3.5 bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white font-bold text-xs uppercase tracking-widest rounded-full transition-all duration-150 cursor-pointer shadow-[0_4px_12px_rgba(239,68,68,0.25)]"
           >
             <LogOut size={14} strokeWidth={2.2} />
             <span>Logout Session</span>
           </button>
+
+          {showConfirmDropdown && (
+            <div className="flex flex-col items-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl w-64 text-center space-y-3 animate-in fade-in slide-in-from-top-2 duration-150 shadow-lg">
+              <p className="text-[11px] text-zinc-650 dark:text-zinc-400 font-semibold uppercase tracking-wider font-mono">Confirm Logout?</p>
+              <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-light leading-snug">Are you sure you want to end your secure session?</p>
+              <div className="flex items-center justify-center gap-3 w-full pt-1">
+                <button
+                  id="settings-logout-yes-btn"
+                  onClick={onLogout}
+                  className="flex-1 bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white font-bold py-2 px-4 rounded-xl text-xs transition-transform active:scale-97 cursor-pointer"
+                >
+                  Yes
+                </button>
+                <button
+                  id="settings-logout-no-btn"
+                  onClick={() => setShowConfirmDropdown(false)}
+                  className="flex-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-750 text-zinc-700 dark:text-zinc-300 font-bold py-2 px-4 rounded-xl text-xs transition-transform active:scale-97 cursor-pointer"
+                >
+                  No
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

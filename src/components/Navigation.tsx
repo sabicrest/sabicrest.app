@@ -398,26 +398,26 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
       </div>
 
       {/* Logout Confirmation popover overlay modal */}
-      {showLogoutConfirm && (
+      {showLogoutConfirm && typeof window !== 'undefined' && createPortal(
         <div 
           id="logout-confirm-overlay" 
           onClick={() => setShowLogoutConfirm(false)}
-          className="fixed inset-0 bg-zinc-950/60 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in duration-200"
+          className="fixed inset-0 bg-zinc-950/60 backdrop-blur-xs flex items-center justify-center z-[2000000] animate-in fade-in duration-200 select-none pointer-events-auto"
         >
           <div 
             id="logout-confirm-card" 
             onClick={(e) => e.stopPropagation()}
-            className="bg-white border border-zinc-100 rounded-3xl p-6 max-w-sm w-full mx-4 shadow-xl space-y-4 animate-in zoom-in-95 duration-200"
+            className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-850 rounded-3xl p-6 max-w-sm w-full mx-4 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200"
           >
             <div className="flex items-start gap-4">
-              <div className="p-3 bg-red-50 text-red-600 rounded-2xl">
+              <div className="p-3 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 rounded-2xl shrink-0">
                 <AlertTriangle size={20} />
               </div>
-              <div className="space-y-1">
-                <h4 className="text-sm font-semibold text-brand-black">
+              <div className="space-y-1 min-w-0">
+                <h4 className="text-sm font-semibold text-brand-black dark:text-white">
                   Confirm Account Logout
                 </h4>
-                <p className="text-xs text-brand-gray font-light leading-relaxed">
+                <p className="text-xs text-brand-gray dark:text-zinc-400 font-light leading-relaxed">
                   Are you sure you want to end your secure session? You will need to authenticate again to access the Sabicrest dashboards.
                 </p>
               </div>
@@ -427,7 +427,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
               <button
                 id="logout-confirm-cancel-btn"
                 onClick={() => setShowLogoutConfirm(false)}
-                className="px-4 py-2 bg-zinc-50 hover:bg-zinc-100 text-zinc-600 rounded-xl text-xs font-medium cursor-pointer transition-colors"
+                className="px-4 py-2 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded-xl text-xs font-semibold cursor-pointer transition-colors border border-transparent dark:border-zinc-750"
               >
                 Cancel
               </button>
@@ -437,13 +437,14 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
                   setShowLogoutConfirm(false);
                   onLogout();
                 }}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-medium cursor-pointer transition-colors"
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-semibold cursor-pointer transition-colors"
               >
                 Sign Out
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Mobile Glassmorphic Search Interface - flapped just under the header */}
@@ -619,21 +620,6 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
                       </button>
                     );
                   })}
-                </div>
-
-                {/* Drawer Footer controls */}
-                <div className="p-5 border-t border-zinc-100 dark:border-zinc-850 bg-zinc-50/50 dark:bg-zinc-900/30">
-                  <button
-                    id="hamburger-drawer-logout"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      setShowLogoutConfirm(true);
-                    }}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-red-50 dark:bg-red-950/10 hover:bg-red-105 dark:hover:bg-red-950/20 text-red-650 border border-red-100 dark:border-red-950/40 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
-                  >
-                    <LogOut size={14} />
-                    <span>Secure Sign Out</span>
-                  </button>
                 </div>
               </motion.div>
             </div>

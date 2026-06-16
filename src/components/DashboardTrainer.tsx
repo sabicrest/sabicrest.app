@@ -1301,14 +1301,11 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
 
                         {/* Edit Button for Pending Proposal */}
                         {isPending && (
-                          <div className="pt-1 flex">
-                            <button
-                              id={`edit-proposal-btn-${curr.id}`}
-                              onClick={() => handleStartEditProposal(curr)}
-                              className="w-full flex items-center justify-center gap-1 bg-zinc-100 hover:bg-brand-yellow/15 border border-zinc-200 hover:border-brand-yellow/50 text-zinc-700 hover:text-brand-black transition-all rounded-xl py-2 text-[10px] uppercase tracking-wide font-medium cursor-pointer"
-                            >
-                              <Pencil size={10} /> Edit Course Proposal
-                            </button>
+                          <div className="pt-2.5 border-t border-zinc-100/80 mt-2">
+                            <div className="flex items-start gap-1.5 text-[10px] text-zinc-500 bg-zinc-50 dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800 p-2 rounded-xl leading-relaxed">
+                              <Shield size={12} className="shrink-0 text-zinc-400 mt-0.5" />
+                              <span>🔒 Read-Only. Contact support or chat in-app with <strong className="font-semibold text-brand-black dark:text-zinc-300">Sabicrest Team</strong> to edit.</span>
+                            </div>
                           </div>
                         )}
                       </div>

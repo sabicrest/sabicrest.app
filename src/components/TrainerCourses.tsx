@@ -9,7 +9,7 @@ import { db } from '../db';
 import { 
   BookOpen, Plus, Search, Sparkles, Filter, ChevronDown, CheckCircle2, AlertCircle, XCircle, Clock,
   DollarSign, Users, Award, BookOpenCheck, ChevronUp, FileText, Sliders, Camera, Upload, X, ArrowUpRight, Check,
-  Calendar, Lock, Unlock, Info
+  Calendar, Lock, Unlock, Info, ShieldAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -630,7 +630,7 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                           onClick={() => handleTriggerEdit(col)}
                           className="flex-1 md:w-full bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-100 dark:border-zinc-800 py-1.5 px-3 rounded-lg text-[10px] uppercase font-semibold text-neutral-800 dark:text-zinc-300 transition-colors cursor-pointer"
                         >
-                          Configure
+                          View Details
                         </button>
                       </div>
                     </div>
@@ -1123,7 +1123,11 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                 
                 <div className="flex items-center justify-between border-b border-zinc-50 dark:border-zinc-900 pb-4 mb-4 select-none">
                   <h3 className="text-base font-light tracking-tight text-neutral-900 dark:text-zinc-50">
-                    {editingCurriculum ? 'Edit Curriculum' : 'Propose New Course'} // <span className="font-semibold">{editingCurriculum ? 'Update details' : 'Proposal Wizard'}</span>
+                    {editingCurriculum ? (
+                      <span>Course Syllabus <strong className="font-semibold text-brand-yellow">Details</strong></span>
+                    ) : (
+                      <span>Propose <strong className="font-semibold">New Course</strong></span>
+                    )}
                   </h3>
                   <button
                     onClick={() => {
@@ -1138,6 +1142,17 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                 </div>
 
                 <form onSubmit={handleFormSubmit} className="space-y-4">
+                  {editingCurriculum && (
+                    <div className="p-3.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200/40 dark:border-amber-900/40 rounded-2xl flex items-start gap-2.5 text-xs text-amber-800 dark:text-amber-300 leading-snug animate-in fade-in duration-200">
+                      <ShieldAlert size={16} className="shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold">🔒 Course is Read-Only</p>
+                        <p className="font-light text-[10.5px] mt-0.5">
+                          You cannot directly edit courses once they are created. To remake any changes, please contact support or chat in-app with the <strong className="font-semibold">Sabicrest Team</strong> or any administrator.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   
                   {/* Scrollable multi section container */}
                   <div className="max-h-[50vh] overflow-y-auto pr-1 space-y-3 scrollbar-thin">
@@ -1185,6 +1200,7 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                                   onChange={(e) => setCurrTitle(e.target.value)}
                                   className="w-full text-xs font-light bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow"
                                   required
+                                  disabled={!!editingCurriculum}
                                 />
                               </div>
 
@@ -1196,6 +1212,7 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                                   onChange={(e) => setCurrDesc(e.target.value)}
                                   className="w-full min-h-20 text-xs font-light bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl px-3.5 py-2.5 focus:outline-hidden focus:border-brand-yellow resize-none"
                                   required
+                                  disabled={!!editingCurriculum}
                                 ></textarea>
                               </div>
                             </div>
@@ -1245,6 +1262,7 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                                     value={currCategory}
                                     onChange={(e) => setCurrCategory(e.target.value)}
                                     className="w-full text-xs font-light bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl px-2.5 py-2.5 outline-hidden"
+                                    disabled={!!editingCurriculum}
                                   >
                                     {[
                                       "Business", "Marketing", "Design", "Tech", "Visual Design",
@@ -1259,6 +1277,7 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                                     value={currLevel}
                                     onChange={(e) => setCurrLevel(e.target.value as any)}
                                     className="w-full text-xs font-light bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl px-2.5 py-2.5 outline-hidden"
+                                    disabled={!!editingCurriculum}
                                   >
                                     {["Beginner", "Intermediate", "Advanced"].map(lvl => <option key={lvl} value={lvl}>{lvl}</option>)}
                                   </select>
@@ -1274,6 +1293,7 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                                     onChange={(e) => setCurrDuration(Number(e.target.value))}
                                     className="w-full text-xs font-light bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl px-2.5 py-2 focus:outline-hidden"
                                     required
+                                    disabled={!!editingCurriculum}
                                   />
                                 </div>
 
@@ -1286,6 +1306,7 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                                     onChange={(e) => setCurrPrice(Number(e.target.value))}
                                     className="w-full text-xs font-light bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl px-2.5 py-2 focus:outline-hidden"
                                     required
+                                    disabled={!!editingCurriculum}
                                   />
                                 </div>
                               </div>
@@ -1299,11 +1320,11 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                                   With Sabicrest's unique fixed-fee cohort model, the proposed fee of <strong>₦{currPrice.toLocaleString()}</strong> is the total payment you will collect for this cohort (requires a minimum of 1 active student; maximum of 5 students). Revenue splits:
                                 </p>
                                 <div className="grid grid-cols-2 gap-2 mt-2 font-mono text-[10px] text-center">
-                                  <div className="bg-white dark:bg-zinc-955 p-2 rounded-lg border border-zinc-100 dark:border-zinc-800">
+                                  <div className="bg-white dark:bg-zinc-955 p-2 rounded-lg border border-zinc-150 dark:border-zinc-800">
                                     <span className="block text-[8px] text-zinc-400 font-mono">Trainer Payout (85%)</span>
                                     <span className="font-semibold text-emerald-600 dark:text-emerald-400">₦{(currPrice * 0.85).toLocaleString()}</span>
                                   </div>
-                                  <div className="bg-white dark:bg-zinc-955 p-2 rounded-lg border border-zinc-100 dark:border-zinc-800">
+                                  <div className="bg-white dark:bg-zinc-955 p-2 rounded-lg border border-zinc-155 dark:border-zinc-800">
                                     <span className="block text-[8px] text-zinc-400 font-mono">Sabicrest Maintenance (15%)</span>
                                     <span className="font-semibold text-neutral-850 dark:text-zinc-300 font-mono">₦{(currPrice * 0.15).toLocaleString()}</span>
                                   </div>
@@ -1327,6 +1348,7 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                                     onChange={(e) => setCustomCategory(e.target.value)}
                                     className="w-full text-xs font-light bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl px-3 py-2 focus:outline-hidden"
                                     required
+                                    disabled={!!editingCurriculum}
                                   />
                                 </div>
                               )}
@@ -1379,13 +1401,15 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                                       referrerPolicy="no-referrer"
                                       className="w-full h-full object-cover"
                                     />
-                                    <button
-                                      type="button"
-                                      onClick={() => setCurrImageUrl('')}
-                                      className="absolute inset-0 bg-neutral-950/40 hover:bg-neutral-950/60 flex items-center justify-center text-white transition-colors cursor-pointer"
-                                    >
-                                      <X size={14} className="stroke-[2.5]" />
-                                    </button>
+                                    {!editingCurriculum && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setCurrImageUrl('')}
+                                        className="absolute inset-0 bg-neutral-950/40 hover:bg-neutral-950/60 flex items-center justify-center text-white transition-colors cursor-pointer"
+                                      >
+                                        <X size={14} className="stroke-[2.5]" />
+                                      </button>
+                                    )}
                                   </div>
                                 ) : (
                                   <div className="w-24 h-16 rounded-xl border-2 border-dashed border-zinc-150 flex items-center justify-center text-zinc-400 shrink-0 bg-zinc-50">
@@ -1394,20 +1418,24 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                                 )}
 
                                 <div className="flex-1 space-y-1">
-                                  <div className="flex items-center">
-                                    <label className="bg-neutral-900 border border-neutral-900 hover:bg-neutral-800 dark:bg-brand-yellow dark:text-neutral-950 dark:border-brand-yellow text-white text-[10px] font-semibold uppercase tracking-wider px-3 py-2 rounded-xl cursor-pointer transition-colors flex items-center gap-1">
-                                      <Upload size={11} />
-                                      Select File
-                                      <input 
-                                        type="file" 
-                                        accept="image/*" 
-                                        onChange={handleImageUpload}
-                                        className="hidden" 
-                                      />
-                                    </label>
+                                  <div className="flex items-center font-sans">
+                                    {!editingCurriculum ? (
+                                      <label className="bg-neutral-900 border border-neutral-900 hover:bg-neutral-800 dark:bg-brand-yellow dark:text-neutral-950 dark:border-brand-yellow text-white text-[10px] font-semibold uppercase tracking-wider px-3 py-2 rounded-xl cursor-pointer transition-colors flex items-center gap-1">
+                                        <Upload size={11} />
+                                        Select File
+                                        <input 
+                                          type="file" 
+                                          accept="image/*" 
+                                          onChange={handleImageUpload}
+                                          className="hidden" 
+                                        />
+                                      </label>
+                                    ) : (
+                                      <span className="text-[10px] text-zinc-400 font-mono bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 px-2 py-1 rounded-md">Locked Image (Read-Only)</span>
+                                    )}
                                   </div>
                                   <p className="text-[9px] text-zinc-400 font-light leading-snug">
-                                    Select PEG/PNG course thumbnail graphics. Left empty: default backdrop auto-assigned.
+                                    {editingCurriculum ? 'Displaying the current cover graphic thumbnail.' : 'Select PEG/PNG course thumbnail graphics. Left empty: default backdrop auto-assigned.'}
                                   </p>
                                 </div>
                               </div>
@@ -1451,35 +1479,39 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                             className="overflow-hidden"
                           >
                             <div className="p-4 bg-white dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-900 space-y-3">
-                              <label className="block text-[10px] uppercase tracking-wider font-light text-zinc-400 mb-1">Add Weekly Syllabus Modules ({moduleList.length})</label>
-                              <div className="flex gap-2">
-                                <input
-                                  type="text"
-                                  placeholder="e.g. Introduction to grid metrics & structures"
-                                  value={newModuleText}
-                                  onChange={(e) => setNewModuleText(e.target.value)}
-                                  className="flex-1 text-xs font-light bg-zinc-50 dark:bg-zinc-905 border border-zinc-100 dark:border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-hidden"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={handleAddModule}
-                                  className="bg-neutral-900 text-white dark:bg-brand-yellow dark:text-neutral-950 rounded-xl px-3 text-xs font-bold cursor-pointer transition-colors"
-                                >
-                                  Add
-                                </button>
-                              </div>
+                              <label className="block text-[10px] uppercase tracking-wider font-light text-zinc-400 mb-1">Weekly Syllabus Modules ({moduleList.length})</label>
+                              {!editingCurriculum && (
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="e.g. Introduction to grid metrics & structures"
+                                    value={newModuleText}
+                                    onChange={(e) => setNewModuleText(e.target.value)}
+                                    className="flex-1 text-xs font-light bg-zinc-50 dark:bg-zinc-905 border border-zinc-100 dark:border-zinc-800 rounded-xl px-3 py-2.5 focus:outline-hidden"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={handleAddModule}
+                                    className="bg-neutral-900 text-white dark:bg-brand-yellow dark:text-neutral-950 rounded-xl px-3 text-xs font-bold cursor-pointer transition-colors"
+                                  >
+                                    Add
+                                  </button>
+                                </div>
+                              )}
 
                               <div className="space-y-1.5 max-h-36 overflow-y-auto scrollbar-thin">
                                 {moduleList.map((mod, index) => (
                                   <div key={index} className="flex justify-between items-center bg-zinc-50 dark:bg-zinc-900 px-3 py-1.5 rounded-lg text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
                                     <span className="truncate">Week {index + 1}: {mod}</span>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveModule(index)}
-                                      className="text-red-600 hover:text-red-800 font-bold px-1 cursor-pointer"
-                                    >
-                                      &times;
-                                    </button>
+                                    {!editingCurriculum && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveModule(index)}
+                                        className="text-red-600 hover:text-red-800 font-bold px-1 cursor-pointer"
+                                      >
+                                        &times;
+                                      </button>
+                                    )}
                                   </div>
                                 ))}
                                 {moduleList.length === 0 && (
@@ -1495,24 +1527,40 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                   </div>
 
                   <div className="pt-3 border-t border-zinc-100 dark:border-zinc-900 flex gap-2">
-                    <button
-                      type="submit"
-                      disabled={moduleList.length === 0 || !currTitle.trim()}
-                      className="bg-neutral-900 hover:bg-neutral-850 dark:bg-brand-yellow dark:text-neutral-950 text-white px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide cursor-pointer flex-1 disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      {editingCurriculum ? 'Save Changes' : 'Propose To Admin'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowProposalModal(false);
-                        setEditingCurriculum(null);
-                        setProposalActiveSection('info');
-                      }}
-                      className="bg-zinc-100 dark:bg-zinc-900 text-neutral-850 dark:text-zinc-400 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer py-2.5 hover:bg-zinc-200"
-                    >
-                      Cancel
-                    </button>
+                    {editingCurriculum ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowProposalModal(false);
+                          setEditingCurriculum(null);
+                          setProposalActiveSection('info');
+                        }}
+                        className="bg-zinc-105 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-805 text-neutral-850 dark:text-zinc-205 w-full py-2.5 rounded-xl text-xs font-semibold cursor-pointer text-center"
+                      >
+                        Close Details
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          type="submit"
+                          disabled={moduleList.length === 0 || !currTitle.trim()}
+                          className="bg-neutral-900 hover:bg-neutral-850 dark:bg-brand-yellow dark:text-neutral-950 text-white px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide cursor-pointer flex-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          Propose To Admin
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowProposalModal(false);
+                            setEditingCurriculum(null);
+                            setProposalActiveSection('info');
+                          }}
+                          className="bg-zinc-100 dark:bg-zinc-900 text-neutral-850 dark:text-zinc-400 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer py-2.5 hover:bg-zinc-200"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    )}
                   </div>
 
                 </form>
