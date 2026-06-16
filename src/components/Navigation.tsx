@@ -171,7 +171,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
   };
 
   return (
-    <nav id="sabicrest-nav" className={`bg-white/95 backdrop-blur-md border-b border-zinc-200/30 fixed top-0 left-0 right-0 select-none transition-all ${mobileMenuOpen ? 'z-[100]' : 'z-40'}`}>
+    <nav id="sabicrest-nav" className={`bg-white/95 backdrop-blur-md border-b border-zinc-200/30 fixed top-0 left-0 right-0 select-none transition-all ${mobileMenuOpen ? 'z-[99999]' : 'z-40'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           
@@ -501,7 +501,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
       {/* Side Hamburger Menu Drawer (always available on mobile and desktop) */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <div key="hamburger-drawer-enclosure" className="fixed inset-0 z-50">
+          <div key="hamburger-drawer-enclosure" className="fixed inset-0 z-[100000]">
             {/* Backdrop Overlay */}
             <motion.div
               id="hamburger-backdrop-overlay"
