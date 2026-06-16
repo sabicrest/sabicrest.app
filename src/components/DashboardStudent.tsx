@@ -2365,11 +2365,15 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                   }
                 };
 
+                const outcomesList = selectedCourse.outcomes
+                  ? selectedCourse.outcomes.split('\n').map(o => o.trim()).filter(o => o.length > 0)
+                  : getCourseOutcomes(selectedCourse.title);
+
                 return (
                   <div className="space-y-2 border border-zinc-150 rounded-2xl p-4 bg-amber-50/5">
                     <h4 className="text-[10px] uppercase tracking-wider font-semibold text-brand-yellow font-bold">Targeted Learning Outcomes (Certified)</h4>
                     <ul className="space-y-1.5">
-                      {getCourseOutcomes(selectedCourse.title).map((outcome, oIdx) => (
+                      {outcomesList.map((outcome, oIdx) => (
                         <li key={oIdx} className="text-[11px] text-zinc-650 dark:text-zinc-350 font-light flex items-start gap-2">
                           <span className="text-[#3bb75e] text-xs font-bold leading-none mt-0.5">✓</span>
                           <span>{outcome}</span>

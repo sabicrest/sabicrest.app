@@ -204,6 +204,125 @@ export default function AdminSubViews({
   const [selectedCurriculumStatus, setSelectedCurriculumStatus] = useState<string>('all');
   const [userActiveTab, setUserActiveTab] = useState<'directory' | 'verifications'>('directory');
 
+  // Course creation state hooks
+  const [isCreatingCourse, setIsCreatingCourse] = useState(false);
+  const [newCourseTitle, setNewCourseTitle] = useState('');
+  const [newCourseDescription, setNewCourseDescription] = useState('');
+  const [newCourseCategory, setNewCourseCategory] = useState('Digital Course');
+  const [newCourseLevel, setNewCourseLevel] = useState<'Beginner' | 'Intermediate' | 'Advanced'>('Intermediate');
+  const [newCourseDurationWeeks, setNewCourseDurationWeeks] = useState(8);
+  const [newCourseTrainerId, setNewCourseTrainerId] = useState('');
+  const [newCourseTrainerNameCustom, setNewCourseTrainerNameCustom] = useState('');
+  const [newCoursePrice, setNewCoursePrice] = useState(150000);
+  const [newCourseOutcomes, setNewCourseOutcomes] = useState('');
+  const [newCourseEquipment, setNewCourseEquipment] = useState('');
+  const [newCourseImageUrl, setNewCourseImageUrl] = useState('');
+  const [newCourseModules, setNewCourseModules] = useState<string[]>(Array(8).fill(''));
+
+  const handleDurationChange = (weeks: number) => {
+    const validWeeks = isNaN(weeks) || weeks < 1 ? 1 : weeks;
+    setNewCourseDurationWeeks(validWeeks);
+    setNewCourseModules(prev => {
+      const arr = [...prev];
+      if (arr.length < validWeeks) {
+        return [...arr, ...Array(validWeeks - arr.length).fill('')];
+      } else if (arr.length > validWeeks) {
+        return arr.slice(0, validWeeks);
+      }
+      return arr;
+    });
+  };
+
+  const handleCreateCourse = () => {
+    if (!newCourseTitle.trim() || !newCourseDescription.trim()) {
+      showToast('Error: Title and Description are required.');
+      return;
+    }
+
+    // Determine trainer details
+    let finalTrainerId = currentUser.id;
+    let finalTrainerName = currentUser.name;
+
+    if (newCourseTrainerId === 'admin-custom') {
+      finalTrainerId = 't-custom-' + Date.now();
+      finalTrainerName = newCourseTrainerNameCustom.trim() || 'Custom Expert Coach';
+    } else if (newCourseTrainerId) {
+      const selectedTrainerObj = users.find(u => u.id === newCourseTrainerId);
+      if (selectedTrainerObj) {
+        finalTrainerId = selectedTrainerObj.id;
+        finalTrainerName = selectedTrainerObj.name;
+      }
+    }
+
+    // fallback for imageUrl
+    let finalImageUrl = newCourseImageUrl.trim();
+    if (!finalImageUrl) {
+      // Pick stock fallback based on keywords/category
+      const titleLower = newCourseTitle.toLowerCase();
+      if (titleLower.includes('figma') || titleLower.includes('design') || titleLower.includes('creative')) {
+        finalImageUrl = 'https://images.unsplash.com/photo-1561070791-26c113006238?w=800&auto=format&fit=crop&q=80';
+      } else if (titleLower.includes('web') || titleLower.includes('code') || titleLower.includes('program') || titleLower.includes('software')) {
+        finalImageUrl = 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80';
+      } else if (titleLower.includes('iot') || titleLower.includes('hardware') || titleLower.includes('embedded')) {
+        finalImageUrl = 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80';
+      } else if (titleLower.includes('agri') || titleLower.includes('farm') || titleLower.includes('crop')) {
+        finalImageUrl = 'https://images.unsplash.com/photo-1523741543316-beb7fc7023d8?w=800&auto=format&fit=crop&q=80';
+      } else {
+        finalImageUrl = 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80';
+      }
+    }
+
+    const newCourseObj = {
+      trainerId: finalTrainerId,
+      trainerName: finalTrainerName,
+      title: newCourseTitle.trim(),
+      description: newCourseDescription.trim(),
+      category: newCourseCategory,
+      level: newCourseLevel,
+      durationWeeks: newCourseDurationWeeks,
+      modules: newCourseModules.map((m, i) => m.trim() || `Syllabus lesson topic for week ${i+1}`),
+      price: newCoursePrice,
+      pricingBeginner: newCoursePrice,
+      pricingIntermediate: newCoursePrice,
+      pricingExpert: newCoursePrice,
+      equipment: newCourseEquipment.trim() || 'General access tools & computer device',
+      outcomes: newCourseOutcomes.trim() || 'Graduates gain intensive skills and professional certification in this discipline.',
+      imageUrl: finalImageUrl
+    };
+
+    db.addApprovedCurriculum(newCourseObj);
+
+    // log event
+    db.addAdminActivity({
+      adminId: currentUser.id,
+      adminName: currentUser.name,
+      adminEmail: currentUser.email,
+      action: 'Create Approved Course',
+      details: `Created approved course "${newCourseObj.title}" for NGN ${newCourseObj.price.toLocaleString()}.`,
+      ipAddress: '192.168.10.22'
+    });
+
+    showToast(`Course "${newCourseObj.title}" created & published successfully!`);
+    
+    // Clear state
+    setNewCourseTitle('');
+    setNewCourseDescription('');
+    setNewCourseCategory('Digital Course');
+    setNewCourseLevel('Intermediate');
+    setNewCourseDurationWeeks(8);
+    setNewCourseTrainerId('');
+    setNewCourseTrainerNameCustom('');
+    setNewCoursePrice(150000);
+    setNewCourseOutcomes('');
+    setNewCourseEquipment('');
+    setNewCourseImageUrl('');
+    setNewCourseModules(Array(8).fill(''));
+    setIsCreatingCourse(false);
+
+    // Refresh parent view
+    reloadAdminData();
+  };
+
   // Local Rejection Comments States
   const [rejectionTargetId, setRejectionTargetId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
@@ -851,6 +970,228 @@ export default function AdminSubViews({
       {/* B. CURRICULA SYLLABUS LEDGER */}
       {subView === 'courses' && (
         <div className="bg-white border border-zinc-100 p-6 rounded-3xl space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-zinc-50 p-4 rounded-2xl">
+            <div className="flex-grow flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-950 font-sans">Course Catalog Management</h3>
+                <p className="text-[10px] text-zinc-400 font-light mt-0.5">Edit, review on-boarding, or create a syllabus immediately.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCreatingCourse(!isCreatingCourse)}
+                className="flex items-center gap-1.5 bg-zinc-950 hover:bg-zinc-800 text-white rounded-xl px-4 py-2 text-xs font-bold font-mono transition-transform active:scale-97 cursor-pointer border border-zinc-900"
+              >
+                {isCreatingCourse ? <X size={12} /> : <Plus size={12} />}
+                <span>{isCreatingCourse ? 'Cancel Layout' : 'Create Course'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Creation Form Block */}
+          {isCreatingCourse && (
+            <form onSubmit={(e) => { e.preventDefault(); handleCreateCourse(); }} className="border border-zinc-150 rounded-2xl p-6 bg-zinc-50/20 space-y-5 animate-in fade-in duration-200">
+              <div className="border-b border-zinc-100 pb-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-800 font-mono flex items-center gap-2"><BookOpen className="w-4 h-4 text-emerald-600" /> New Course Setup Form</h4>
+                <p className="text-[10px] text-zinc-400 font-light mt-0.5">Publish an approved live course instantly onto student directory.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Title */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] uppercase font-bold tracking-wider text-zinc-400">Course Title *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newCourseTitle}
+                    onChange={(e) => setNewCourseTitle(e.target.value)}
+                    placeholder="e.g., Spatial Prototyping & Figma Systems"
+                    className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2 text-xs focus:outline-hidden"
+                  />
+                </div>
+
+                {/* Category */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] uppercase font-bold tracking-wider text-zinc-400">Category *</label>
+                  <select
+                    value={newCourseCategory}
+                    onChange={(e) => setNewCourseCategory(e.target.value)}
+                    className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2 text-xs focus:outline-hidden"
+                  >
+                    <option value="Digital Course">Digital Course</option>
+                    <option value="Software Engineering">Software Engineering</option>
+                    <option value="Creative Arts & Space">Creative Arts & Space</option>
+                    <option value="Business & Finance">Business & Finance</option>
+                    <option value="IoT & Hardware Systems">IoT & Hardware Systems</option>
+                    <option value="Farming & Agritech">Farming & Agritech</option>
+                    <option value="Advanced Craft">Advanced Craft</option>
+                  </select>
+                </div>
+
+                {/* Level */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] uppercase font-bold tracking-wider text-zinc-400">Skill Level *</label>
+                  <select
+                    value={newCourseLevel}
+                    onChange={(e) => setNewCourseLevel(e.target.value as any)}
+                    className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2 text-xs focus:outline-hidden"
+                  >
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                  </select>
+                </div>
+
+                {/* Price */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] uppercase font-bold tracking-wider text-zinc-400">Tuition Fee (₦ NGN) *</label>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    value={newCoursePrice}
+                    onChange={(e) => setNewCoursePrice(Number(e.target.value))}
+                    className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2 text-xs focus:outline-hidden"
+                  />
+                </div>
+
+                {/* Duration */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] uppercase font-bold tracking-wider text-zinc-400">Cohort Duration (Weeks) *</label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    max={20}
+                    value={newCourseDurationWeeks}
+                    onChange={(e) => handleDurationChange(Number(e.target.value))}
+                    className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2 text-xs focus:outline-hidden"
+                  />
+                </div>
+
+                {/* Trainer selection */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] uppercase font-bold tracking-wider text-zinc-400">Assign Trainer *</label>
+                  <select
+                    value={newCourseTrainerId}
+                    onChange={(e) => setNewCourseTrainerId(e.target.value)}
+                    className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2 text-xs focus:outline-hidden font-mono"
+                  >
+                    <option value="">-- Choose Coach/Trainer --</option>
+                    {users.filter(u => u.role === 'trainer').map(t => (
+                      <option key={t.id} value={t.id}>{t.name} ({t.email})</option>
+                    ))}
+                    <option value="admin-custom">Self / Custom Coach Name...</option>
+                  </select>
+                </div>
+
+                {/* Custom Trainer Name */}
+                {newCourseTrainerId === 'admin-custom' && (
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="block text-[10px] uppercase font-bold tracking-wider text-zinc-400">Custom Trainer / Coach Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={newCourseTrainerNameCustom}
+                      onChange={(e) => setNewCourseTrainerNameCustom(e.target.value)}
+                      placeholder="Enter name of custom coach"
+                      className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2 text-xs focus:outline-hidden"
+                    />
+                  </div>
+                )}
+
+                {/* Image cover cover */}
+                <div className="space-y-1 md:col-span-2">
+                  <label className="block text-[10px] uppercase font-bold tracking-wider text-zinc-400">Course Banner Image URL (Optional)</label>
+                  <input
+                    type="url"
+                    value={newCourseImageUrl}
+                    onChange={(e) => setNewCourseImageUrl(e.target.value)}
+                    placeholder="e.g. https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800 (or leave blank for custom stock template)"
+                    className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2 text-xs focus:outline-hidden"
+                  />
+                </div>
+
+                {/* Synopsis */}
+                <div className="space-y-1 md:col-span-2">
+                  <label className="block text-[10px] uppercase font-bold tracking-wider text-zinc-400">Course Synopsis (Syllabus Description) *</label>
+                  <textarea
+                    required
+                    rows={3}
+                    value={newCourseDescription}
+                    onChange={(e) => setNewCourseDescription(e.target.value)}
+                    placeholder="Describe the learning objectives, spatial projects, industrial applications..."
+                    className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2 text-xs focus:outline-hidden resize-y font-light leading-relaxed"
+                  />
+                </div>
+
+                {/* Outcomes */}
+                <div className="space-y-1 md:col-span-2">
+                  <label className="block text-[10px] uppercase font-bold tracking-wider text-zinc-400">Targeted Learning Outcomes (Certified, one per line) *</label>
+                  <textarea
+                    required
+                    rows={3}
+                    value={newCourseOutcomes}
+                    onChange={(e) => setNewCourseOutcomes(e.target.value)}
+                    placeholder="Architect auto-layout components and centralized token libraries&#10;Draft interactive prototype layouts ready for handoff&#10;Evaluate spatial designs with industry-standard audits"
+                    className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2 text-xs focus:outline-hidden resize-y font-light leading-relaxed"
+                  />
+                </div>
+
+                {/* Equipment */}
+                <div className="space-y-1 md:col-span-2">
+                  <label className="block text-[10px] uppercase font-bold tracking-wider text-zinc-400">Required Tools & Equipments *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newCourseEquipment}
+                    onChange={(e) => setNewCourseEquipment(e.target.value)}
+                    placeholder="e.g. Figma workspace account, computer with stable Internet access"
+                    className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2 text-xs focus:outline-hidden"
+                  />
+                </div>
+              </div>
+
+              {/* Weekly modules breakdown */}
+              <div className="space-y-3 pt-3 border-t border-zinc-100">
+                <h5 className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 font-mono">Weekly Syllabus Details ({newCourseDurationWeeks} Weeks)</h5>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto p-1 bg-zinc-50/50 rounded-xl border border-zinc-100">
+                  {newCourseModules.map((moduleDesc, index) => (
+                    <div key={index} className="space-y-1 p-2.5 bg-white rounded-lg border border-zinc-100 shadow-3xs">
+                      <span className="text-[9px] font-mono font-bold text-zinc-500 block">Week {index + 1} Module Description *</span>
+                      <input
+                        type="text"
+                        required
+                        value={moduleDesc}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setNewCourseModules(prev => prev.map((item, idx) => idx === index ? val : item));
+                        }}
+                        placeholder={`e.g. Core principles of topic week ${index + 1}`}
+                        className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1 text-xs focus:outline-hidden"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-4 flex justify-end gap-3 border-t border-zinc-100">
+                <button
+                  type="button"
+                  onClick={() => setIsCreatingCourse(false)}
+                  className="bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl px-5 py-2 text-xs font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-6 py-2 text-xs font-bold cursor-pointer transition-colors"
+                >
+                  Create Live Course
+                </button>
+              </div>
+            </form>
+          )}
+
           <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-zinc-50 p-4 rounded-2xl">
             <div className="relative flex-grow">
               <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />

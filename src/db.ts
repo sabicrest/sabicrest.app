@@ -1129,6 +1129,21 @@ export class SupabaseDatabase {
     return newCurriculum;
   }
 
+  addApprovedCurriculum(curriculum: Omit<Curriculum, 'id' | 'status' | 'submittedAt' | 'approvedAt'>): Curriculum {
+    const newCurriculum: Curriculum = {
+      ...curriculum,
+      id: `c-${Date.now()}`,
+      status: 'approved',
+      submittedAt: new Date().toISOString(),
+      approvedAt: new Date().toISOString()
+    };
+    this.curricula.push(newCurriculum);
+    this.saveToStorage();
+    this.logTransaction('CREATE_APPROVED_CURRICULUM_RECORD', 'Curricula', JSON.stringify(newCurriculum));
+    this.saveToSupabase('curricula', newCurriculum.id, newCurriculum);
+    return newCurriculum;
+  }
+
   updateCurriculum(curriculum: Curriculum) {
     this.curricula = this.curricula.map(c => c.id === curriculum.id ? curriculum : c);
     this.saveToStorage();
