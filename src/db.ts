@@ -772,14 +772,14 @@ export class SupabaseDatabase {
           id: 'l-init-1',
           date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           type: 'practice',
-          note: 'Checked livestock feeders and updated temperature registers.',
+          note: 'Completed foundational course module and self-assessment checklist.',
           timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
         },
         {
           id: 'l-init-2',
           date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           type: 'attendance',
-          note: 'Attended live online class about farm management best practices.',
+          note: 'Attended general orientation webinar on collaborative project methodologies.',
           timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
         }
       ];
