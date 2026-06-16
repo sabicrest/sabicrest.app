@@ -1079,10 +1079,6 @@ export class SupabaseDatabase {
     return this.curricula.filter(c => {
       if (!c) return false;
       const idStr = String(c.id || '');
-      
-      // If it's a pre-seeded mock course, filter it out completely
-      const isPreseeded = idStr.startsWith('c-') && !isNaN(Number(idStr.split('-')[1])) && Number(idStr.split('-')[1]) <= 55;
-      if (isPreseeded) return false;
 
       const titleLower = String(c.title || '').toLowerCase();
       const descLower = String(c.description || '').toLowerCase();
@@ -1125,7 +1121,7 @@ export class SupabaseDatabase {
     this.curricula.push(newCurriculum);
     this.saveToStorage();
     this.logTransaction('PROPOSE_CURRICULUM_RECORD', 'Curricula', JSON.stringify(newCurriculum));
-    this.saveToSupabase('curricula', newCurriculum.id, newCurriculum);
+    this.saveToSupabase('courses', newCurriculum.id, newCurriculum);
     return newCurriculum;
   }
 
@@ -1140,7 +1136,7 @@ export class SupabaseDatabase {
     this.curricula.push(newCurriculum);
     this.saveToStorage();
     this.logTransaction('CREATE_APPROVED_CURRICULUM_RECORD', 'Curricula', JSON.stringify(newCurriculum));
-    this.saveToSupabase('curricula', newCurriculum.id, newCurriculum);
+    this.saveToSupabase('courses', newCurriculum.id, newCurriculum);
     return newCurriculum;
   }
 
@@ -1148,7 +1144,13 @@ export class SupabaseDatabase {
     this.curricula = this.curricula.map(c => c.id === curriculum.id ? curriculum : c);
     this.saveToStorage();
     this.logTransaction('UPDATE_CURRICULUM_RECORD', 'Curricula', JSON.stringify(curriculum));
-    this.saveToSupabase('curricula', curriculum.id, curriculum);
+    this.saveToSupabase('courses', curriculum.id, curriculum);
+  }
+
+  deleteCurriculum(id: string) {
+    this.curricula = this.curricula.filter(c => c.id !== id);
+    this.saveToStorage();
+    this.saveToSupabase('courses', id, null, true);
   }
 
   // --- Trainer Applications CRUD ---

@@ -202,6 +202,7 @@ export default function AdminSubViews({
   const [periodFilter, setPeriodFilter] = useState<'all' | 'today' | 'week' | 'month' | '3months'>('all');
   const [courseFilter, setCourseFilter] = useState<string>('all');
   const [selectedCurriculumStatus, setSelectedCurriculumStatus] = useState<string>('all');
+  const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null);
   const [userActiveTab, setUserActiveTab] = useState<'directory' | 'verifications'>('directory');
 
   // Course creation state hooks
@@ -1256,22 +1257,57 @@ export default function AdminSubViews({
                     </div>
 
                     {/* Quick action gates */}
-                    {c.status === 'pending' && (
-                      <div className="pt-2 flex gap-2">
+                    <div className="pt-2 flex gap-2 items-center justify-between">
+                      {c.status === 'pending' ? (
+                        <div className="flex gap-2 flex-1">
+                          <button 
+                            onClick={() => handleApproveCurriculum(c.id)}
+                            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-1.5 text-[10.5px] font-bold uppercase tracking-wider cursor-pointer"
+                          >
+                            Approve Syllabus
+                          </button>
+                          <button 
+                            onClick={() => setRejectionTargetId(c.id)}
+                            className="bg-red-50 hover:bg-red-100 text-red-600 rounded-xl px-4 py-1.5 text-[10.5px] font-bold uppercase cursor-pointer"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex-1" />
+                      )}
+
+                      {deletingCourseId === c.id ? (
+                        <div className="flex gap-1.5 items-center bg-red-50 border border-red-200 rounded-xl p-1.5 max-w-full justify-between animate-fade-in shrink-0">
+                          <span className="text-[9px] text-red-750 font-bold ml-1 uppercase font-mono animate-pulse">Delete?</span>
+                          <div className="flex gap-1">
+                            <button 
+                              onClick={() => {
+                                db.deleteCurriculum(c.id);
+                                setDeletingCourseId(null);
+                                reloadAdminData();
+                              }}
+                              className="bg-red-650 hover:bg-red-750 text-white rounded-lg px-2 py-1 text-[8.5px] font-bold uppercase cursor-pointer"
+                            >
+                              Yes
+                            </button>
+                            <button 
+                              onClick={() => setDeletingCourseId(null)}
+                              className="bg-zinc-200 hover:bg-zinc-350 text-zinc-700 rounded-lg px-2 py-1 text-[8.5px] font-bold uppercase cursor-pointer"
+                            >
+                              No
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
                         <button 
-                          onClick={() => handleApproveCurriculum(c.id)}
-                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-1.5 text-[10.5px] font-bold uppercase tracking-wider cursor-pointer"
+                          onClick={() => setDeletingCourseId(c.id)}
+                          className="bg-zinc-100 hover:bg-red-50 text-zinc-550 hover:text-red-600 border border-zinc-200/50 hover:border-red-200 rounded-xl px-3 py-1.5 text-[9.5px] font-bold uppercase cursor-pointer shrink-0 transition-colors"
                         >
-                          Approve Syllabus
+                          Delete Course
                         </button>
-                        <button 
-                          onClick={() => setRejectionTargetId(c.id)}
-                          className="bg-red-50 hover:bg-red-100 text-red-600 rounded-xl px-4 py-1.5 text-[10.5px] font-bold uppercase cursor-pointer"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 );
               })

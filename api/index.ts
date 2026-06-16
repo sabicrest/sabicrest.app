@@ -577,9 +577,9 @@ app.post('/api/supabase/save', async (req, res) => {
       } else if (collectionId === 'events' && clientUserRole !== 'trainer') {
         isAuthorized = false;
         authReason = 'Access Denied: Only certified trainers can manage scheduled course events.';
-      } else if (collectionId === 'curricula' && clientUserRole !== 'trainer') {
+      } else if ((collectionId === 'curricula' || collectionId === 'courses') && clientUserRole !== 'trainer') {
         isAuthorized = false;
-        authReason = 'Access Denied: Only certified trainers retain rights to manage curriculum assets.';
+        authReason = 'Access Denied: Only certified trainers retain rights to manage curriculum and course assets.';
       } else if (collectionId === 'assignments') {
         if (clientUserRole === 'student') {
           if (!isDelete && documentData && documentData.studentId && documentData.studentId !== clientUserId) {
