@@ -338,9 +338,9 @@ export default function App() {
       {currentUser && (currentUser.role === 'student' || currentUser.role === 'trainer' || currentUser.role === 'admin') && (
         <div 
           id="sabicrest-mobile-bottom-nav" 
-          className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-[510px] h-[76px] bg-white border border-zinc-200/50 shadow-[0_16px_40px_rgba(0,0,0,0.06)] rounded-full flex items-center px-[2px] transition-all"
+          className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-[540px] h-[82px] bg-white dark:bg-zinc-950 border border-zinc-200/50 dark:border-zinc-800/80 shadow-[0_16px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.45)] rounded-[26px] flex items-center p-1.5 transition-all duration-300"
         >
-          <div className="flex items-center w-full h-full overflow-x-auto scrollbar-none gap-1 py-[2px] px-1 scroll-smooth snap-x touch-pan-x select-none">
+          <div className="flex items-center justify-between w-full h-full gap-1 select-none font-sans">
             {(currentUser.role === 'student'
               ? [
                   { id: 'dashboard', label: 'Space', icon: Home },
@@ -382,21 +382,21 @@ export default function App() {
                       }
                     }
                   }}
-                  className={`shrink-0 w-[72px] h-[72px] rounded-full flex flex-col items-center justify-center transition-all duration-200 snap-center cursor-pointer ${
+                  className={`flex-1 h-full rounded-[20px] flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer ${
                     isActive 
                       ? 'bg-[#FFCC00] text-zinc-950 font-bold shadow-md' 
-                      : 'text-zinc-400 hover:text-zinc-650 hover:bg-zinc-50/50'
+                      : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-50/50 dark:hover:bg-zinc-900/40'
                   }`}
                 >
                   <div className="relative flex items-center justify-center">
                     <Icon 
-                      size={25} 
-                      strokeWidth={isActive ? 1.9 : 1.35}
-                      className={isActive ? 'text-zinc-950' : 'text-zinc-400'} 
+                      size={23} 
+                      strokeWidth={isActive ? 1.95 : 1.35}
+                      className={isActive ? 'text-zinc-950' : 'text-zinc-400 dark:text-zinc-500'} 
                       fill="none"
                     />
                     {item.badge !== undefined && item.badge > 0 && (
-                      <span className={`absolute -top-1.5 -right-4 min-w-[15px] h-4 px-1 text-[9px] font-extrabold rounded-full flex items-center justify-center border font-sans leading-none ${
+                      <span className={`absolute -top-1.5 -right-3.5 min-w-[15px] h-4 px-1 text-[9px] font-extrabold rounded-full flex items-center justify-center border font-sans leading-none ${
                         isActive 
                           ? 'bg-zinc-950 text-[#FFCC00] border-zinc-950 shadow-xs' 
                           : 'bg-[#FFCC00] text-zinc-950 border-white'
@@ -405,8 +405,8 @@ export default function App() {
                       </span>
                     )}
                   </div>
-                  <span className={`text-[12px] font-sans tracking-tight mt-1 leading-none text-center select-none ${
-                    isActive ? 'text-zinc-950 font-bold' : 'text-zinc-400 font-medium'
+                  <span className={`text-[9.5px] xs:text-[11px] font-sans tracking-tight leading-none text-center select-none ${
+                    isActive ? 'text-zinc-950 font-bold' : 'text-zinc-400 dark:text-zinc-550 font-medium'
                   }`}>
                     {item.label}
                   </span>
