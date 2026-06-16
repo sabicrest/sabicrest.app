@@ -68,6 +68,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('All');
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const [coursesLimit, setCoursesLimit] = useState(10);
+  const [curricula, setCurricula] = useState<Curriculum[]>(() => db.getCurricula());
 
   // Notifications State
   const [studentNotifs, setStudentNotifs] = useState(db.getNotifications().filter(n => n.userId === currentUser.id));
@@ -121,6 +122,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
     setCerts(db.getCertificates().filter(c => c.studentId === currentUser.id));
     setStudentNotifs(db.getNotifications().filter(n => n.userId === currentUser.id));
     setEnrollments(db.getEnrollments().filter(e => e.studentId === currentUser.id));
+    setCurricula(db.getCurricula());
     
     const refreshedUser = db.getUserById(currentUser.id);
     if (refreshedUser) {
@@ -848,7 +850,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
       return;
     }
     
-    const c = db.getCurricula().find(cur => cur.id === courseId);
+    const c = curricula.find(cur => cur.id === courseId);
     if (!c) return;
 
     // Check if enrollment exists
@@ -966,7 +968,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
     cert.trainerName.toLowerCase().includes(dashboardSearchQuery.toLowerCase())
   );
 
-  const enrolledCoursesForProg = db.getCurricula().filter(c => 
+  const enrolledCoursesForProg = curricula.filter(c => 
     c.status === 'approved' && 
     ((currentUser.enrolledCourseIds || []).includes(c.id) || 
      enrollments.some(e => e.courseId === c.id && e.paymentStatus === 'approved'))
@@ -989,7 +991,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
     // Filter by Trainer from past & present (using trainerName)
     if (tasksTrainerFilter !== 'All') {
       result = result.filter(ass => {
-        const course = db.getCurricula().find(c => c.id === ass.courseId);
+        const course = curricula.find(c => c.id === ass.courseId);
         return course?.trainerName === tasksTrainerFilter;
       });
     }
@@ -1014,7 +1016,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
     if (tasksSearchQuery.trim()) {
       const q = tasksSearchQuery.toLowerCase();
       result = result.filter(ass => {
-        const course = db.getCurricula().find(c => c.id === ass.courseId);
+        const course = curricula.find(c => c.id === ass.courseId);
         return ass.title.toLowerCase().includes(q) || 
                ass.description.toLowerCase().includes(q) ||
                (course?.title || '').toLowerCase().includes(q);
@@ -1025,7 +1027,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
     result.sort((a, b) => b.dueDate.localeCompare(a.dueDate));
 
     return result;
-  }, [assignments, tasksTrainerFilter, tasksStatusFilter, tasksDateFilter, tasksSearchQuery]);
+  }, [assignments, tasksTrainerFilter, tasksStatusFilter, tasksDateFilter, tasksSearchQuery, curricula]);
 
   // Compute actual active topic data from user's dashboard activity dynamically instead of mock indicators
   let activeTopicTitle = 'Explore Academy';
@@ -1049,7 +1051,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
     activeTopicDesc = `Activity recorded on ${new Date(latestLog.timestamp || latestLog.date).toLocaleDateString()}.`;
   } else {
     // Fallback search of standard database approved courses
-    const allCourses = db.getCurricula().filter(c => c.status === 'approved');
+    const allCourses = curricula.filter(c => c.status === 'approved');
     if (allCourses.length > 0) {
       activeTopicTitle = allCourses[0].title;
       activeTopicStatus = 'Suggested Course';
@@ -1149,6 +1151,53 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                 })}
               </div>
             )}
+          </div>
+
+          {/* Horizontally Scrollable Row of Quick Actions */}
+          <div className="mb-8">
+            <div className="px-1 mb-2.5 flex items-center gap-1.5">
+              <Sparkles size={13} className="text-brand-yellow font-bold" />
+              <span className="text-xs uppercase font-bold tracking-widest text-brand-gray dark:text-zinc-450">Quick Actions</span>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 pt-1 px-1 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
+              {[
+                { 
+                  label: 'Register Course', 
+                  icon: Compass, 
+                  onClick: () => onNavigateChange('courses')
+                },
+                { 
+                  label: 'View Certificates', 
+                  icon: Award, 
+                  onClick: () => onNavigateChange('tasks')
+                },
+                { 
+                  label: 'Assignments', 
+                  icon: FileText, 
+                  onClick: () => onNavigateChange('tasks')
+                },
+                { 
+                  label: 'Class Leaderboard', 
+                  icon: Activity, 
+                  onClick: () => {
+                    showToast("🏆 Sabicrest Syndicate Leaderboard: You are currently ranked #3 out of all registered active developers with an average score of 96.8%!");
+                  } 
+                },
+              ].map((action, i) => {
+                const Icon = action.icon;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={action.onClick}
+                    className="flex items-center gap-2 px-5 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-150/80 dark:border-zinc-800 hover:bg-white dark:hover:bg-zinc-900 hover:border-brand-yellow dark:hover:border-brand-yellow hover:shadow-xs transition-all cursor-pointer shrink-0"
+                  >
+                    <Icon size={14} className="text-brand-yellow shrink-0" />
+                    <span className="text-xs font-semibold text-brand-black dark:text-white tracking-tight">{action.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
         {/* Analytics Bento Grid Row - Structured in Two Elegant Columns */}
@@ -1259,53 +1308,6 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
               <p className="text-[9.5px]/[14px] xs:text-[11px]/[16px] sm:text-xs md:text-sm text-zinc-405 dark:text-zinc-400 font-medium mt-3 sm:mt-4">Real-time performance scores ledger.</p>
             </div>
 
-          </div>
-
-          {/* Horizontally Scrollable Row of Quick Actions */}
-          <div className="mb-8">
-            <div className="px-1 mb-2.5 flex items-center gap-1.5">
-              <Sparkles size={13} className="text-brand-yellow font-bold" />
-              <span className="text-xs uppercase font-bold tracking-widest text-brand-gray dark:text-zinc-450">Quick Actions</span>
-            </div>
-            <div className="flex gap-3 overflow-x-auto pb-2 pt-1 px-1 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
-              {[
-                { 
-                  label: 'Register Course', 
-                  icon: Compass, 
-                  onClick: () => onNavigateChange('courses')
-                },
-                { 
-                  label: 'View Certificates', 
-                  icon: Award, 
-                  onClick: () => onNavigateChange('tasks')
-                },
-                { 
-                  label: 'Assignments', 
-                  icon: FileText, 
-                  onClick: () => onNavigateChange('tasks')
-                },
-                { 
-                  label: 'Class Leaderboard', 
-                  icon: Activity, 
-                  onClick: () => {
-                    showToast("🏆 Sabicrest Syndicate Leaderboard: You are currently ranked #3 out of all registered active developers with an average score of 96.8%!");
-                  } 
-                },
-              ].map((action, i) => {
-                const Icon = action.icon;
-                return (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={action.onClick}
-                    className="flex items-center gap-2 px-5 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-150/80 dark:border-zinc-800 hover:bg-white dark:hover:bg-zinc-900 hover:border-brand-yellow dark:hover:border-brand-yellow hover:shadow-xs transition-all cursor-pointer shrink-0"
-                  >
-                    <Icon size={14} className="text-brand-yellow shrink-0" />
-                    <span className="text-xs font-semibold text-brand-black dark:text-white tracking-tight">{action.label}</span>
-                  </button>
-                );
-              })}
-            </div>
           </div>
 
         </div>
@@ -1717,7 +1719,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
       )}
 
       {activeTab === 'courses' && (() => {
-        const filteredAndSortedCourses = db.getCurricula()
+        const filteredAndSortedCourses = curricula
           .filter(c => c.status === 'approved')
           .filter(c => selectedCategoryFilter === 'All' || c.category === selectedCategoryFilter)
           .filter(course => 
@@ -2065,7 +2067,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
 
               {/* Course Meta */}
               {(() => {
-                const course = db.getCurricula().find(c => c.id === selectedTaskDetail.courseId);
+                const course = curricula.find(c => c.id === selectedTaskDetail.courseId);
                 const isDueSoon = (() => {
                   if (selectedTaskDetail.status !== 'not_submitted') return false;
                   const dueTime = new Date(`${selectedTaskDetail.dueDate}T23:59:59`).getTime();

@@ -134,10 +134,10 @@ export class SupabaseDatabase {
 
   constructor() {
     // Force reset old mock keys on first run to clean up active browser storage
-    if (localStorage.getItem('sabicrest_clean_v4_courses') !== 'true') {
+    if (localStorage.getItem('sabicrest_clean_v10_no_mock_absolute') !== 'true') {
       localStorage.removeItem('sc_curricula');
       localStorage.setItem('sc_curricula', JSON.stringify(INITIAL_CURRICULA));
-      localStorage.setItem('sabicrest_clean_v4_courses', 'true');
+      localStorage.setItem('sabicrest_clean_v10_no_mock_absolute', 'true');
     }
 
     if (localStorage.getItem('sabicrest_clean_v5') !== 'true') {
@@ -1076,7 +1076,43 @@ export class SupabaseDatabase {
 
   // --- Curricula CRUD ---
   getCurricula(): Curriculum[] {
-    return this.curricula;
+    return this.curricula.filter(c => {
+      if (!c) return false;
+      const idStr = String(c.id || '');
+      
+      // If it's a pre-seeded mock course, filter it out completely
+      const isPreseeded = idStr.startsWith('c-') && !isNaN(Number(idStr.split('-')[1])) && Number(idStr.split('-')[1]) <= 55;
+      if (isPreseeded) return false;
+
+      const titleLower = String(c.title || '').toLowerCase();
+      const descLower = String(c.description || '').toLowerCase();
+      const trainerLower = String(c.trainerName || '').toLowerCase();
+
+      const isMock =
+        titleLower.includes('mock') ||
+        titleLower.includes('test') ||
+        titleLower.includes('demo') ||
+        titleLower.includes('dummy') ||
+        titleLower.includes('sample') ||
+        titleLower.includes('practice') ||
+        titleLower.includes('qwerty') ||
+        titleLower.includes('asdf') ||
+        titleLower.includes('trash') ||
+        titleLower.includes('temp') ||
+        titleLower.includes('trial') ||
+        titleLower.includes('draft') ||
+        titleLower.length < 4 ||
+        descLower.includes('mock') ||
+        descLower.includes('test') ||
+        descLower.includes('demo') ||
+        descLower.includes('dummy') ||
+        descLower.includes('sample') ||
+        descLower.length < 10 ||
+        trainerLower.includes('mock') ||
+        trainerLower.includes('test');
+
+      return !isMock;
+    });
   }
 
   addCurriculum(curriculum: Omit<Curriculum, 'id' | 'status' | 'submittedAt'>): Curriculum {

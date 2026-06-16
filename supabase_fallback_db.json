@@ -68,22 +68,12 @@
   "assignments": [],
   "teams": [],
   "certificates": [],
-  "notifications": [
-    {
-      "$id": "n-1781197117074",
-      "$createdAt": "2026-06-11T16:58:36.962Z",
-      "$updatedAt": "2026-06-11T16:58:36.962Z",
-      "userId": "u-custom-1781179779277",
-      "title": "Sign-In Verification Completed",
-      "message": "Welcome back, Samson Gbizie! Successfully signed into your dashboard.",
-      "type": "system",
-      "read": false,
-      "createdAt": "2026-06-11T16:58:37.074Z"
-    }
-  ],
+  "notifications": [],
   "enrollments": [],
   "admin_activities": [],
   "settings": {
     "bypassSupabase": false
-  }
+  },
+  "courses": [],
+  "trainer_applications": []
 }
