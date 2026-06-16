@@ -1096,6 +1096,61 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
             </div>
           </div>
 
+          {/* Home Active Courses Progress Hub - High Contrast Isolation (Now positioned first after header) */}
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xs uppercase font-bold tracking-widest text-brand-gray dark:text-zinc-455 flex items-center gap-1.5">
+                <BookOpen size={13} className="text-brand-yellow" /> Active Courses
+              </h3>
+              <button 
+                onClick={() => onNavigateChange('courses')}
+                className="text-xs text-brand-yellow font-semibold hover:underline"
+              >
+                Register For More Courses &rarr;
+              </button>
+            </div>
+
+            {enrolledCoursesForProg.length === 0 ? (
+              <div className="text-center p-8 text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900/30 rounded-2xl text-xs font-light border border-zinc-100/50 dark:border-zinc-800">
+                You are not currently enrolled in any curricula. Head over to the <strong className="text-brand-black dark:text-white cursor-pointer underline font-medium" onClick={() => onNavigateChange('courses')}>Register Courses</strong> page to explore available classes.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {enrolledCoursesForProg.map(course => {
+                  const courseTasks = assignments.filter(a => a.courseId === course.id);
+                  const gradedTasks = courseTasks.filter(a => a.status === 'graded');
+                  const hasAssignments = courseTasks.length > 0;
+                  const completionPercent = hasAssignments ? Math.round((gradedTasks.length / courseTasks.length) * 100) : 0;
+                  
+                  return (
+                    <div key={course.id} className="premium-card p-4 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="w-10 h-8 rounded-lg overflow-hidden shrink-0 border border-zinc-100 dark:border-zinc-850">
+                          <img 
+                            src={getCourseImage(course.category, course.title, course.imageUrl)} 
+                            alt={course.title} 
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        </div>
+                        <div className="overflow-hidden">
+                          <h4 className="text-xs font-semibold text-brand-black dark:text-zinc-200 truncate max-w-[180px] sm:max-w-[240px]">{course.title}</h4>
+                          <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono">Trainer: {course.trainerName}</span>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-[10.5px] font-mono font-semibold text-brand-yellow">{completionPercent}% Complete</span>
+                        <div className="w-16 bg-zinc-100 dark:bg-zinc-950 h-1.5 rounded-full overflow-hidden mt-1">
+                          <div className="bg-brand-yellow h-1.5 rounded-full" style={{ width: `${completionPercent}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
         {/* Analytics Bento Grid Row - Structured in Two Elegant Columns */}
         <div id="student-bento-row" className="grid grid-cols-2 gap-4 md:gap-6 mb-8">
             
@@ -1253,60 +1308,6 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
             </div>
           </div>
 
-          {/* Home Active Courses Progress Hub - High Contrast Isolation */}
-          <div className="mt-8 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xs uppercase font-bold tracking-widest text-brand-gray dark:text-zinc-455 flex items-center gap-1.5">
-                <BookOpen size={13} className="text-brand-yellow" /> Active Courses
-              </h3>
-              <button 
-                onClick={() => onNavigateChange('courses')}
-                className="text-xs text-brand-yellow font-semibold hover:underline"
-              >
-                Register For More Courses &rarr;
-              </button>
-            </div>
-
-            {enrolledCoursesForProg.length === 0 ? (
-              <div className="text-center p-8 text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900/30 rounded-2xl text-xs font-light border border-zinc-100/50 dark:border-zinc-800">
-                You are not currently enrolled in any curricula. Head over to the <strong className="text-brand-black dark:text-white cursor-pointer underline font-medium" onClick={() => onNavigateChange('courses')}>Register Courses</strong> page to explore available classes.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {enrolledCoursesForProg.map(course => {
-                  const courseTasks = assignments.filter(a => a.courseId === course.id);
-                  const gradedTasks = courseTasks.filter(a => a.status === 'graded');
-                  const hasAssignments = courseTasks.length > 0;
-                  const completionPercent = hasAssignments ? Math.round((gradedTasks.length / courseTasks.length) * 100) : 0;
-                  
-                  return (
-                    <div key={course.id} className="premium-card p-4 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3 overflow-hidden">
-                        <div className="w-10 h-8 rounded-lg overflow-hidden shrink-0 border border-zinc-100 dark:border-zinc-850">
-                          <img 
-                            src={getCourseImage(course.category, course.title, course.imageUrl)} 
-                            alt={course.title} 
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                        </div>
-                        <div className="overflow-hidden">
-                          <h4 className="text-xs font-semibold text-brand-black dark:text-zinc-200 truncate max-w-[180px] sm:max-w-[240px]">{course.title}</h4>
-                          <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono">Trainer: {course.trainerName}</span>
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <span className="text-[10.5px] font-mono font-semibold text-brand-yellow">{completionPercent}% Complete</span>
-                        <div className="w-16 bg-zinc-100 dark:bg-zinc-950 h-1.5 rounded-full overflow-hidden mt-1">
-                          <div className="bg-brand-yellow h-1.5 rounded-full" style={{ width: `${completionPercent}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
         </div>
       )}
 
