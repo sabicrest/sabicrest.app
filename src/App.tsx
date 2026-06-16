@@ -256,6 +256,8 @@ export default function App() {
           { id: 'courses', label: 'Courses', icon: BookOpen },
           { id: 'messaging', label: 'Chats', icon: MessageSquare },
           { id: 'tasks', label: 'Tasks', icon: FileText },
+          { id: 'collaboration', label: 'Collaboration', icon: Users },
+          { id: 'scheduling', label: 'Events', icon: CalendarDays },
           { id: 'profile', label: 'Profile', icon: UserIcon }
         ];
       case 'trainer':
@@ -338,31 +340,29 @@ export default function App() {
       {currentUser && (currentUser.role === 'student' || currentUser.role === 'trainer' || currentUser.role === 'admin') && (
         <div 
           id="sabicrest-mobile-bottom-nav" 
-          className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-[540px] h-[82px] bg-white dark:bg-zinc-950 border border-zinc-200/50 dark:border-zinc-800/80 shadow-[0_16px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.45)] rounded-[26px] flex items-center p-1.5 transition-all duration-300"
+          className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-3rem)] max-w-[440px] h-[76px] bg-white dark:bg-zinc-950 border border-zinc-200/40 dark:border-zinc-800/80 shadow-[0_12px_36px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.4)] rounded-[24px] flex items-center p-2 transition-all duration-300"
         >
           <div className="flex items-center justify-between w-full h-full gap-1 select-none font-sans">
             {(currentUser.role === 'student'
               ? [
-                  { id: 'dashboard', label: 'Space', icon: Home },
+                  { id: 'dashboard', label: 'Home', icon: Home },
                   { id: 'courses', label: 'Courses', icon: BookOpen },
-                  { id: 'messaging', label: 'Chats', icon: MessageSquare, badge: chatCount > 0 ? chatCount : 0 },
                   { id: 'tasks', label: 'Tasks', icon: FileText },
-                  { id: 'collaboration', label: 'Collab', icon: Users },
-                  { id: 'scheduling', label: 'Events', icon: CalendarDays },
+                  { id: 'messaging', label: 'Chats', icon: MessageSquare, badge: chatCount > 0 ? chatCount : 0 },
                   { id: 'profile', label: 'Profile', icon: UserIcon },
                 ]
               : currentUser.role === 'trainer'
               ? [
-                  { id: 'dashboard', label: 'Space', icon: LayoutDashboard },
+                  { id: 'dashboard', label: 'Home', icon: Home },
+                  { id: 'scheduling', label: 'Courses', icon: BookOpen },
                   { id: 'messaging', label: 'Chats', icon: MessageSquare, badge: chatCount > 0 ? chatCount : 0 },
-                  { id: 'scheduling', label: 'My Courses', icon: BookOpen },
-                  { id: 'profile', label: 'Settings', icon: Settings },
+                  { id: 'profile', label: 'Profile', icon: Settings },
                 ]
               : [
-                  { id: 'dashboard', label: 'Space', icon: LayoutDashboard },
-                  { id: 'messaging', label: 'Chats', icon: MessageSquare, badge: chatCount > 0 ? chatCount : 0 },
+                  { id: 'dashboard', label: 'Home', icon: Home },
                   { id: 'scheduling', label: 'Events', icon: CalendarDays },
-                  { id: 'profile', label: 'Settings', icon: Settings },
+                  { id: 'messaging', label: 'Chats', icon: MessageSquare, badge: chatCount > 0 ? chatCount : 0 },
+                  { id: 'profile', label: 'Profile', icon: Settings },
                 ]
             ).map(item => {
               const Icon = item.icon;
@@ -382,21 +382,21 @@ export default function App() {
                       }
                     }
                   }}
-                  className={`flex-1 h-full rounded-[20px] flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer ${
+                  className={`flex-1 h-full rounded-[16px] flex flex-col items-center justify-center gap-0.5 transition-all duration-200 cursor-pointer relative ${
                     isActive 
-                      ? 'bg-[#FFCC00] text-zinc-950 font-bold shadow-md' 
-                      : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-50/50 dark:hover:bg-zinc-900/40'
+                      ? 'bg-[#FFCC00] text-zinc-950 font-extrabold shadow-sm' 
+                      : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-650 dark:hover:text-zinc-350 hover:bg-zinc-50/10 dark:hover:bg-zinc-900/10'
                   }`}
                 >
                   <div className="relative flex items-center justify-center">
                     <Icon 
-                      size={23} 
-                      strokeWidth={isActive ? 1.95 : 1.35}
+                      size={20} 
+                      strokeWidth={isActive ? 2 : 1.4}
                       className={isActive ? 'text-zinc-950' : 'text-zinc-400 dark:text-zinc-500'} 
                       fill="none"
                     />
                     {item.badge !== undefined && item.badge > 0 && (
-                      <span className={`absolute -top-1.5 -right-3.5 min-w-[15px] h-4 px-1 text-[9px] font-extrabold rounded-full flex items-center justify-center border font-sans leading-none ${
+                      <span className={`absolute -top-1.5 -right-3 min-w-[14px] h-3.5 px-1 text-[8px] font-extrabold rounded-full flex items-center justify-center border font-sans leading-none ${
                         isActive 
                           ? 'bg-zinc-950 text-[#FFCC00] border-zinc-950 shadow-xs' 
                           : 'bg-[#FFCC00] text-zinc-950 border-white'
@@ -405,8 +405,8 @@ export default function App() {
                       </span>
                     )}
                   </div>
-                  <span className={`text-[9.5px] xs:text-[11px] font-sans tracking-tight leading-none text-center select-none ${
-                    isActive ? 'text-zinc-950 font-bold' : 'text-zinc-400 dark:text-zinc-550 font-medium'
+                  <span className={`text-[10px] font-sans tracking-tight leading-none text-center select-none ${
+                    isActive ? 'text-zinc-950 font-extrabold' : 'text-zinc-400 dark:text-zinc-550 font-semibold'
                   }`}>
                     {item.label}
                   </span>

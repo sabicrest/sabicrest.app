@@ -381,6 +381,17 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
               <LogOut size={16} />
             </button>
 
+            {/* Hamburger menu button - visible on BOTH mobile and desktop */}
+            <button
+              id="hamburger-menu-btn"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-zinc-500 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-xl transition-all cursor-pointer flex items-center justify-center shrink-0"
+              aria-label="Toggle Navigation Menu"
+              title="Open Navigation Drawer"
+            >
+              <Menu size={20} strokeWidth={2} />
+            </button>
+
           </div>
         </div>
       </div>
@@ -484,6 +495,146 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
               </button>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Side Hamburger Menu Drawer (always available on mobile and desktop) */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <div key="hamburger-drawer-enclosure" className="fixed inset-0 z-50">
+            {/* Backdrop Overlay */}
+            <motion.div
+              id="hamburger-backdrop-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="absolute inset-0 bg-zinc-950/45 backdrop-blur-xs cursor-pointer"
+            />
+
+            {/* Slide-out Drawer Panel */}
+            <motion.div
+              id="hamburger-side-drawer"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+              className="absolute top-0 right-0 bottom-0 w-[310px] sm:w-[350px] bg-white dark:bg-zinc-950 shadow-[0_0_50px_rgba(0,0,0,0.15)] dark:shadow-[0_0_50px_rgba(0,0,0,0.6)] flex flex-col border-l border-zinc-150/40 dark:border-zinc-850 h-full overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Drawer Title Header */}
+              <div className="p-5 border-b border-zinc-100 dark:border-zinc-850 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-900/30">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 bg-white dark:bg-zinc-900 border border-zinc-200 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+                    <img
+                      src={sabicrestLogo}
+                      alt="Sabicrest Logo"
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <span className="text-xs font-black text-zinc-950 dark:text-white tracking-tight uppercase font-sans">
+                    Sabicrest Menu
+                  </span>
+                </div>
+                <button
+                  id="hamburger-drawer-close"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-850 transition-colors cursor-pointer"
+                  title="Close Menu"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* User Profile Card Summary inside Drawer */}
+              <div className="p-5 border-b border-zinc-100 dark:border-zinc-850 space-y-3">
+                <div className="flex items-center gap-3">
+                  {currentUser.avatar ? (
+                    <img 
+                      src={currentUser.avatar} 
+                      alt="avatar" 
+                      className="w-12 h-12 rounded-full object-cover border-2 border-brand-yellow/80" 
+                      referrerPolicy="no-referrer" 
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-zinc-900 dark:bg-zinc-800 text-white flex items-center justify-center text-sm font-bold border-2 border-[#FFCC00]">
+                      {currentUser.name.charAt(0)}
+                    </div>
+                  )}
+                  <div className="space-y-0.5 min-w-0">
+                    <h4 className="text-sm font-bold text-zinc-950 dark:text-white truncate">{currentUser.name}</h4>
+                    <p className="text-[11px] text-zinc-500 truncate">{currentUser.email}</p>
+                    <div className="inline-flex items-center gap-1 text-[10px] font-mono uppercase bg-zinc-100 dark:bg-zinc-850 text-zinc-800 dark:text-zinc-250 px-2 py-0.5 rounded-md font-semibold">
+                      {currentUser.verified ? (
+                        <CheckCircle size={10} className="text-emerald-500 animate-pulse" />
+                      ) : (
+                        <Shield size={10} className="text-zinc-400" />
+                      )}
+                      {currentUser.role}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Navigation Menu Links Items */}
+              <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+                <div className="px-3 py-1.5">
+                  <span className="text-[10px] font-mono tracking-wider text-zinc-405 dark:text-zinc-550 uppercase font-bold">
+                    System Hub Pages
+                  </span>
+                </div>
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      id={`hamburger-drawer-link-${tab.id}`}
+                      onClick={() => {
+                        setActiveTab(tab.id);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl transition-all cursor-pointer text-left ${
+                        isActive
+                          ? 'bg-[#FFCC00] text-zinc-950 font-bold shadow-xs scale-[0.98]'
+                          : 'text-zinc-600 dark:text-zinc-350 hover:bg-zinc-50 dark:hover:bg-zinc-900/60 hover:text-zinc-900 dark:hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon size={18} className={isActive ? 'text-zinc-950' : 'text-zinc-400 dark:text-zinc-500'} strokeWidth={isActive ? 2 : 1.4} />
+                        <span className="text-xs font-semibold tracking-wide uppercase">{tab.label}</span>
+                      </div>
+                      {tab.id === 'messaging' && chatCount > 0 && (
+                        <span className={`text-[9px] font-bold min-w-[16px] h-4 rounded-full flex items-center justify-center px-1 border leading-none ${
+                          isActive 
+                            ? 'bg-zinc-950 text-brand-yellow border-zinc-950 shadow-xs' 
+                            : 'bg-[#FFCC00] text-zinc-950 border-white'
+                        }`}>
+                          {chatCount}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Drawer Footer controls */}
+              <div className="p-5 border-t border-zinc-100 dark:border-zinc-850 bg-zinc-50/50 dark:bg-zinc-900/30">
+                <button
+                  id="hamburger-drawer-logout"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setShowLogoutConfirm(true);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-red-50 dark:bg-red-950/10 hover:bg-red-105 dark:hover:bg-red-950/20 text-red-650 border border-red-100 dark:border-red-950/40 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  <LogOut size={14} />
+                  <span>Secure Sign Out</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </nav>
