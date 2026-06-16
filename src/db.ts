@@ -220,11 +220,30 @@ export class SupabaseDatabase {
   }
 
   private async proxySave(collectionId: string, documentId: string, data: any, isDelete = false): Promise<any> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const userStr = window.localStorage.getItem('sabicrest_current_user');
+        if (userStr) {
+          const u = JSON.parse(userStr);
+          if (u && u.id) {
+            headers['x-client-userid'] = u.id;
+          }
+          if (u && u.role) {
+            headers['x-client-role'] = u.role;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Could not read user session context for RLS proxy headers:', e);
+    }
+
     const res = await fetch('/api/supabase/save', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers,
       body: JSON.stringify({
         collectionId,
         documentId,

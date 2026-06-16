@@ -45,7 +45,7 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
   const [coursesSearchQuery, setCoursesSearchQuery] = useState('');
 
   // Dynamic administrative subview states for clickable drilldowns
-  const [adminSubView, setAdminSubView] = useState<'default' | 'users' | 'courses' | 'pending-verification' | 'ongoing-courses' | 'graduating' | 'inactive-students' | 'active-students' | 'active-trainers' | 'chats-messages' | 'finances' | 'course-proposals' | 'payment-audit' | 'audit-logs'>('default');
+  const [adminSubView, setAdminSubView] = useState<'default' | 'users' | 'courses' | 'pending-verification' | 'ongoing-courses' | 'graduating' | 'inactive-students' | 'active-students' | 'active-trainers' | 'chats-messages' | 'finances' | 'course-proposals' | 'payment-audit' | 'audit-logs' | 'database-rls'>('default');
   const [subViewQuery, setSubViewQuery] = useState('');
   const [subViewFilters, setSubViewFilters] = useState({
     role: 'all',          // 'all', 'student', 'trainer'
@@ -656,6 +656,16 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
                 }`}
               >
                 <Activity size={12} /> System Audit Logs
+              </button>
+              <button
+                onClick={() => setAdminSubView('database-rls')}
+                className={`flex items-center gap-1.5 rounded-xl text-[10px] px-3.5 py-2 font-mono uppercase cursor-pointer transition-all border ${
+                  adminSubView === 'database-rls'
+                    ? 'bg-zinc-950 text-white border-zinc-950 font-bold shadow-xs'
+                    : 'bg-zinc-50 text-zinc-700 border-zinc-100 hover:bg-zinc-100'
+                }`}
+              >
+                <Shield size={12} /> Database Security & RLS
               </button>
             </div>
           </div>

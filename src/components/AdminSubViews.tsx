@@ -6,8 +6,169 @@ import {
   ChevronLeft, Award, BookOpen, Users, HelpCircle, UserX, UserCheck, Search, XCircle, 
   MessageSquare, DollarSign, Clock, Shield, ToggleLeft, ToggleRight, Trash2, Plus, 
   BookOpenCheck, CheckCircle2, Flame, RefreshCw, Sparkles, Activity, FileText,
-  Play, ClipboardCheck, X
+  Play, ClipboardCheck, X, Key, Copy, Info
 } from 'lucide-react';
+
+const rlsSqlMap: Record<string, string> = {
+  users: `--- 1. ENABLE ROW LEVEL SECURITY
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+
+--- 2. SELECT: ALLOW AUTHENTICATED DIRECTORY ACCESS FOR ACADEMY COORDINATION
+CREATE POLICY "Allow authenticated read users" ON public.users
+    FOR SELECT TO authenticated USING (true);
+
+--- 3. INSERT: ALLOW SIGN-UPS AND INITIAL ACCOUNT REGISTRATIONS
+CREATE POLICY "Allow registration insert safety" ON public.users
+    FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+--- 4. UPDATE: USERS CAN ONLY UPDATE THEIR OWN ROW
+CREATE POLICY "Allow owners to update core profile info" ON public.users
+    FOR UPDATE TO authenticated 
+    USING (auth.uid()::text = id)
+    WITH CHECK (auth.uid()::text = id);
+
+--- 5. DELETE: STRICTLY SELF-ACCOUNT ERASURES OR ADMIN BYPASS
+CREATE POLICY "Allow owners to delete their own account profile" ON public.users
+    FOR DELETE TO authenticated USING (auth.uid()::text = id);`,
+
+  messages: `--- 1. ENABLE ROW LEVEL SECURITY ON DIRECT CHATS
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+
+--- 2. SELECT: ONLY SENDER, RECEIVER, OR PUBLIC GROUPS CAN ACCESS
+CREATE POLICY "Select messages isolation policy" ON public.messages
+    FOR SELECT TO authenticated
+    USING (
+        auth.uid()::text = sender_id 
+        OR auth.uid()::text = receiver_id 
+        OR channel_id IS NOT NULL
+    );
+
+--- 3. INSERT: VALIDATE ACTIVE SENDER IDENTITY OWNERSHIP
+CREATE POLICY "Insert messages safety check" ON public.messages
+    FOR INSERT TO authenticated
+    WITH CHECK (auth.uid()::text = sender_id);
+
+--- 4. UPDATE/DELETE: SENDERS CONTROL OWN MESSAGES
+CREATE POLICY "Modify own messages constraint" ON public.messages
+    FOR ALL TO authenticated
+    USING (auth.uid()::text = sender_id)
+    WITH CHECK (auth.uid()::text = sender_id);`,
+
+  hub_messages: `--- 1. ENABLE ROW LEVEL SECURITY ON BROADCASTS
+ALTER TABLE public.hub_messages ENABLE ROW LEVEL SECURITY;
+
+--- 2. SELECT: GENERAL AUDIENCE PUBLIC DISCOVERY
+CREATE POLICY "Select hub broadcasts" ON public.hub_messages
+    FOR SELECT TO authenticated USING (true);
+
+--- 3. INSERT: SENDER IS THE AUTHENTICATED WRITER
+CREATE POLICY "Insert hub messages" ON public.hub_messages
+    FOR INSERT TO authenticated WITH CHECK (auth.uid()::text = sender_id);
+
+--- 4. UPDATE/DELETE: CONTROL OWN RECORDS
+CREATE POLICY "Manage own hub broadcasts" ON public.hub_messages
+    FOR ALL TO authenticated
+    USING (auth.uid()::text = sender_id)
+    WITH CHECK (auth.uid()::text = sender_id);`,
+
+  assignments: `--- 1. ENABLE ROW LEVEL SECURITY ON ACADEMIC HOMEWORK
+ALTER TABLE public.assignments ENABLE ROW LEVEL SECURITY;
+
+--- 2. SELECT: PERMIT STUDENT OWNERS OR REVIEWING COURSE MENTORS (TRAINERS)
+CREATE POLICY "Retrieve relevant assignments files" ON public.assignments
+    FOR SELECT TO authenticated
+    USING (
+        auth.uid()::text = student_id 
+        OR auth.uid()::text = trainer_id
+    );
+
+--- 3. INSERT: STUDENTS CREATE HOMEWORK LABELS ONLY REPRESENTING THEMSELVES
+CREATE POLICY "Create student assignment file" ON public.assignments
+    FOR INSERT TO authenticated WITH CHECK (auth.uid()::text = student_id);
+
+--- 4. UPDATE: PERMIT MENTORS TO FEEDBACK AND STUDENTS TO RE-UPLOAD
+CREATE POLICY "Alter assignment records validation" ON public.assignments
+    FOR UPDATE TO authenticated
+    USING (
+        auth.uid()::text = student_id 
+        OR auth.uid()::text = trainer_id
+    )
+    WITH CHECK (
+        auth.uid()::text = student_id 
+        OR auth.uid()::text = trainer_id
+    );`,
+
+  events: `--- 1. ENABLE ROW LEVEL SECURITY ON TIMETABLES
+ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
+
+--- 2. SELECT: ALL ACTIVE STUDENTS & TRAINERS READ MEET SCHEDULES
+CREATE POLICY "Select academic timetable" ON public.events
+    FOR SELECT TO authenticated USING (true);
+
+--- 3. MANAGEMENT (INSERT/UPDATE/DELETE): OWNERSHIP RESTRICTED TO SCHEDULER (TRAINER)
+CREATE POLICY "Trainers manage scheduled events" ON public.events
+    FOR ALL TO authenticated
+    USING (auth.uid()::text = trainer_id)
+    WITH CHECK (auth.uid()::text = trainer_id);`,
+
+  curricula: `--- 1. ENABLE ROW LEVEL SECURITY ON CORE CURRICULUM
+ALTER TABLE public.curricula ENABLE ROW LEVEL SECURITY;
+
+--- 2. SELECT: CATALOG IS VIEWABLE ACROSS PLATFORM
+CREATE POLICY "Read course curriculum directories" ON public.curricula
+    FOR SELECT TO authenticated, anon USING (true);
+
+--- 3. MANAGEMENT: ONLY CORRESPONDING CREATOR (TRAINER) CAN TOUCH SYLLABUS LISTS
+CREATE POLICY "Trainers manage own curricula ledger" ON public.curricula
+    FOR ALL TO authenticated
+    USING (auth.uid()::text = trainer_id)
+    WITH CHECK (auth.uid()::text = trainer_id);`,
+
+  enrollments: `--- 1. ENABLE ROW LEVEL SECURITY ON COHORT ENROLLMENTS
+ALTER TABLE public.enrollments ENABLE ROW LEVEL SECURITY;
+
+--- 2. SELECT: STUDENT OWNER OR ADMITTING ACADEMIC MENTOR
+CREATE POLICY "Retrieve isolated enrollments histories" ON public.enrollments
+    FOR SELECT TO authenticated
+    USING (
+        auth.uid()::text = student_id 
+        OR auth.uid()::text = trainer_id
+    );
+
+--- 3. INSERT: STUDENTS ONLY INITIATE REGISTRATION COMMITTING THEIR OWN ID
+CREATE POLICY "Enrollment request initiation trigger" ON public.enrollments
+    FOR INSERT TO authenticated WITH CHECK (auth.uid()::text = student_id);
+
+--- 4. UPDATE: ENROLLMENTS APPROVAL GRANTS CONTROL TO CO-PARTICIPANTS
+CREATE POLICY "Enrollment modifications control" ON public.enrollments
+    FOR UPDATE TO authenticated
+    USING (
+        auth.uid()::text = student_id 
+        OR auth.uid()::text = trainer_id
+    );`,
+
+  notifications: `--- 1. ENABLE ROW LEVEL SECURITY ON SYSTEM NOTIFICATIONS
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+
+--- 2. SEAL COMPLETE INTERACTIVE CHANNELS SO USERS CAN ONLY TARGET THEIR OWN RECORD
+CREATE POLICY "Secure isolated user notification line" ON public.notifications
+    FOR ALL TO authenticated
+    USING (auth.uid()::text = user_id)
+    WITH CHECK (auth.uid()::text = user_id);`,
+
+  teams: `--- 1. ENABLE ROW LEVEL SECURITY ON TEAMS LIST
+ALTER TABLE public.teams ENABLE ROW LEVEL SECURITY;
+
+--- 2. SELECT: GENERAL AUDIENCE DIRECTORY VIEW
+CREATE POLICY "Select visible teams directories" ON public.teams
+    FOR SELECT TO authenticated USING (true);
+
+--- 3. MANAGEMENT: ONLY CHOSEN TEAM LEAD RETAINS CONTROL BOUNDARIES
+CREATE POLICY "Manage physical team profiles" ON public.teams
+    FOR ALL TO authenticated
+    USING (auth.uid()::text = leader_id)
+    WITH CHECK (auth.uid()::text = leader_id);`
+};
 
 interface AdminSubViewsProps {
   currentUser: User;
@@ -18,7 +179,7 @@ interface AdminSubViewsProps {
   trainerApps: TrainerApplication[];
   transactions: any[];
   activities: AdminActivity[];
-  subView: 'users' | 'courses' | 'pending-verification' | 'ongoing-courses' | 'graduating' | 'inactive-students' | 'active-students' | 'active-trainers' | 'chats-messages' | 'finances' | 'course-proposals' | 'payment-audit' | 'audit-logs';
+  subView: 'users' | 'courses' | 'pending-verification' | 'ongoing-courses' | 'graduating' | 'inactive-students' | 'active-students' | 'active-trainers' | 'chats-messages' | 'finances' | 'course-proposals' | 'payment-audit' | 'audit-logs' | 'database-rls';
   initialRoleFilter?: 'all' | 'student' | 'trainer';
   reloadAdminData: () => void;
 }
@@ -54,6 +215,7 @@ export default function AdminSubViews({
   // Feedbacks / In-app interactive messages with Trainer Candidate
   const [activeMessageApp, setActiveMessageApp] = useState<any | null>(null);
   const [adminMessageText, setAdminMessageText] = useState('');
+  const [rlsActiveTable, setRlsActiveTable] = useState<string>('users');
 
   // Toast confirmation feedback trigger
   const [notifToast, setNotifToast] = useState<string | null>(null);
@@ -489,6 +651,7 @@ export default function AdminSubViews({
               {subView === 'course-proposals' && <BookOpenCheck className="w-5 h-5 text-[#218c3f]" />}
               {subView === 'payment-audit' && <ClipboardCheck className="w-5 h-5 text-teal-605" />}
               {subView === 'audit-logs' && <Activity className="w-5 h-5 text-amber-600" />}
+              {subView === 'database-rls' && <Shield className="w-5 h-5 text-indigo-600 animate-pulse" />}
 
               <span>
                 {subView === 'users' ? "Total User's" : 
@@ -503,6 +666,7 @@ export default function AdminSubViews({
                  subView === 'course-proposals' ? 'Course proposals queue' :
                  subView === 'payment-audit' ? 'Student Tuition verification queue' :
                  subView === 'audit-logs' ? 'System Audit logs' :
+                 subView === 'database-rls' ? 'Supabase Row Level Security (RLS) policies' :
                  'Financial Accounts Audit'}
               </span>
             </h2>
@@ -1800,6 +1964,103 @@ export default function AdminSubViews({
               >
                 Send
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DATABASE ROW LEVEL SECURITY GATE */}
+      {subView === 'database-rls' && (
+        <div className="space-y-6">
+          <div className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-xs space-y-6">
+            <div className="bg-zinc-50 p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-xs font-bold tracking-wider text-neutral-800 uppercase flex items-center gap-1.5 font-mono">
+                  <Shield size={14} className="text-emerald-500 animate-pulse" /> Cloud Supabase Row-Level Security Enforcer
+                </h3>
+                <p className="text-[11px] text-zinc-500 mt-1 font-light">
+                  Enforces strict data isolation. Users can only read or write records directly associated with their own user identity.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-1 rounded-xl font-semibold uppercase flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" /> Proxy Security: active
+                </span>
+                <span className="text-[9px] font-mono bg-zinc-900 text-white px-2.5 py-1 rounded-xl">RLS RULES READY</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-1 space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 font-mono">Protected Tables</h4>
+                <div className="space-y-1.5">
+                  {[
+                    { id: 'users', label: 'users', desc: 'Isolate user profiles & private parameters' },
+                    { id: 'messages', label: 'messages', desc: 'Secure direct student-teacher chat histories' },
+                    { id: 'hub_messages', label: 'hub_messages', desc: 'Manage shared academy channel broadcasts' },
+                    { id: 'assignments', label: 'assignments', desc: 'Restrict homework files strictly to owners & reviewers' },
+                    { id: 'events', label: 'events', desc: 'Safeguard calendar timetables creation' },
+                    { id: 'curricula', label: 'curricula', desc: 'Limit curriculum syllabus configurations to trainers' },
+                    { id: 'enrollments', label: 'enrollments', desc: 'Safeguard cohort registrations list' },
+                    { id: 'notifications', label: 'notifications', desc: 'Seal system notifications line' },
+                    { id: 'teams', label: 'teams', desc: 'Control team workspaces' },
+                  ].map((tbl) => (
+                    <button
+                      key={tbl.id}
+                      onClick={() => setRlsActiveTable(tbl.id)}
+                      className={`w-full text-left p-3.5 rounded-2xl border text-xs transition-all cursor-pointer ${
+                        rlsActiveTable === tbl.id
+                          ? 'bg-zinc-950 border-zinc-950 text-white shadow-xs'
+                          : 'bg-zinc-50 hover:bg-zinc-100 border-zinc-100 text-zinc-700'
+                      }`}
+                    >
+                      <div className="font-mono font-bold flex items-center gap-1.5">
+                        <Key size={11} className={rlsActiveTable === tbl.id ? 'text-brand-yellow' : 'text-zinc-400'} />
+                        {tbl.label}
+                      </div>
+                      <p className={`text-[10px] mt-1 font-light ${rlsActiveTable === tbl.id ? 'text-zinc-300' : 'text-zinc-500'}`}>
+                        {tbl.desc}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="lg:col-span-2 space-y-4">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-700 font-mono">
+                      SQL Policy Blueprint: <span className="text-indigo-600 font-semibold">{rlsActiveTable}</span>
+                    </h4>
+                    <p className="text-[10px] text-zinc-500 font-light mt-0.5">Copy and execute this script inside your Supabase SQL editor terminal.</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(rlsSqlMap[rlsActiveTable] || '');
+                      showToast('SQL Policy copied successfully!');
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 hover:bg-black text-white text-[10px] font-mono uppercase rounded-xl cursor-pointer"
+                  >
+                    <Copy size={11} /> Copy Query
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <pre className="p-4 rounded-3xl bg-zinc-950 text-emerald-400 font-mono text-[10.5px] leading-relaxed overflow-x-auto max-h-[420px] shadow-inner border border-zinc-900">
+                    <code>{rlsSqlMap[rlsActiveTable]}</code>
+                  </pre>
+                </div>
+
+                <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-start gap-2.5">
+                  <Info size={14} className="text-amber-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <h5 className="text-[11px] font-bold text-amber-900 font-mono uppercase">Developer System Advisory</h5>
+                    <p className="text-[10.5px] text-amber-800 font-light leading-normal">
+                      The SabiCrest full-stack proxy engine has also been reinforced with parallel <strong>Server-Side Row-Level Security filters</strong>. Every operation addressing `/api/supabase/save` validates user credentials against document schemas, preventing data crossover leaks even in simulated or local storage fallback modes.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

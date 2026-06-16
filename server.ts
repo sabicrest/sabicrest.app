@@ -532,6 +532,62 @@ async function startServer() {
   // API Proxy Route for Saving or Deleting Documents
   app.post('/api/supabase/save', async (req, res) => {
     const { collectionId, documentId, data: documentData, isDelete } = req.body;
+    const clientUserId = req.headers['x-client-userid'] as string;
+    const clientUserRole = req.headers['x-client-role'] as string;
+
+    // Enforce Proxy-Level Security (Row-Level Security)
+    if (clientUserId) {
+      if (clientUserRole !== 'admin') {
+        let isAuthorized = true;
+        let authReason = '';
+
+        if (collectionId === 'users' && documentId !== clientUserId) {
+          isAuthorized = false;
+          authReason = 'Access Denied: You cannot modify or delete another user\'s profile.';
+        } else if (collectionId === 'messages' && !isDelete && documentData && documentData.senderId && documentData.senderId !== clientUserId) {
+          isAuthorized = false;
+          authReason = 'Access Denied: Sender identity mismatch. You cannot send messages representing other accounts.';
+        } else if (collectionId === 'hub_messages' && !isDelete && documentData && documentData.senderId && documentData.senderId !== clientUserId) {
+          isAuthorized = false;
+          authReason = 'Access Denied: Broadcaster identity mismatch. You cannot broadcast posts representing other accounts.';
+        } else if (collectionId === 'events' && clientUserRole !== 'trainer') {
+          isAuthorized = false;
+          authReason = 'Access Denied: Only certified trainers can manage scheduled course events.';
+        } else if (collectionId === 'curricula' && clientUserRole !== 'trainer') {
+          isAuthorized = false;
+          authReason = 'Access Denied: Only certified trainers retain rights to manage curriculum assets.';
+        } else if (collectionId === 'assignments') {
+          if (clientUserRole === 'student') {
+            if (!isDelete && documentData && documentData.studentId && documentData.studentId !== clientUserId) {
+              isAuthorized = false;
+              authReason = 'Access Denied: Student registration ID mismatch on assignment metadata.';
+            }
+          } else if (clientUserRole === 'trainer') {
+            if (!isDelete && documentData && documentData.trainerId && documentData.trainerId !== clientUserId) {
+              isAuthorized = false;
+              authReason = 'Access Denied: Mentor/Trainer registration ID mismatch on grading files.';
+            }
+          } else {
+            isAuthorized = false;
+            authReason = 'Access Denied: Invalid role privileges.';
+          }
+        } else if (collectionId === 'enrollments' && clientUserRole === 'student' && !isDelete && documentData && documentData.studentId && documentData.studentId !== clientUserId) {
+          isAuthorized = false;
+          authReason = 'Access Denied: Student ID mismatch. You cannot enroll other users into class cohorts.';
+        } else if (collectionId === 'notifications' && !isDelete && documentData && documentData.userId && documentData.userId !== clientUserId) {
+          isAuthorized = false;
+          authReason = 'Access Denied: You cannot redirect system notifications to other members.';
+        }
+
+        if (!isAuthorized) {
+          console.warn(`[Proxy RLS Blocked] Unauthorized action on collection '${collectionId}' (document ID: '${documentId}') by user '${clientUserId}' (Role: '${clientUserRole}'): ${authReason}`);
+          return res.status(200).json({
+            success: false,
+            error: authReason
+          });
+        }
+      }
+    }
 
     if (collectionId === 'users') {
       try {
