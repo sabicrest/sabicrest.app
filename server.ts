@@ -53,43 +53,220 @@ async function startServer() {
     return newObj;
   }
 
+  // --- SQL Seeding Parser for Fallback ---
+  function parseSQLTuple(line: string): any[] {
+    let content = line.trim();
+    if (content.startsWith('(')) {
+      content = content.substring(1);
+    }
+    if (content.endsWith('),') || content.endsWith(');')) {
+      content = content.substring(0, content.length - 2);
+    } else if (content.endsWith(')')) {
+      content = content.substring(0, content.length - 1);
+    }
+    
+    const result: any[] = [];
+    let i = 0;
+    while (i < content.length) {
+      while (i < content.length && (content[i] === ' ' || content[i] === ',')) {
+        i++;
+      }
+      if (i >= content.length) break;
+      
+      if (content[i] === "'") {
+        let str = '';
+        i++; // skip open quote
+        while (i < content.length) {
+          if (content[i] === "'") {
+            if (content[i+1] === "'") {
+              str += "'";
+              i += 2;
+            } else {
+              i++;
+              break;
+            }
+          } else {
+            str += content[i];
+            i++;
+          }
+        }
+        result.push(str);
+        if (content.startsWith('::jsonb', i)) {
+          i += 7;
+        }
+      } else {
+        let token = '';
+        while (i < content.length && content[i] !== ',' && content[i] !== ' ' && content[i] !== ')') {
+          token += content[i];
+          i++;
+        }
+        if (token.toUpperCase() === 'NULL' || token === '') {
+          result.push(null);
+        } else if (token.toUpperCase() === 'TRUE') {
+          result.push(true);
+        } else if (token.toUpperCase() === 'FALSE') {
+          result.push(false);
+        } else {
+          result.push(token);
+        }
+      }
+    }
+    return result;
+  }
+
+  function parseSeedCoursesFromSQL(): any[] {
+    try {
+      const sqlPath = path.join(process.cwd(), 'sabicrest_supabase_setup.sql');
+      if (!fs.existsSync(sqlPath)) return [];
+      const content = fs.readFileSync(sqlPath, 'utf-8');
+      
+      const startIndex = content.indexOf('INSERT INTO public.courses');
+      if (startIndex === -1) return [];
+      
+      const lines = content.split('\n');
+      const courses: any[] = [];
+      let inValues = false;
+      
+      for (let line of lines) {
+        line = line.trim();
+        if (line.includes('INSERT INTO public.courses')) {
+          inValues = true;
+          continue;
+        }
+        if (inValues && line.startsWith('VALUES')) {
+          continue;
+        }
+        if (inValues) {
+          if (line.startsWith('INSERT INTO') || line.startsWith('CREATE TABLE') || line.startsWith('ANALYZE') || line.startsWith('TRUNCATE')) {
+            break; 
+          }
+          if (line === '' || line.startsWith('--')) {
+            continue;
+          }
+          
+          const parsedTuple = parseSQLTuple(line);
+          if (parsedTuple && parsedTuple.length >= 10) {
+            let parsedModules = [];
+            try {
+              if (parsedTuple[8]) {
+                parsedModules = JSON.parse(parsedTuple[8]);
+              }
+            } catch (e) {}
+
+            const course = {
+              id: parsedTuple[0],
+              trainerId: parsedTuple[1],
+              trainerName: parsedTuple[2],
+              title: parsedTuple[3],
+              description: parsedTuple[4],
+              category: parsedTuple[5],
+              level: parsedTuple[6],
+              durationWeeks: Number(parsedTuple[7]),
+              modules: parsedModules,
+              status: parsedTuple[9] || 'approved',
+              rejectionReason: parsedTuple[10] || null,
+              submittedAt: parsedTuple[11],
+              approvedAt: parsedTuple[12],
+              price: parsedTuple[13] ? Number(parsedTuple[13]) : null,
+              pricingBeginner: parsedTuple[14] ? Number(parsedTuple[14]) : null,
+              pricingIntermediate: parsedTuple[15] ? Number(parsedTuple[15]) : null,
+              pricingExpert: parsedTuple[16] ? Number(parsedTuple[16]) : null,
+              equipment: parsedTuple[17] || null,
+              outcomes: parsedTuple[18] || null,
+              imageUrl: parsedTuple[19] || null,
+              cohortStartDate: parsedTuple[20] || null,
+              earlyDrawProcessed: parsedTuple[21] === 'true' || parsedTuple[21] === true,
+              fullDrawProcessed: parsedTuple[22] === 'true' || parsedTuple[22] === true,
+            };
+            courses.push(course);
+          }
+          
+          if (line.endsWith(';')) {
+            break; 
+          }
+        }
+      }
+      return courses;
+    } catch (err) {
+      console.error('Error parsing SQL seeds:', err);
+      return [];
+    }
+  }
+
   function loadLocalDB(): any {
+    let dbData: any = null;
     try {
       if (fs.existsSync(FALLBACK_DB_PATH)) {
         const fileContent = fs.readFileSync(FALLBACK_DB_PATH, 'utf-8');
-        return JSON.parse(fileContent);
+        dbData = JSON.parse(fileContent);
       }
     } catch (err) {
       console.error('[Fallback DB] Failed to load local JSON fallback database:', err);
     }
 
-    // Migrate from the old Appwrite fallback DB if it exists
-    const OLD_FALLBACK_DB_PATH = path.join(process.cwd(), 'appwrite_fallback_db.json');
-    try {
-      if (fs.existsSync(OLD_FALLBACK_DB_PATH)) {
-        const fileContent = fs.readFileSync(OLD_FALLBACK_DB_PATH, 'utf-8');
-        const oldData = JSON.parse(fileContent);
-        fs.writeFileSync(FALLBACK_DB_PATH, fileContent, 'utf-8');
-        fs.unlinkSync(OLD_FALLBACK_DB_PATH);
-        console.log('[Fallback DB] Successfully migrated fallback data from Appwrite to Supabase.');
-        return oldData;
-      }
-    } catch (e) {}
+    if (!dbData) {
+      // Migrate from the old Appwrite fallback DB if it exists
+      const OLD_FALLBACK_DB_PATH = path.join(process.cwd(), 'appwrite_fallback_db.json');
+      try {
+        if (fs.existsSync(OLD_FALLBACK_DB_PATH)) {
+          const fileContent = fs.readFileSync(OLD_FALLBACK_DB_PATH, 'utf-8');
+          dbData = JSON.parse(fileContent);
+          fs.writeFileSync(FALLBACK_DB_PATH, fileContent, 'utf-8');
+          fs.unlinkSync(OLD_FALLBACK_DB_PATH);
+          console.log('[Fallback DB] Successfully migrated fallback data from Appwrite to Supabase.');
+        }
+      } catch (e) {}
+    }
 
-    return {
-      users: [],
-      messages: [],
-      hub_messages: [],
-      events: [],
-      curricula: [],
-      assignments: [],
-      teams: [],
-      certificates: [],
-      notifications: [],
-      enrollments: [],
-      admin_activities: [],
-      settings: { bypassSupabase: false }
-    };
+    if (!dbData) {
+      dbData = {
+        users: [],
+        messages: [],
+        hub_messages: [],
+        events: [],
+        curricula: [],
+        courses: [],
+        assignments: [],
+        teams: [],
+        certificates: [],
+        notifications: [],
+        enrollments: [],
+        admin_activities: [],
+        settings: { bypassSupabase: false }
+      };
+    }
+
+    // Pre-populate courses/curricula if empty or missing
+    if (!dbData.courses || dbData.courses.length === 0 || !dbData.curricula || dbData.curricula.length === 0) {
+      const seedCourses = parseSeedCoursesFromSQL();
+      if (seedCourses && seedCourses.length > 0) {
+        if (!dbData.courses || dbData.courses.length === 0) {
+          dbData.courses = seedCourses.map(c => ({
+            ...c,
+            $id: c.id,
+            $createdAt: c.submittedAt || new Date().toISOString(),
+            $updatedAt: c.submittedAt || new Date().toISOString()
+          }));
+        }
+        if (!dbData.curricula || dbData.curricula.length === 0) {
+          dbData.curricula = seedCourses.map(c => ({
+            ...c,
+            $id: c.id,
+            $createdAt: c.submittedAt || new Date().toISOString(),
+            $updatedAt: c.submittedAt || new Date().toISOString()
+          }));
+        }
+        // Save the updated fallback database
+        try {
+          fs.writeFileSync(FALLBACK_DB_PATH, JSON.stringify(dbData, null, 2), 'utf-8');
+          console.log(`[Fallback DB] Successfully pre-populated ${seedCourses.length} default courses/curricula from SQL setup.`);
+        } catch (saveErr) {
+          console.error('[Fallback DB] Failed to save pre-populated DB:', saveErr);
+        }
+      }
+    }
+
+    return dbData;
   }
 
   function saveLocalDB(dbData: any): void {
@@ -489,7 +666,7 @@ async function startServer() {
         throw error;
       }
 
-      const formattedDocs = (data || []).map((row: any) => {
+      let formattedDocs = (data || []).map((row: any) => {
         const camelRow = convertTopLevelKeysToCamel(row);
         return {
           ...camelRow,
@@ -498,6 +675,17 @@ async function startServer() {
           $updatedAt: camelRow.timestamp || camelRow.createdAt || new Date().toISOString()
         };
       });
+
+      // Fallback: If live Supabase returned 0 entries for courses or curricula, load our local seeded defaults
+      if (formattedDocs.length === 0 && (collectionId === 'courses' || collectionId === 'curricula')) {
+        console.log(`[Supabase Empty Seed Fallback] Live query on '${collectionId}' returned 0 rows. Rendering pre-seeded defaults.`);
+        try {
+          const db = loadLocalDB();
+          formattedDocs = db[collectionId] || [];
+        } catch (e) {
+          console.error(`Failed to pull ${collectionId} from local loaded DB:`, e);
+        }
+      }
 
       // Cache records inside local JSON fallback database
       try {
