@@ -101,6 +101,9 @@ async function startServer() {
   }
 
   function getSupabaseBypassStatus(): boolean {
+    if (process.env.NODE_ENV === 'production') {
+      return false; // Force live Supabase in production
+    }
     if (inMemoryBypass) return true;
     try {
       const db = loadLocalDB();
@@ -555,7 +558,7 @@ async function startServer() {
           authReason = 'Access Denied: Only certified trainers can manage scheduled course events.';
         } else if ((collectionId === 'curricula' || collectionId === 'courses') && clientUserRole !== 'trainer') {
           isAuthorized = false;
-          authReason = 'Access Denied: Only certified trainers retain rights to manage curriculum and course assets.';
+          authReason = 'Access Denied: Only certified trainers retain rights to manage curriculum assets.';
         } else if (collectionId === 'assignments') {
           if (clientUserRole === 'student') {
             if (!isDelete && documentData && documentData.studentId && documentData.studentId !== clientUserId) {

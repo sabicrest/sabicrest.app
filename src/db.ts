@@ -432,7 +432,7 @@ export class SupabaseDatabase {
       let syncedCurricula = false;
       try {
         const res = await this.proxyList('courses');
-        if (res && res.documents && res.documents.length > 0) {
+        if (res && res.documents) {
           this.curricula = res.documents.map((doc: any) => {
             const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
             let parsedModules = [];
@@ -452,7 +452,7 @@ export class SupabaseDatabase {
       if (!syncedCurricula) {
         try {
           const res = await this.proxyList('curricula');
-          if (res && res.documents && res.documents.length > 0) {
+          if (res && res.documents) {
             this.curricula = res.documents.map((doc: any) => {
               const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
               let parsedModules = [];
@@ -470,8 +470,8 @@ export class SupabaseDatabase {
         }
       }
 
-      // If we failed to sync from both or if they are empty, fall back to INITIAL_CURRICULA
-      if (!syncedCurricula || this.curricula.length === 0) {
+      // If we failed to sync from both (due to network or database errors), fall back to cached state
+      if (!syncedCurricula) {
         console.log('[Fallback DB] No courses or curricula found in Supabase or sync failed. Retaining pre-seeded initial curricula.');
         const cached = localStorage.getItem('sc_curricula');
         if (cached) {
@@ -1079,6 +1079,10 @@ export class SupabaseDatabase {
     return this.curricula.filter(c => {
       if (!c) return false;
       const idStr = String(c.id || '');
+      
+      // If it's a pre-seeded mock course, filter it out completely
+      const isPreseeded = idStr.startsWith('c-') && !isNaN(Number(idStr.split('-')[1])) && Number(idStr.split('-')[1]) <= 55;
+      if (isPreseeded) return false;
 
       const titleLower = String(c.title || '').toLowerCase();
       const descLower = String(c.description || '').toLowerCase();
@@ -1122,6 +1126,7 @@ export class SupabaseDatabase {
     this.saveToStorage();
     this.logTransaction('PROPOSE_CURRICULUM_RECORD', 'Curricula', JSON.stringify(newCurriculum));
     this.saveToSupabase('courses', newCurriculum.id, newCurriculum);
+    this.saveToSupabase('curricula', newCurriculum.id, newCurriculum);
     return newCurriculum;
   }
 
@@ -1137,6 +1142,7 @@ export class SupabaseDatabase {
     this.saveToStorage();
     this.logTransaction('CREATE_APPROVED_CURRICULUM_RECORD', 'Curricula', JSON.stringify(newCurriculum));
     this.saveToSupabase('courses', newCurriculum.id, newCurriculum);
+    this.saveToSupabase('curricula', newCurriculum.id, newCurriculum);
     return newCurriculum;
   }
 
@@ -1145,12 +1151,7 @@ export class SupabaseDatabase {
     this.saveToStorage();
     this.logTransaction('UPDATE_CURRICULUM_RECORD', 'Curricula', JSON.stringify(curriculum));
     this.saveToSupabase('courses', curriculum.id, curriculum);
-  }
-
-  deleteCurriculum(id: string) {
-    this.curricula = this.curricula.filter(c => c.id !== id);
-    this.saveToStorage();
-    this.saveToSupabase('courses', id, null, true);
+    this.saveToSupabase('curricula', curriculum.id, curriculum);
   }
 
   // --- Trainer Applications CRUD ---
