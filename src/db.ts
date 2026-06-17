@@ -1076,43 +1076,7 @@ export class SupabaseDatabase {
 
   // --- Curricula CRUD ---
   getCurricula(): Curriculum[] {
-    return this.curricula.filter(c => {
-      if (!c) return false;
-      const idStr = String(c.id || '');
-      
-      // If it's a pre-seeded mock course, filter it out completely
-      const isPreseeded = idStr.startsWith('c-') && !isNaN(Number(idStr.split('-')[1])) && Number(idStr.split('-')[1]) <= 55;
-      if (isPreseeded) return false;
-
-      const titleLower = String(c.title || '').toLowerCase();
-      const descLower = String(c.description || '').toLowerCase();
-      const trainerLower = String(c.trainerName || '').toLowerCase();
-
-      const isMock =
-        titleLower.includes('mock') ||
-        titleLower.includes('test') ||
-        titleLower.includes('demo') ||
-        titleLower.includes('dummy') ||
-        titleLower.includes('sample') ||
-        titleLower.includes('practice') ||
-        titleLower.includes('qwerty') ||
-        titleLower.includes('asdf') ||
-        titleLower.includes('trash') ||
-        titleLower.includes('temp') ||
-        titleLower.includes('trial') ||
-        titleLower.includes('draft') ||
-        titleLower.length < 4 ||
-        descLower.includes('mock') ||
-        descLower.includes('test') ||
-        descLower.includes('demo') ||
-        descLower.includes('dummy') ||
-        descLower.includes('sample') ||
-        descLower.length < 10 ||
-        trainerLower.includes('mock') ||
-        trainerLower.includes('test');
-
-      return !isMock;
-    });
+    return this.curricula.filter(c => !!c);
   }
 
   addCurriculum(curriculum: Omit<Curriculum, 'id' | 'status' | 'submittedAt'>): Curriculum {
