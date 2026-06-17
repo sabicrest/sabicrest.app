@@ -15,7 +15,7 @@ import {
   Award, BookOpen, Clock, FileText, CheckCircle2, ChevronRight, Upload, Link, AlertCircle, 
   FileCheck, Printer, Settings, User as UserIcon, Mail, Phone, MapPin, Sliders, Bell, 
   Compass, Radio, Heart, HelpCircle, Activity, CreditCard, Lock, X, ExternalLink, ShieldCheck, Coins, Search, ArrowUpRight,
-  TrendingUp, ChevronDown, ChevronUp, Sparkles, Flame, Snowflake, Briefcase, Trophy, Filter, List, Users
+  TrendingUp, ChevronDown, ChevronUp, Sparkles, Flame, Snowflake, Briefcase, Trophy, Filter, List, Users, MessageCircle
 } from 'lucide-react';
 
 interface DashboardStudentProps {
@@ -900,6 +900,21 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
     reloadStudentData();
   };
 
+  const handleSendWhatsAppProof = (course: Curriculum) => {
+    // Generate a unique reference code, like WA-RANDOM
+    const waRef = 'WA-' + Math.floor(100000 + Math.random() * 900000);
+    
+    // Auto submit to db so administrative panel registers the enrollment as pending_verification
+    handleSubmitVerificationReference(course.id, waRef);
+    
+    // Construct WhatsApp message URL
+    const message = `Hello Sabicrest Academy Support team,\n\nI just made payment for "${course.title}". Here are my enrollment details:\n\n- Name: ${currentUser.name}\n- Email: ${currentUser.email}\n- Cost: ₦${(course.price || 35000).toLocaleString()}\n- Reference ID: ${waRef}\n\nI have attached my transfer receipt / screenshot above. Please verify my access. Thank you!`;
+    const waUrl = `https://wa.me/2348108199412?text=${encodeURIComponent(message)}`;
+    
+    // Open in a new window/tab
+    window.open(waUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profileName.trim()) {
@@ -1737,7 +1752,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
         const rejectedCount = enrollments.filter(e => e.paymentStatus === 'rejected').length;
 
         return (
-          <div id="student-register-courses-view" className="space-y-6 animate-in fade-in duration-200">
+          <div id="student-register-courses-view" className="space-y-6 animate-in fade-in duration-200 pb-32 lg:pb-8">
             
             {/* Redesigned Upper Header with Subtab Navigation */}
             <div className="mb-2 flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-zinc-150 dark:border-zinc-800 pb-5">
@@ -2456,7 +2471,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
       {/* Course Details Slide-out Drawer */}
       {selectedCourse && (
         <div id="course-details-drawer" className="fixed inset-0 bg-brand-black/50 backdrop-blur-xs flex items-center justify-end z-50 animate-in fade-in duration-200">
-          <div className="bg-white border-l border-zinc-100 w-full max-w-xl h-full p-8 shadow-2xl flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-300">
+          <div className="bg-white border-l border-zinc-100 w-full max-w-xl h-full pt-8 px-8 pb-32 lg:pb-8 shadow-2xl flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-300">
             
             <div className="space-y-6">
               {/* Header */}
@@ -2653,6 +2668,19 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                           Your Paystack transaction reference <strong className="font-mono bg-amber-100/60 px-1.5 py-0.5 rounded text-amber-950">{enr.paymentReference}</strong> is in the queue. Chief Admin Officer is validating payment. Real-time updates will signal instantly once verified.
                         </p>
                         
+                        <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                          <button
+                            onClick={() => {
+                              const message = `Hello Sabicrest Support, I'm checking the status of my payment verification for "${selectedCourse.title}".\nName: ${currentUser.name}\nReference Code: ${enr.paymentReference}`;
+                              window.open(`https://wa.me/2348108199412?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+                            }}
+                            className="flex-1 flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1ebd53] text-white py-2 px-3 rounded-xl text-[10px] uppercase font-bold tracking-wider transition-colors cursor-pointer"
+                          >
+                            <MessageCircle size={12} className="fill-white text-[#25D366]" />
+                            Follow up on WhatsApp
+                          </button>
+                        </div>
+
                         <div className="pt-2 border-t border-amber-150/40 text-left text-[10px] space-y-1 text-zinc-500 font-light">
                           <p><strong>Merchant Order Size:</strong> ₦{(enr.amount || 35000).toLocaleString()}</p>
                           <p><strong>Submission Time:</strong> {enr.submittedAt ? new Date(enr.submittedAt).toLocaleTimeString() : 'Awaiting sync'}</p>
@@ -2676,12 +2704,20 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                           </div>
                         </div>
 
-                        <div className="pt-3 border-t border-red-100 flex gap-2.5">
+                        <div className="pt-3 border-t border-red-100 flex flex-col sm:flex-row gap-2">
                           <button
                             onClick={() => handleInitiatePaymentProcess(selectedCourse)}
                             className="bg-brand-black text-white hover:bg-zinc-900 text-brand-yellow rounded-xl px-4 py-2 text-[10px] uppercase font-semibold transition-colors cursor-pointer shrink-0"
                           >
                             Pay with Paystack (Retry)
+                          </button>
+                          
+                          <button
+                            onClick={() => handleSendWhatsAppProof(selectedCourse)}
+                            className="flex-1 flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1ebd53] text-white py-2 px-3 rounded-xl text-[10px] uppercase font-bold transition-colors cursor-pointer"
+                          >
+                            <MessageCircle size={12} className="fill-white text-[#25D366]" />
+                            WhatsApp Support
                           </button>
                         </div>
                       </div>
@@ -2723,21 +2759,37 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                   return (
                     <div className="space-y-4">
                       <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800 rounded-2xl p-4 text-[11px] leading-relaxed text-zinc-650 dark:text-zinc-450 font-light">
-                        To register, proceed to check-out with the integrated Paystack secure portal. This ensures instant transaction indexing. Optionally, enter a reference manually.
+                        To register, proceed to secure online check-out with Paystack. To finalize manual payments, simply click below to submit your payment receipt instantly to Sabicrest on WhatsApp.
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {/* Option 1: Live Paystack */}
                         <button
                           onClick={() => setConfirmingCourseId(selectedCourse.id)}
-                          className="flex items-center justify-center gap-2 bg-[#3bb75e] hover:bg-[#349e52] text-white py-3 px-4 rounded-xl text-xs uppercase tracking-wide font-semibold shadow-xs transition-colors cursor-pointer focus-ring"
+                          className="flex items-center justify-center gap-2 bg-brand-black dark:bg-zinc-800 hover:bg-zinc-900 text-white dark:text-brand-yellow py-3 px-4 rounded-xl text-xs uppercase tracking-wide font-semibold shadow-xs transition-colors cursor-pointer focus-ring"
                         >
-                          <CreditCard size={13} />
-                          Register Course
+                          <CreditCard size={13} className="text-brand-yellow" />
+                          Pay with Paystack
                         </button>
 
-                        <div className="space-y-2">
-                          <span className="text-[9px] uppercase font-bold text-zinc-450 block">Or submit paid Ref code</span>
-                          <div className="flex gap-1.5">
+                        {/* Option 2: WhatsApp Proof of Payment */}
+                        <button
+                          onClick={() => handleSendWhatsAppProof(selectedCourse)}
+                          className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebd53] text-white py-3 px-4 rounded-xl text-xs uppercase tracking-wide font-semibold shadow-xs transition-all cursor-pointer focus-ring shadow-lg shadow-emerald-500/10"
+                        >
+                          <MessageCircle size={14} className="fill-white text-[#25D366]" />
+                          Proof via WhatsApp
+                        </button>
+                      </div>
+
+                      {/* Collapsible reference code input */}
+                      <div className="border-t border-zinc-100 dark:border-zinc-800/80 pt-3">
+                        <details className="group">
+                          <summary className="text-[10px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer select-none flex items-center justify-between">
+                            <span>Already have a transaction reference code?</span>
+                            <span className="text-[8px] transition-transform group-open:rotate-180">▼</span>
+                          </summary>
+                          <div className="mt-2.5 flex gap-1.5 animate-in slide-in-from-top-1 duration-150">
                             <input
                               type="text"
                               value={paystackRefInput}
@@ -2752,7 +2804,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                               Submit
                             </button>
                           </div>
-                        </div>
+                        </details>
                       </div>
                     </div>
                   );
