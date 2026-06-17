@@ -733,27 +733,22 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
         trainerId: course.trainerId,
         trainerName: course.trainerName,
         amount: course.price || 35000,
-        paymentLinkUrl: `https://checkout.paystack.com/sabicrest-pay-${course.id}`,
+        paymentLinkUrl: `https://paystack.shop/pay/sabicrest`,
         paymentStatus: 'pending_payment',
         paymentReference: mockRef
       });
       reloadStudentData();
     }
     
-    // Reset terminal steps
-    setPaymentStep('checkout');
-    setCardNo('');
-    setCardExpiry('');
-    setCardCvv('');
-    setPaymentOtp('');
-    setPaystackLogs(['Initializing Paystack secure checkout terminal...', 'Setting up payment headers for NGN transaction...']);
-    setShowPaystackTerminal(true);
+    // Open official Paystack payment link
+    showToast('Redirecting to Sabicrest secure Paystack payment page...');
+    window.open('https://paystack.shop/pay/sabicrest', '_blank', 'noopener,noreferrer');
   };
 
   const handleGeneratePaystackLink = (course: Curriculum) => {
     setGeneratingLink(true);
     setTimeout(() => {
-      const link = `https://checkout.paystack.com/sabicrest-checkout-${course.id}-${Math.floor(Math.random() * 89999 + 10000)}`;
+      const link = `https://paystack.shop/pay/sabicrest`;
       setGeneratedLink(link);
       setGeneratingLink(false);
       showToast('✓ Paystack transaction secure check-out link compiled!');
@@ -874,7 +869,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
         trainerId: c.trainerId,
         trainerName: c.trainerName,
         amount: c.price || 35000,
-        paymentLinkUrl: `https://checkout.paystack.com/sabicrest-pay-${courseId}`,
+        paymentLinkUrl: `https://paystack.shop/pay/sabicrest`,
         paymentStatus: 'pending_verification',
         paymentReference: referenceCode,
         submittedAt: new Date().toISOString()
@@ -1940,8 +1935,9 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                             {/* Info Block */}
                             <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                               <div className="space-y-2">
-                                <h4 className="text-sm font-bold text-brand-black dark:text-white leading-snug group-hover:text-brand-yellow dark:group-hover:text-brand-yellow transition-colors line-clamp-1 font-sans">
-                                  {course.title}
+                                <h4 className="text-sm font-bold text-brand-black dark:text-white leading-snug group-hover:text-brand-yellow dark:group-hover:text-brand-yellow transition-colors line-clamp-1 font-sans flex items-center gap-1.5 flex-wrap">
+                                  <span>{course.title}</span>
+                                  <span className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500 font-normal px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded select-all self-center">ID: {course.id}</span>
                                 </h4>
                                 <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-light leading-relaxed line-clamp-3">
                                   {course.description}
@@ -2480,8 +2476,9 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                   <span className="text-[9px] uppercase font-mono tracking-widest bg-zinc-100 px-3 py-1 rounded-full text-zinc-500 font-medium border border-zinc-200">
                     SABICREST CURRICULUM SYLLABUS
                   </span>
-                  <h3 className="text-lg md:text-xl font-light tracking-tight text-brand-black mt-2">
-                    Course: <span className="font-semibold text-brand-black">{selectedCourse.title}</span>
+                  <h3 className="text-lg md:text-xl font-light tracking-tight text-brand-black mt-2 flex items-center gap-2 flex-wrap">
+                    <span>Course: <span className="font-semibold text-brand-black">{selectedCourse.title}</span></span>
+                    <span className="text-xs font-mono text-zinc-400 font-normal px-2 py-0.5 bg-zinc-100 rounded select-all mb-0.5">ID: {selectedCourse.id}</span>
                   </h3>
                 </div>
                 <button
