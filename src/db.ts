@@ -419,10 +419,19 @@ export class SupabaseDatabase {
       try {
         const res = await this.proxyList('events');
         if (res && res.documents) {
-          this.events = res.documents.map((doc: any) => {
+          const remoteEvents = res.documents.map((doc: any) => {
             const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
             return { id: $id, ...data } as any;
           });
+          
+          const mergedEvents = [...remoteEvents];
+          this.events.forEach((local) => {
+            const exists = remoteEvents.some(r => r.id === local.id);
+            if (!exists) {
+              mergedEvents.push(local);
+            }
+          });
+          this.events = mergedEvents;
         }
       } catch (err) {
         console.warn('Supabase sync error [events]:', err);
@@ -492,10 +501,19 @@ export class SupabaseDatabase {
       try {
         const res = await this.proxyList('trainer_applications');
         if (res && res.documents) {
-          this.trainerApplications = res.documents.map((doc: any) => {
+          const remoteApps = res.documents.map((doc: any) => {
             const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
             return { id: $id, ...data } as any;
           });
+          
+          const mergedApps = [...remoteApps];
+          this.trainerApplications.forEach((local) => {
+            const exists = remoteApps.some(r => r.id === local.id);
+            if (!exists && local.status === 'pending') {
+              mergedApps.push(local);
+            }
+          });
+          this.trainerApplications = mergedApps;
         }
       } catch (err) {
         console.warn('Supabase sync warning [trainer_applications]:', err);
@@ -505,10 +523,19 @@ export class SupabaseDatabase {
       try {
         const res = await this.proxyList('assignments');
         if (res && res.documents) {
-          this.assignments = res.documents.map((doc: any) => {
+          const remoteAssignments = res.documents.map((doc: any) => {
             const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
             return { id: $id, ...data } as any;
           });
+          
+          const mergedAssignments = [...remoteAssignments];
+          this.assignments.forEach((local) => {
+            const exists = remoteAssignments.some(r => r.id === local.id);
+            if (!exists && local.status !== 'not_submitted') {
+              mergedAssignments.push(local);
+            }
+          });
+          this.assignments = mergedAssignments;
         }
       } catch (err) {
         console.warn('Supabase sync error [assignments]:', err);
@@ -543,10 +570,19 @@ export class SupabaseDatabase {
       try {
         const res = await this.proxyList('certificates');
         if (res && res.documents) {
-          this.certificates = res.documents.map((doc: any) => {
+          const remoteCerts = res.documents.map((doc: any) => {
             const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
             return { id: $id, ...data } as any;
           });
+          
+          const mergedCerts = [...remoteCerts];
+          this.certificates.forEach((local) => {
+            const exists = remoteCerts.some(r => r.id === local.id);
+            if (!exists) {
+              mergedCerts.push(local);
+            }
+          });
+          this.certificates = mergedCerts;
         }
       } catch (err) {
         console.warn('Supabase sync error [certificates]:', err);
@@ -569,14 +605,26 @@ export class SupabaseDatabase {
         console.warn('Supabase sync error [notifications]:', err);
       }
 
-      // Sync Enrollments
+      // Sync Enrollments (Keep local pending creations from disappearing)
       try {
         const res = await this.proxyList('enrollments');
         if (res && res.documents) {
-          this.enrollments = res.documents.map((doc: any) => {
+          const remoteEnrollments = res.documents.map((doc: any) => {
             const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...data } = doc;
             return { id: $id, ...data } as any;
           });
+          
+          const mergedEnrollments = [...remoteEnrollments];
+          this.enrollments.forEach((local) => {
+            const exists = remoteEnrollments.some(r => r.id === local.id);
+            if (!exists) {
+              // Retain local-only enrollments that are pending or new (to prevent disappearing on slow servers)
+              if (local.paymentStatus === 'pending_payment' || local.paymentStatus === 'pending_verification') {
+                mergedEnrollments.push(local);
+              }
+            }
+          });
+          this.enrollments = mergedEnrollments;
         }
       } catch (err) {
         console.warn('Supabase sync error [enrollments]:', err);
@@ -714,17 +762,23 @@ export class SupabaseDatabase {
   }
 
   mergeUsersPayload(remoteUsers: User[]) {
-    // Only keep users that exists in remote parsed list from Supabase
-    const merged: User[] = [];
+    // Start with a clone of current local users to preserve additions and local states
+    const merged: User[] = [...this.users];
 
     // Merge remote users carefully
     remoteUsers.forEach((remoteUser: User) => {
       const idx = merged.findIndex(u => u.id === remoteUser.id || u.email.toLowerCase().trim() === remoteUser.email.toLowerCase().trim());
       if (idx >= 0) {
         const localUser = merged[idx];
+        // Merge fields, prioritizing local values for sensitive arrays like enrolledCourseIds if they are larger (meaning a pending update hasn't propagated)
+        const localEnrolled = localUser.enrolledCourseIds || [];
+        const remoteEnrolled = remoteUser.enrolledCourseIds || [];
+        const finalEnrolled = localEnrolled.length > remoteEnrolled.length ? localEnrolled : remoteEnrolled;
+
         const mergedUser = {
           ...localUser,
           ...remoteUser,
+          enrolledCourseIds: finalEnrolled,
           // Handle passwords
           password: remoteUser.password || localUser.password || 'password123'
         };
