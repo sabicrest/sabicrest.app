@@ -1206,7 +1206,7 @@ export class SupabaseDatabase {
   addAssignment(assignment: Omit<Assignment, 'id' | 'status'>): Assignment {
     const newAssignment: Assignment = {
       ...assignment,
-      id: `a-${Date.now()}`,
+      id: `a-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
       status: 'not_submitted'
     };
     this.assignments.push(newAssignment);
@@ -1214,6 +1214,48 @@ export class SupabaseDatabase {
     this.logTransaction('CREATE_ASSIGNMENT_RECORD', 'Assignments', JSON.stringify(newAssignment));
     this.saveToSupabase('assignments', newAssignment.id, newAssignment);
     return newAssignment;
+  }
+
+  initializeMilestonesForCourse(studentId: string, studentName: string, courseId: string, courseTitle: string, trainerId: string, trainerName: string) {
+    const existing = this.assignments.some(a => a.studentId === studentId && a.courseId === courseId);
+    if (existing) return;
+
+    const milestones = [
+      {
+        title: `Milestone 1: Orientation & Sandbox Workspace Environment Setup`,
+        description: `Establish a local developer workspace environment. Ensure git configurations are initialized, test sandbox database connections, and authorize system access credentials.`,
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      },
+      {
+        title: `Milestone 2: Responsive Frontend User Interface Components`,
+        description: `Construct responsive layouts and fluid interface containers utilizing tailwind css styles. Ensure proper sizing of touch interactive targets for mobile use with zero render loops.`,
+        dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      },
+      {
+        title: `Milestone 3: Server-Side Endpoint & Database Schema Integration`,
+        description: `Configure server-side proxy handlers to safely dispatch external queries. Write proper postgresql schema tables and execute strict row level security (RLS) policies.`,
+        dueDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      },
+      {
+        title: `Milestone 4: High Fidelity Final Demonstration & Release Audit`,
+        description: `Validate accessibility contrast ratios, optimize production codebundles, eliminate dead imports, and submit your final live build results for executive CAO degree credentialing.`,
+        dueDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      }
+    ];
+
+    milestones.forEach(m => {
+      this.addAssignment({
+        title: m.title,
+        description: m.description,
+        dueDate: m.dueDate,
+        maxPoints: 100,
+        studentId,
+        studentName,
+        trainerId,
+        trainerName,
+        courseId
+      });
+    });
   }
 
   updateAssignment(assignment: Assignment) {

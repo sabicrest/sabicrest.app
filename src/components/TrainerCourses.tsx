@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { User, Curriculum, CourseEnrollment } from '../types';
+import { User, Curriculum, CourseEnrollment, Assignment } from '../types';
 import { db } from '../db';
 import { 
   BookOpen, Plus, Search, Sparkles, Filter, ChevronDown, CheckCircle2, AlertCircle, XCircle, Clock,
@@ -21,8 +21,16 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
   // Primary list states
   const [courses, setCourses] = useState<Curriculum[]>([]);
   const [enrollments, setEnrollments] = useState<CourseEnrollment[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>(db.getAssignments());
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'pending' | 'rejected'>('all');
+
+  // Milestone grading states
+  const [gradingStudentEnrId, setGradingStudentEnrId] = useState<string | null>(null);
+  const [editingAssignmentId, setEditingAssignmentId] = useState<string | null>(null);
+  const [gradeInput, setGradeInput] = useState('A');
+  const [pointsInput, setPointsInput] = useState(100);
+  const [feedbackInput, setFeedbackInput] = useState('');
 
   // Tab control state
   const [currentTab, setCurrentTab] = useState<'courses' | 'roster'>('courses');
@@ -68,6 +76,7 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
     );
     setCourses(allCourses);
     setEnrollments(allEnrollments);
+    setAssignments(db.getAssignments());
   };
 
   useEffect(() => {
@@ -85,12 +94,35 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
       verifiedAt: new Date().toISOString() 
     };
     db.updateEnrollment(updated);
+
+    // Update Student enrolledCourseIds list
+    const student = db.getUsers().find(u => u.id === enr.studentId);
+    if (student) {
+      const currentEnrolls = student.enrolledCourseIds || [];
+      if (!currentEnrolls.includes(enr.courseId)) {
+        const updatedUser: User = {
+          ...student,
+          enrolledCourseIds: [...currentEnrolls, enr.courseId]
+        };
+        db.updateUser(updatedUser);
+      }
+    }
+
+    // Initialize Milestones
+    db.initializeMilestonesForCourse(
+      enr.studentId,
+      enr.studentName,
+      enr.courseId,
+      enr.courseTitle,
+      enr.trainerId,
+      enr.trainerName
+    );
     
     // Add real-time log notification to active student
     db.addNotification({
       userId: enr.studentId,
       title: 'Congratulations! Enrollment Verified',
-      message: `Your payment was verified by ${currentUser.name}. You now have access to "${enr.courseTitle}"!`,
+      message: `Your payment was verified by ${currentUser.name}. You now have access to "${enr.courseTitle}" and your 4 milestones are initialized!`,
       type: 'system'
     });
 
@@ -149,6 +181,30 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
       type: 'grade'
     });
 
+    loadData();
+  };
+
+  const handleSaveMilestoneGrade = (assignmentId: string) => {
+    const task = db.getAssignments().find(a => a.id === assignmentId);
+    if (!task) return;
+
+    db.updateAssignment({
+      ...task,
+      status: 'graded',
+      grade: gradeInput,
+      points: Number(pointsInput),
+      feedback: feedbackInput,
+      gradedAt: new Date().toISOString()
+    });
+
+    db.addNotification({
+      userId: task.studentId,
+      title: 'Milestone Coursework Graded!',
+      message: `Your project milestone "${task.title}" has been evaluated by Coach ${currentUser.name}. Score: ${gradeInput} (${pointsInput}/100 pts)`,
+      type: 'grade'
+    });
+
+    setEditingAssignmentId(null);
     loadData();
   };
 
@@ -1051,47 +1107,204 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                       </div>
 
                       <div className="space-y-2">
-                        {approvedRoster.map(studentEnr => (
-                          <div 
-                            key={studentEnr.id} 
-                            className="bg-white border border-zinc-100 dark:border-zinc-900 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs"
-                          >
-                            <div>
-                              <div className="font-semibold text-neutral-900 dark:text-zinc-55 flex items-center gap-1.5">
-                                {studentEnr.studentName}
-                                {studentEnr.completed ? (
-                                  <span className="text-[8px] uppercase font-bold text-emerald-800 bg-emerald-100/60 px-1.5 py-0.5 rounded-sm">
-                                    ✓ Completed
-                                  </span>
-                                ) : (
-                                  <span className="text-[8px] uppercase font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded-sm animate-pulse">
-                                    ⏳ In Training
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-[9px] text-zinc-405 font-mono">
-                                Email: {studentEnr.studentEmail} • Registered on: {studentEnr.verifiedAt ? new Date(studentEnr.verifiedAt).toLocaleDateString() : 'Direct Setup'}
-                              </div>
-                            </div>
+                        {approvedRoster.map(studentEnr => {
+                          const studentTasks = assignments.filter(a => a.courseId === col.id && a.studentId === studentEnr.studentId);
+                          const gradedTasks = studentTasks.filter(t => t.status === 'graded');
+                          const percentDone = studentTasks.length > 0 ? Math.round((gradedTasks.length / studentTasks.length) * 100) : 0;
+                          const isExpanded = gradingStudentEnrId === studentEnr.id;
 
-                            <div className="flex items-center gap-3">
-                              <span className="font-mono text-[10px] text-zinc-450 dark:text-zinc-500">
-                                Paid: ₦{studentEnr.amount?.toLocaleString() || (col.price || 0).toLocaleString()}
-                              </span>
-                              
-                              <button
-                                onClick={() => handleToggleStudentCompletion(studentEnr)}
-                                className={`text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
-                                  studentEnr.completed
-                                    ? 'bg-amber-100/60 text-amber-900 hover:bg-amber-200 border border-amber-200'
-                                    : 'bg-emerald-650 hover:bg-emerald-700 text-white'
-                                }`}
-                              >
-                                {studentEnr.completed ? "Mark Active" : "Mark Completed"}
-                              </button>
+                          return (
+                            <div 
+                              key={studentEnr.id} 
+                              className="bg-white border border-zinc-100 dark:border-zinc-900 rounded-xl p-3 text-xs space-y-3"
+                            >
+                              <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                  <div className="font-semibold text-neutral-900 dark:text-zinc-55 flex items-center gap-1.5 flex-wrap">
+                                    {studentEnr.studentName}
+                                    {studentEnr.completed ? (
+                                      <span className="text-[8px] uppercase font-bold text-emerald-800 bg-emerald-100/60 px-1.5 py-0.5 rounded-sm">
+                                        ✓ Completed
+                                      </span>
+                                    ) : (
+                                      <span className="text-[8px] uppercase font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded-sm animate-pulse">
+                                        ⏳ In Training
+                                      </span>
+                                    )}
+
+                                    <span className="text-[8px] font-mono uppercase bg-zinc-100 text-zinc-600 px-1.5 py-0.5 rounded font-bold">
+                                      Milestones: {gradedTasks.length}/4 ({percentDone}%)
+                                    </span>
+                                  </div>
+                                  <div className="text-[9px] text-zinc-405 font-mono">
+                                    Email: {studentEnr.studentEmail} • Registered on: {studentEnr.verifiedAt ? new Date(studentEnr.verifiedAt).toLocaleDateString() : 'Direct Setup'}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono text-[10px] text-zinc-450 dark:text-zinc-500">
+                                    Paid: ₦{studentEnr.amount?.toLocaleString() || (col.price || 0).toLocaleString()}
+                                  </span>
+
+                                  <button
+                                    onClick={() => {
+                                      setGradingStudentEnrId(isExpanded ? null : studentEnr.id);
+                                      setEditingAssignmentId(null);
+                                    }}
+                                    className={`text-[9px] font-semibold uppercase tracking-wider px-2 py-1 rounded transition-colors border cursor-pointer ${
+                                      isExpanded 
+                                        ? 'bg-zinc-800 text-white border-zinc-900' 
+                                        : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border-zinc-200'
+                                    }`}
+                                  >
+                                    {isExpanded ? 'Hide Milestones' : 'Grade Milestones'}
+                                  </button>
+                                  
+                                  <button
+                                    onClick={() => handleToggleStudentCompletion(studentEnr)}
+                                    className={`text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                                      studentEnr.completed
+                                        ? 'bg-amber-100/60 text-amber-900 hover:bg-amber-200 border border-amber-200'
+                                        : 'bg-emerald-650 hover:bg-emerald-700 text-white'
+                                    }`}
+                                  >
+                                    {studentEnr.completed ? "Mark Active" : "Mark Completed"}
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Collapsible Milestone Grading Panel */}
+                              {isExpanded && (
+                                <div className="mt-2 bg-zinc-50 border border-zinc-150 p-4 rounded-xl space-y-3">
+                                  <div className="flex items-center justify-between pb-2 border-b border-zinc-205">
+                                    <h5 className="font-bold text-zinc-700 text-[10px] uppercase font-mono tracking-wider">
+                                      Course Milestones & Grading Notebook
+                                    </h5>
+                                    <span className="text-[9px] font-mono text-zinc-400 bg-white px-2 py-0.5 border rounded">
+                                      Total Checklist: {gradedTasks.length} Graded, {studentTasks.length - gradedTasks.length} Pending
+                                    </span>
+                                  </div>
+
+                                  <div className="space-y-3">
+                                    {studentTasks.length === 0 ? (
+                                      <p className="text-[10px] text-zinc-450 italic py-2">
+                                        No milestones found. Click approved on payment reference list to auto-initialize.
+                                      </p>
+                                    ) : (
+                                      studentTasks.map((task, mIdx) => {
+                                        const isEditing = editingAssignmentId === task.id;
+                                        return (
+                                          <div key={task.id} className="bg-white border border-zinc-200/80 rounded-lg p-3 space-y-2">
+                                            <div className="flex justify-between items-start gap-2">
+                                              <div>
+                                                <span className="text-[8.5px] font-mono uppercase bg-zinc-100 border text-zinc-500 px-1.5 py-0.2 rounded font-bold">
+                                                  Milestone {mIdx + 1}
+                                                </span>
+                                                <h6 className="font-semibold text-zinc-805 mt-1 text-[11.5px]">{task.title.replace(/^Milestone\s+\d+:\s*/i, '')}</h6>
+                                              </div>
+                                              <span className={`text-[8.5px] font-mono px-2 py-0.5 rounded shrink-0 border ${
+                                                task.status === 'graded' ? 'bg-emerald-50 text-emerald-800 border-emerald-100' :
+                                                task.status === 'pending_review' ? 'bg-amber-50 text-amber-805 border-amber-100' :
+                                                'bg-zinc-50 text-zinc-450 border-zinc-150'
+                                              }`}>
+                                                {task.status === 'graded' ? 'COMPLETED & GRADED' : task.status === 'pending_review' ? 'PENDING' : 'INCOMPLETE'}
+                                              </span>
+                                            </div>
+
+                                            <p className="text-[10.5px] text-zinc-500 font-light leading-relaxed">
+                                              {task.description}
+                                            </p>
+
+                                            {task.status === 'graded' && !isEditing && (
+                                              <div className="bg-emerald-50/50 border border-emerald-100 p-2 rounded-md space-y-1 text-[10px] font-mono text-zinc-650">
+                                                <div className="flex justify-between text-emerald-950 font-bold">
+                                                  <span>Grade Issued: {task.grade}</span>
+                                                  <span>Evaluated: {task.points}/100 pts</span>
+                                                </div>
+                                                {task.feedback && (
+                                                  <p className="text-[9.5px] text-zinc-500 font-sans italic mt-1 leading-normal">&ldquo;{task.feedback}&rdquo;</p>
+                                                )}
+                                              </div>
+                                            )}
+
+                                            {isEditing ? (
+                                              <div className="bg-zinc-50 p-3 rounded-lg border border-zinc-200 space-y-2.5 mt-2">
+                                                <p className="text-[10px] font-bold text-zinc-705">Enter Graduation Evaluation Details</p>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                  <div>
+                                                    <label className="block text-[8.5px] font-mono text-zinc-450 uppercase mb-0.5">Grade (A to F)</label>
+                                                    <select
+                                                      value={gradeInput}
+                                                      onChange={(e) => setGradeInput(e.target.value)}
+                                                      className="w-full bg-white border border-zinc-250 rounded px-1.5 py-0.5 text-[10px] focus:outline-hidden"
+                                                    >
+                                                      <option value="A">A - Excellent</option>
+                                                      <option value="B">B - Good</option>
+                                                      <option value="C">C - Passed</option>
+                                                      <option value="F">F - Flagged</option>
+                                                    </select>
+                                                  </div>
+                                                  <div>
+                                                    <label className="block text-[8.5px] font-mono text-zinc-450 uppercase mb-0.5">Points (0–100)</label>
+                                                    <input
+                                                      type="number"
+                                                      min="0"
+                                                      max="100"
+                                                      value={pointsInput}
+                                                      onChange={(e) => setPointsInput(Number(e.target.value))}
+                                                      className="w-full bg-white border border-zinc-250 rounded px-1.5 py-0.5 text-[10px] focus:outline-hidden font-mono"
+                                                    />
+                                                  </div>
+                                                </div>
+                                                <div>
+                                                  <label className="block text-[8.5px] font-mono text-zinc-450 uppercase mb-0.5">Tutor Evaluation Feedback</label>
+                                                  <textarea
+                                                    value={feedbackInput}
+                                                    onChange={(e) => setFeedbackInput(e.target.value)}
+                                                    placeholder="Enter brief specific feedback for student regarding milestone competencies..."
+                                                    className="w-full bg-white border border-zinc-250 rounded p-1.5 text-[10px] focus:outline-hidden h-11"
+                                                  />
+                                                </div>
+                                                <div className="flex justify-end gap-1.5">
+                                                  <button
+                                                    onClick={() => setEditingAssignmentId(null)}
+                                                    className="px-2 py-0.5 bg-zinc-200 hover:bg-zinc-250 text-zinc-700 rounded text-[9px] uppercase cursor-pointer"
+                                                  >
+                                                    Cancel
+                                                  </button>
+                                                  <button
+                                                    onClick={() => handleSaveMilestoneGrade(task.id)}
+                                                    className="px-2.5 py-0.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded text-[9px] uppercase font-bold cursor-pointer"
+                                                  >
+                                                    Save Grade
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            ) : (
+                                              <div className="flex justify-end pt-1">
+                                                <button
+                                                  onClick={() => {
+                                                    setEditingAssignmentId(task.id);
+                                                    setGradeInput(task.grade || 'A');
+                                                    setPointsInput(task.points || 100);
+                                                    setFeedbackInput(task.feedback || '');
+                                                  }}
+                                                  className="text-[9px] font-bold uppercase text-indigo-650 hover:text-indigo-800 tracking-wider flex items-center gap-0.5 cursor-pointer bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 px-2 py-0.5 rounded"
+                                                >
+                                                  {task.status === 'graded' ? 'Update Evaluation' : 'Mark & Grade Milestone'} &rarr;
+                                                </button>
+                                              </div>
+                                            )}
+                                          </div>
+                                        );
+                                      })
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
 
                         {approvedRoster.length === 0 && (
                           <p className="text-[10px] text-zinc-400 font-mono py-2 text-center select-none italic">

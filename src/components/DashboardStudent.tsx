@@ -148,6 +148,31 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
     return () => clearInterval(interval);
   }, [currentUser.id]);
 
+  useEffect(() => {
+    // Passive milestone auto-initializer for approved courses
+    const studentEnrs = db.getEnrollments().filter(e => e.studentId === currentUser.id && e.paymentStatus === 'approved');
+    let hasUpdated = false;
+    
+    studentEnrs.forEach(enr => {
+      const existing = db.getAssignments().filter(a => a.studentId === currentUser.id && a.courseId === enr.courseId);
+      if (existing.length === 0) {
+        db.initializeMilestonesForCourse(
+          currentUser.id,
+          currentUser.name,
+          enr.courseId,
+          enr.courseTitle,
+          enr.trainerId || "u-trainer-1",
+          enr.trainerName || "Verified Coach"
+        );
+        hasUpdated = true;
+      }
+    });
+
+    if (hasUpdated) {
+      reloadStudentData();
+    }
+  }, [currentUser.id]);
+
   // Generate live updates using users' first names where appropriate along with Google News updates
   const liveUpdates = useMemo(() => {
     const students = db.getUsers().filter(u => u.role === 'student');
@@ -1544,93 +1569,119 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                     const completionPercent = hasAssignments ? Math.round((gradedTasks.length / courseTasks.length) * 100) : (isFullyGraduated ? 100 : 0);
 
                     return (
-                      <div key={course.id} className="border border-zinc-105 rounded-xl p-4 md:p-5 bg-zinc-50/20 hover:bg-white transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        
-                        <div className="space-y-3 flex-1 w-full">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-10 rounded-lg overflow-hidden shrink-0 border border-zinc-100">
-                              <img 
-                                src={getCourseImage(course.category, course.title, course.imageUrl)} 
-                                alt={course.title} 
-                                referrerPolicy="no-referrer"
-                                className="w-full h-full object-cover"
-                              />
+                        <div key={course.id} className="border border-zinc-150 rounded-xl p-4 md:p-5 bg-zinc-50/20 hover:bg-white transition-all space-y-4">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                          <div className="space-y-3 flex-1 w-full">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-10 rounded-lg overflow-hidden shrink-0 border border-zinc-100">
+                                <img 
+                                  src={getCourseImage(course.category, course.title, course.imageUrl)} 
+                                  alt={course.title} 
+                                  referrerPolicy="no-referrer"
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-bold text-brand-black truncate max-w-[280px] md:max-w-[360px] leading-tight font-semibold">
+                                  {course.title}
+                                </h4>
+                                <p className="text-[10px] text-zinc-400 font-mono">
+                                  Mentor: <strong className="text-zinc-650 font-medium">{course.trainerName}</strong> • {course.durationWeeks} Weeks
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="text-xs font-bold text-brand-black truncate max-w-[280px] md:max-w-[360px] leading-tight font-semibold">
-                                {course.title}
-                              </h4>
-                              <p className="text-[10px] text-zinc-400 font-mono">
-                                Mentor: <strong className="text-zinc-650 font-medium">{course.trainerName}</strong> • {course.durationWeeks} Weeks
-                              </p>
+
+                            <div className="space-y-1.5">
+                              <div className="flex justify-between items-center text-[10px]">
+                                <span className="text-zinc-500 font-light flex items-center gap-1">
+                                  {hasAssignments ? (
+                                    <>
+                                      <span className="font-semibold text-brand-black">{gradedTasks.length} of {courseTasks.length}</span> milestones evaluated
+                                    </>
+                                  ) : (
+                                    <span className="text-amber-600 font-medium flex items-center gap-1 font-mono">
+                                      <AlertCircle size={10} /> Auto-initializing milestone requirements...
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="font-semibold text-brand-black">{completionPercent}%</span>
+                              </div>
+                              
+                              <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full rounded-full transition-all duration-500 ${
+                                    completionPercent === 100 ? 'bg-emerald-500' : 'bg-brand-yellow'
+                                  }`}
+                                  style={{ width: `${completionPercent}%` }}
+                                />
+                              </div>
                             </div>
                           </div>
 
-                          <div className="space-y-1.5">
-                            <div className="flex justify-between items-center text-[10px]">
-                              <span className="text-zinc-500 font-light flex items-center gap-1">
-                                {hasAssignments ? (
-                                  <>
-                                    <span className="font-semibold text-brand-black">{gradedTasks.length} of {courseTasks.length}</span> assignments evaluated
-                                  </>
-                                ) : (
-                                  <span className="text-amber-600 font-medium flex items-center gap-1">
-                                    <AlertCircle size={10} /> No curriculum projects initialized yet
-                                  </span>
-                                )}
-                              </span>
-                              <span className="font-semibold text-brand-black">{completionPercent}%</span>
-                            </div>
-                            
-                            <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
-                              <div 
-                                className={`h-full rounded-full transition-all duration-500 ${
-                                  completionPercent === 100 ? 'bg-emerald-500' : 'bg-brand-yellow'
-                                }`}
-                                style={{ width: `${completionPercent}%` }}
-                              />
-                            </div>
+                          <div className="shrink-0 flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+                            {(requirementsMatched || isFullyGraduated || completionPercent === 100) ? (
+                              <button
+                                type="button"
+                                id={`claim-download-cert-${course.id}`}
+                                onClick={() => handleClaimAndDownloadCertificate(course)}
+                                className="w-full md:w-auto text-[10px] uppercase tracking-wider font-bold text-brand-black bg-brand-yellow hover:bg-zinc-900 hover:text-brand-yellow font-sans px-4 py-2.5 rounded-xl transition-all shadow-2xs hover:scale-[1.02] flex items-center justify-center gap-1.5 cursor-pointer"
+                              >
+                                <Award size={12} className="shrink-0" /> Download PDF Degree
+                              </button>
+                            ) : (
+                              <div className="bg-zinc-150 border border-zinc-200 text-zinc-450 uppercase font-mono text-[9px] tracking-wider px-3.5 py-2 rounded-xl flex items-center gap-1 cursor-not-allowed select-none">
+                                <Lock size={10} /> Lock Status: {4 - gradedTasks.length} Milestones Remaining
+                              </div>
+                            )}
                           </div>
                         </div>
 
-                        <div className="shrink-0 flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
-                          {!hasAssignments && (
-                            <button
-                              type="button"
-                              id={`initialize-tasks-btn-${course.id}`}
-                              onClick={() => handleInitializeDemoAssignments(course)}
-                              className="text-[9.5px] font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
-                            >
-                              <Sparkles size={11} /> Allocate Course Projects
-                            </button>
-                          )}
-
-                          {hasAssignments && !requirementsMatched && (
-                            <button
-                              type="button"
-                              id={`quick-autograde-btn-${course.id}`}
-                              onClick={() => handleQuickAutogradeTasks(course)}
-                              className="text-[9px] text-zinc-500 hover:text-brand-black bg-zinc-100 hover:bg-zinc-200 font-mono px-2.5 py-1.5 rounded-lg border border-zinc-200 transition-colors cursor-pointer flex items-center gap-1"
-                              title="Quickly complete and grade all coursework for instant testing"
-                            >
-                              <CheckCircle2 size={10} className="text-emerald-500" /> Fast Grade (Test PDF)
-                            </button>
-                          )}
-
-                          {(requirementsMatched || isFullyGraduated || completionPercent === 100) ? (
-                            <button
-                              type="button"
-                              id={`claim-download-cert-${course.id}`}
-                              onClick={() => handleClaimAndDownloadCertificate(course)}
-                              className="w-full md:w-auto text-[10px] uppercase tracking-wider font-bold text-brand-black bg-brand-yellow hover:bg-zinc-900 hover:text-brand-yellow font-sans px-4 py-2.5 rounded-xl transition-all shadow-2xs hover:scale-[1.02] flex items-center justify-center gap-1.5 cursor-pointer"
-                            >
-                              <Award size={12} className="shrink-0" /> Download PDF Degree
-                            </button>
-                          ) : (
-                            <div className="bg-zinc-100 border border-zinc-150 text-zinc-400 uppercase font-medium text-[9px] tracking-wider px-3.5 py-2 rounded-xl flex items-center gap-1 cursor-not-allowed select-none">
-                              <Lock size={10} /> Pending Milestones
-                            </div>
-                          )}
+                        {/* Expandable/Interactive Milestones Grid Dashboard View */}
+                        <div className="border-t border-zinc-150 pt-3 text-left">
+                          <p className="text-[9px] font-mono uppercase font-bold tracking-wider text-zinc-400 mb-2.5">Accredited Curricula Milestones & Competency Audits</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {courseTasks.map((task, idx) => (
+                              <div key={task.id} className="bg-white border border-zinc-150 rounded-xl p-3.5 space-y-2 hover:border-zinc-300 transition-all text-left">
+                                <div className="flex justify-between items-start gap-1">
+                                  <div className="space-y-0.5">
+                                    <span className="text-[8.5px] font-mono uppercase bg-zinc-100 text-zinc-650 px-1.5 py-0.5 rounded font-bold">
+                                      Milestone {idx + 1}
+                                    </span>
+                                    <h5 className="text-[11.5px] font-bold text-zinc-950 leading-tight mt-1">
+                                      {task.title.replace(/^Milestone\s+\d+:\s*/i, '')}
+                                    </h5>
+                                  </div>
+                                  <span className={`text-[8.5px] font-mono px-2 py-0.5 rounded shrink-0 font-bold border ${
+                                    task.status === 'graded' ? 'bg-emerald-50 text-emerald-800 border-emerald-100' :
+                                    task.status === 'pending_review' ? 'bg-amber-50 text-amber-800 border-amber-100' :
+                                    'bg-zinc-50 text-zinc-450 border-zinc-150'
+                                  }`}>
+                                    {task.status === 'graded' ? 'GRADED' : task.status === 'pending_review' ? 'UNDER REVIEW' : 'INCOMPLETE'}
+                                  </span>
+                                </div>
+                                <p className="text-[10.5px] text-zinc-550 font-light leading-relaxed">
+                                  {task.description}
+                                </p>
+                                
+                                {task.status === 'graded' ? (
+                                  <div className="bg-zinc-50/85 border border-zinc-100 p-2 rounded-lg text-[9.5px] space-y-1 font-mono text-zinc-650 mt-1">
+                                    <div className="flex justify-between text-zinc-800 font-bold">
+                                      <span>Grade Received: {task.grade}</span>
+                                      <span>Score: {task.points}/100 pts</span>
+                                    </div>
+                                    {task.feedback && (
+                                      <p className="text-[9.5px] text-zinc-500 font-sans italic mt-1 leading-normal">&ldquo;{task.feedback}&rdquo;</p>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="flex justify-between items-center text-[9px] font-mono text-zinc-400 pt-1">
+                                    <span>Due date: {task.dueDate}</span>
+                                    <span className="text-[8px] uppercase tracking-wider font-semibold text-zinc-450">Pending Teacher Grade</span>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
 
                       </div>

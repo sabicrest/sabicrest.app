@@ -260,25 +260,23 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
       }
     }
 
-    // Allocate weekly assignment evaluators for the student
+    // Allocate course milestones for the student
     const course = db.getCurricula().find(c => c.id === enr.courseId);
     if (course) {
-      db.addAssignment({
-        title: `${course.title}: Getting Started Assignment`,
-        description: `Starter evaluation task for the newly registered syllabus: "${course.title}". Scope focus represents Week 1: "${course.modules[0] || 'Foundational Principles'}". Submit your work here when accomplished for tutor grading.`,
-        dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 14 days out
-        maxPoints: 100,
-        studentId: enr.studentId,
-        studentName: enr.studentName,
-        trainerId: course.trainerId,
-        trainerName: course.trainerName
-      });
+      db.initializeMilestonesForCourse(
+        enr.studentId,
+        enr.studentName,
+        enr.courseId,
+        enr.courseTitle,
+        course.trainerId,
+        course.trainerName
+      );
 
       // inform coach
       db.addNotification({
         userId: course.trainerId,
         title: 'New Student Approved & Onboarded',
-        message: `${enr.studentName} has enrolled for your syllabus: "${course.title}". Starter assignment initialized.`,
+        message: `${enr.studentName} has enrolled for your syllabus: "${course.title}". 4 distinct milestone coursework requirements are now initialized.`,
         type: 'curriculum'
       });
     }
