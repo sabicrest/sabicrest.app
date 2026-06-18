@@ -654,7 +654,7 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
                     : 'bg-zinc-50 text-zinc-700 border-zinc-100 hover:bg-zinc-100'
                 }`}
               >
-                <Activity size={12} /> System Audit Logs
+                <Activity size={12} /> School Activity Diary
               </button>
               <button
                 onClick={() => setAdminSubView('database-rls')}
@@ -664,7 +664,7 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
                     : 'bg-zinc-50 text-zinc-700 border-zinc-100 hover:bg-zinc-100'
                 }`}
               >
-                <Shield size={12} /> Database Security & RLS
+                <Shield size={12} /> Storage Security & Keys
               </button>
             </div>
           </div>

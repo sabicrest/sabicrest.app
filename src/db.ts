@@ -1222,23 +1222,23 @@ export class SupabaseDatabase {
 
     const milestones = [
       {
-        title: `Milestone 1: Orientation & Sandbox Workspace Environment Setup`,
-        description: `Establish a local developer workspace environment. Ensure git configurations are initialized, test sandbox database connections, and authorize system access credentials.`,
+        title: `Step 1: Welcome, Say Hello & Set Up Your Workspace`,
+        description: `Get to know your teacher, set up a comfortable spot to study, and make sure you can log into our friendly online classroom easily.`,
         dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       },
       {
-        title: `Milestone 2: Responsive Frontend User Interface Components`,
-        description: `Construct responsive layouts and fluid interface containers utilizing tailwind css styles. Ensure proper sizing of touch interactive targets for mobile use with zero render loops.`,
+        title: `Step 2: Designing Your First Beautiful Screen`,
+        description: `Create a clean, colorful, and easy-to-read layout. Make sure the buttons are big and clear so children and grandparents alike can tap them easily on phones or computers.`,
         dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       },
       {
-        title: `Milestone 3: Server-Side Endpoint & Database Schema Integration`,
-        description: `Configure server-side proxy handlers to safely dispatch external queries. Write proper postgresql schema tables and execute strict row level security (RLS) policies.`,
+        title: `Step 3: Connecting Your App & Saving Information Safely`,
+        description: `Learn how your app talks to our safe master storage box. Set up simple folders to save user comments or drawings securely.`,
         dueDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       },
       {
-        title: `Milestone 4: High Fidelity Final Demonstration & Release Audit`,
-        description: `Validate accessibility contrast ratios, optimize production codebundles, eliminate dead imports, and submit your final live build results for executive CAO degree credentialing.`,
+        title: `Step 4: Your Final Tour, Beautiful Polish & Graduation Day`,
+        description: `Check your text size and colors for readability, tidy up any unused draft pages, and confidently share your beautiful finished project with our kind principal!`,
         dueDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       }
     ];

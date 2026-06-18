@@ -1178,17 +1178,17 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                                 <div className="mt-2 bg-zinc-50 border border-zinc-150 p-4 rounded-xl space-y-3">
                                   <div className="flex items-center justify-between pb-2 border-b border-zinc-205">
                                     <h5 className="font-bold text-zinc-700 text-[10px] uppercase font-mono tracking-wider">
-                                      Course Milestones & Grading Notebook
+                                      Lesson Steps & Homework Grading Box
                                     </h5>
                                     <span className="text-[9px] font-mono text-zinc-400 bg-white px-2 py-0.5 border rounded">
-                                      Total Checklist: {gradedTasks.length} Graded, {studentTasks.length - gradedTasks.length} Pending
+                                      Homework Status: {gradedTasks.length} Done, {studentTasks.length - gradedTasks.length} Waiting
                                     </span>
                                   </div>
 
                                   <div className="space-y-3">
                                     {studentTasks.length === 0 ? (
                                       <p className="text-[10px] text-zinc-450 italic py-2">
-                                        No milestones found. Click approved on payment reference list to auto-initialize.
+                                        No homework steps found yet.
                                       </p>
                                     ) : (
                                       studentTasks.map((task, mIdx) => {
@@ -1198,7 +1198,7 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                                             <div className="flex justify-between items-start gap-2">
                                               <div>
                                                 <span className="text-[8.5px] font-mono uppercase bg-zinc-100 border text-zinc-500 px-1.5 py-0.2 rounded font-bold">
-                                                  Milestone {mIdx + 1}
+                                                  Step {mIdx + 1}
                                                 </span>
                                                 <h6 className="font-semibold text-zinc-805 mt-1 text-[11.5px]">{task.title.replace(/^Milestone\s+\d+:\s*/i, '')}</h6>
                                               </div>
@@ -1207,7 +1207,7 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                                                 task.status === 'pending_review' ? 'bg-amber-50 text-amber-805 border-amber-100' :
                                                 'bg-zinc-50 text-zinc-450 border-zinc-150'
                                               }`}>
-                                                {task.status === 'graded' ? 'COMPLETED & GRADED' : task.status === 'pending_review' ? 'PENDING' : 'INCOMPLETE'}
+                                                {task.status === 'graded' ? 'FINISHED & GRADED' : task.status === 'pending_review' ? 'WAITING FOR REVIEW' : 'NOT STARTED'}
                                               </span>
                                             </div>
 
@@ -1229,7 +1229,7 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
 
                                             {isEditing ? (
                                               <div className="bg-zinc-50 p-3 rounded-lg border border-zinc-200 space-y-2.5 mt-2">
-                                                <p className="text-[10px] font-bold text-zinc-705">Enter Graduation Evaluation Details</p>
+                                                <p className="text-[10px] font-bold text-zinc-750">Enter Student Homework Grades</p>
                                                 <div className="grid grid-cols-2 gap-2">
                                                   <div>
                                                     <label className="block text-[8.5px] font-mono text-zinc-450 uppercase mb-0.5">Grade (A to F)</label>
@@ -1257,11 +1257,11 @@ export default function TrainerCourses({ currentUser }: TrainerCoursesProps) {
                                                   </div>
                                                 </div>
                                                 <div>
-                                                  <label className="block text-[8.5px] font-mono text-zinc-450 uppercase mb-0.5">Tutor Evaluation Feedback</label>
+                                                  <label className="block text-[8.5px] font-mono text-zinc-450 uppercase mb-0.5">Teacher Review Comments</label>
                                                   <textarea
                                                     value={feedbackInput}
                                                     onChange={(e) => setFeedbackInput(e.target.value)}
-                                                    placeholder="Enter brief specific feedback for student regarding milestone competencies..."
+                                                    placeholder="Enter encouraging feedback and suggestions for the student..."
                                                     className="w-full bg-white border border-zinc-250 rounded p-1.5 text-[10px] focus:outline-hidden h-11"
                                                   />
                                                 </div>

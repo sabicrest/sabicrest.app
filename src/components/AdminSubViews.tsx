@@ -642,12 +642,12 @@ export default function AdminSubViews({
   };
 
   const handleTriggerCertificateAllocation = (enr: CourseEnrollment) => {
-    showToast(`Digital blockchain credential generated & encrypted on chain for ${enr.studentName}!`);
+    showToast(`Happy graduation certificate generated for ${enr.studentName}!`);
     
     db.addNotification({
       userId: enr.studentId,
-      title: 'Graduation Digital Credential Ready',
-      message: `Congratulations! Your verified alumni blockchain certificate for "${enr.courseTitle}" is ready in your locker.`,
+      title: 'Congratulations on Your Graduation!',
+      message: `Congratulations! Your graduation certificate for "${enr.courseTitle}" is ready on your dashboard.`,
       type: 'system'
     });
 
@@ -772,18 +772,18 @@ export default function AdminSubViews({
 
               <span>
                 {subView === 'users' ? "Total User's" : 
-                 subView === 'courses' ? 'Curricula Syllabus Ledger' :
+                 subView === 'courses' ? 'Main Class Directory' :
                  subView === 'pending-verification' ? 'Approvals & Verifications' :
                  subView === 'ongoing-courses' ? 'Active Class Cohorts' :
-                 subView === 'graduating' ? 'Alumni Completion Clearance' :
-                 subView === 'inactive-students' ? 'Sleep Inactivity Monitor' :
-                 subView === 'active-students' ? 'Student Leaderboard & Streaks' :
-                 subView === 'active-trainers' ? 'Certified Mentor Dashboard' :
+                 subView === 'graduating' ? 'Graduation Certificates Hub' :
+                 subView === 'inactive-students' ? 'Inactive Student Helper' :
+                 subView === 'active-students' ? 'Student Points and Trophy List' :
+                 subView === 'active-trainers' ? 'Teacher Directory' :
                  subView === 'chats-messages' ? 'Interactive Communications' :
-                 subView === 'course-proposals' ? 'Course proposals queue' :
-                 subView === 'payment-audit' ? 'Student Tuition verification queue' :
-                 subView === 'audit-logs' ? 'System Audit logs' :
-                 subView === 'database-rls' ? 'Supabase Row Level Security (RLS) policies' :
+                 subView === 'course-proposals' ? 'Teacher Class Suggestions' :
+                 subView === 'payment-audit' ? 'Confirm Fee Payments' :
+                 subView === 'audit-logs' ? 'School Activity Log' :
+                 subView === 'database-rls' ? 'Safe Data Storage Rulebook' :
                  'Financial Accounts Audit'}
               </span>
             </h2>
@@ -1472,7 +1472,7 @@ export default function AdminSubViews({
       {subView === 'graduating' && (
         <div className="bg-white border border-zinc-100 p-6 rounded-3xl space-y-4">
           <h3 className="text-xs font-mono uppercase tracking-wider text-emerald-600 flex items-center gap-1.5">
-            <CheckCircle2 size={14} className="text-emerald-500 animate-pulse" /> Graduating Students Completion Ledger
+            <CheckCircle2 size={14} className="text-emerald-500 animate-pulse" /> List of Graduation Cleared Students
           </h3>
 
           <div className="overflow-x-auto">

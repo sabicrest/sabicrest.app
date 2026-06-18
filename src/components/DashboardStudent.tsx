@@ -499,7 +499,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
       doc.setFont('times', 'italic');
       doc.setFontSize(12);
       doc.setTextColor(82, 82, 91);
-      doc.text('for exceptional commitment, caliber, and full completion of the industry accredited curriculum', 421, 282, { align: 'center' });
+      doc.text('for exceptional learning, hard work, and full completion of the training class', 421, 282, { align: 'center' });
 
       // Curriculum Course Title (Accent color)
       doc.setFont('helvetica', 'bold');
@@ -511,7 +511,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
       doc.setTextColor(161, 161, 170);
-      doc.text(`Official Graduation Date: ${cert.issuedDate}  |  Platform Audit ID: SC-${cert.hash.substring(0, 12).toUpperCase()}`, 421, 332, { align: 'center' });
+      doc.text(`Official Graduation Date: ${cert.issuedDate}  |  Certificate Code: SC-${cert.hash.substring(0, 12).toUpperCase()}`, 421, 332, { align: 'center' });
 
       // Thin separator before signatures
       doc.setDrawColor(244, 244, 245);
@@ -624,7 +624,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
       doc.setFont('courier', 'normal');
       doc.setFontSize(7.5);
       doc.setTextColor(113, 113, 122);
-      doc.text(`VERIFICATION LEDGER HASH: ${cert.hash} (AUDITED BY SABICREST SYNDICATE)`, 421, 496, { align: 'center' });
+      doc.text(`SAFE VERIFICATION CODE: ${cert.hash} (VERIFIED BY SABICREST SCHOOL)`, 421, 496, { align: 'center' });
 
       // Execute Download
       doc.save(`SABICREST_CERTIFICATE_${cert.studentName.replace(/\s+/g, '_')}_${cert.curriculumTitle.replace(/\s+/g, '_')}.pdf`);
@@ -1414,7 +1414,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                 </div>
               </div>
               
-              <p className="text-[9.5px]/[14px] xs:text-[11px]/[16px] sm:text-xs md:text-sm text-zinc-405 dark:text-zinc-400 font-medium mt-3 sm:mt-4">Real-time performance scores ledger.</p>
+              <p className="text-[9.5px]/[14px] xs:text-[11px]/[16px] sm:text-xs md:text-sm text-zinc-405 dark:text-zinc-400 font-medium mt-3 sm:mt-4">Your course grades and status updates.</p>
             </div>
 
           </div>
@@ -1538,17 +1538,17 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
             {/* Assignments stream - Left Wide col */}
             <div className="lg:col-span-2 space-y-6" id="student-assignments-stream">
             
-            {/* Curriculum Progress & Certification Hub */}
+            {/* Class Progress & Graduation Hub */}
             <div className="bg-white border border-zinc-150 rounded-2xl p-6 shadow-xs relative overflow-hidden" id="student-certification-hub">
               <div className="absolute top-0 right-0 w-32 h-32 bg-brand-yellow/5 rounded-full blur-2xl pointer-events-none" />
               
               <div className="flex items-center justify-between gap-1.5 mb-4">
                 <div className="space-y-0.5">
                   <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase flex items-center gap-1.5 font-bold">
-                    <Award size={14} className="text-brand-yellow" /> Curriculum Progress & Certification Hub
+                    <Award size={14} className="text-brand-yellow" /> Class Progress & Graduation Hub
                   </h3>
                   <p className="text-[11px] text-zinc-400 font-light">
-                    Ensure all course requirements are met to unlock and download your official accredited milestone PDF degree.
+                    Complete all of your class steps below to unlock and download your beautiful graduation certificate.
                   </p>
                 </div>
               </div>
@@ -1630,7 +1630,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                               </button>
                             ) : (
                               <div className="bg-zinc-150 border border-zinc-200 text-zinc-450 uppercase font-mono text-[9px] tracking-wider px-3.5 py-2 rounded-xl flex items-center gap-1 cursor-not-allowed select-none">
-                                <Lock size={10} /> Lock Status: {4 - gradedTasks.length} Milestones Remaining
+                                <Lock size={10} /> Lock Status: {4 - gradedTasks.length} Lesson Steps Remaining
                               </div>
                             )}
                           </div>
@@ -1638,14 +1638,14 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
 
                         {/* Expandable/Interactive Milestones Grid Dashboard View */}
                         <div className="border-t border-zinc-150 pt-3 text-left">
-                          <p className="text-[9px] font-mono uppercase font-bold tracking-wider text-zinc-400 mb-2.5">Accredited Curricula Milestones & Competency Audits</p>
+                          <p className="text-[9px] font-mono uppercase font-bold tracking-wider text-zinc-400 mb-2.5 font-sans">Course Milestones & Homework Steps</p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {courseTasks.map((task, idx) => (
                               <div key={task.id} className="bg-white border border-zinc-150 rounded-xl p-3.5 space-y-2 hover:border-zinc-300 transition-all text-left">
                                 <div className="flex justify-between items-start gap-1">
                                   <div className="space-y-0.5">
                                     <span className="text-[8.5px] font-mono uppercase bg-zinc-100 text-zinc-650 px-1.5 py-0.5 rounded font-bold">
-                                      Milestone {idx + 1}
+                                      Step {idx + 1}
                                     </span>
                                     <h5 className="text-[11.5px] font-bold text-zinc-950 leading-tight mt-1">
                                       {task.title.replace(/^Milestone\s+\d+:\s*/i, '')}
@@ -1695,7 +1695,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
             <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs">
               <div className="flex items-center justify-between gap-1.5 mb-4 border-b border-zinc-100 pb-3">
                 <h3 className="text-xs font-semibold tracking-wider text-brand-black uppercase flex items-center gap-1.5 font-bold">
-                  <List size={13} className="text-brand-yellow" /> Tasks & Assignments Ledger
+                  <List size={13} className="text-brand-yellow" /> Your Study Tasks & Homework
                 </h3>
                 <span className="text-[10px] font-mono text-zinc-400 bg-zinc-50 px-2 py-0.5 rounded">
                   Showing {Math.min(tasksPageAssignments.length, tasksLimit)} of {tasksPageAssignments.length}
@@ -1878,14 +1878,14 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] uppercase font-mono tracking-wider font-extrabold px-2.5 py-0.5 rounded bg-amber-100/15 dark:bg-amber-500/10 text-brand-black dark:text-brand-yellow border border-zinc-200 dark:border-zinc-800">
-                    ACCREDITED GUILD SYLLABI
+                    OUR FRIENDLY CLASSES
                   </span>
                 </div>
                 <h2 className="text-2xl font-semibold tracking-tight text-brand-black dark:text-white leading-tight font-sans flex items-center gap-2">
-                  <BookOpen className="text-brand-yellow shrink-0" size={24} /> Academic Classroom Registry
+                  <BookOpen className="text-brand-yellow shrink-0" size={24} /> Class Registration Dashboard
                 </h2>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 font-light max-w-2xl leading-relaxed">
-                  Register for vocational masterclasses, upload transaction confirmations, access customized task blueprints, and claim graduation badges inside our digital ledger.
+                  Sign up for a class, send us your proof of payment, check your homework instructions, and download your graduation badge when you finish!
                 </p>
               </div>
 
@@ -2153,10 +2153,10 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
               <div className="bg-white dark:bg-zinc-950 border border-zinc-150 dark:border-zinc-850 rounded-2xl p-6 shadow-xs space-y-6">
                 <div>
                   <h3 className="text-sm font-semibold text-brand-black dark:text-white uppercase font-mono flex items-center gap-2">
-                    <CreditCard className="text-brand-yellow" size={15} /> Registrations & Payment Ledger
+                    <CreditCard className="text-brand-yellow" size={15} /> Registrations & School Payments
                   </h3>
                   <p className="text-xs text-zinc-400 font-light mt-1">
-                    Track the progress of vocational training applications, resubmit rejected Paystack references, or launch course gateways once verified.
+                    Track your course registration status, pay school fees, or open your class page once approved by the teacher.
                   </p>
                 </div>
 

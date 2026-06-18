@@ -916,7 +916,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
           <div className="bg-white border border-zinc-150 rounded-2xl p-6 shadow-xl max-w-2xl w-full text-left space-y-4 animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center pb-2 border-b border-zinc-100">
               <h3 className="text-sm font-semibold text-brand-black flex items-center gap-2">
-                <CheckCircle2 size={16} className="text-emerald-500" /> Graded Submissions Ledger
+                <CheckCircle2 size={16} className="text-emerald-500" /> Finished Homework & Grades
               </h3>
               <button 
                 onClick={() => setShowGradedListModal(false)}
@@ -1282,7 +1282,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                           >
                             <span className="flex items-center gap-1 uppercase tracking-wider text-[8.5px]">
                               <BookOpen size={10} className="text-brand-yellow" />
-                              Syllabus Breakdown ({curr.modules.length} Modules)
+                              Weekly Class Topics ({curr.modules.length} Weeks)
                             </span>
                             {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                           </button>
