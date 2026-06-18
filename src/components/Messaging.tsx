@@ -34,7 +34,7 @@ import {
   Search
 } from 'lucide-react';
 
-const ALL_CHANNELS = [
+const BASE_CHANNELS = [
   { id: 'team-general', label: 'cohort-general', desc: 'General chatter, major announcements, and introductions.' },
   { id: 'team-collaboration', label: 'team-active-horizon', desc: 'All team collaboration updates, cohort project syncs, and tasks.' },
   { id: 'design-showcase', label: 'design-showcase', desc: 'Present and critique high-fidelity Figma links, design prototypes, and mockups.' },
@@ -46,6 +46,29 @@ interface MessagingProps {
 }
 
 export default function Messaging({ currentUser }: MessagingProps) {
+  const ALL_CHANNELS = React.useMemo(() => {
+    const approvedCourses = db.getCurricula().filter(c => c.status === 'approved');
+    const courseChannels = approvedCourses
+      .filter(course => {
+        if (currentUser.role === 'admin') return true;
+        if (currentUser.role === 'trainer') {
+          return course.trainerId === currentUser.id || course.trainerName === currentUser.name;
+        }
+        if (currentUser.role === 'student') {
+          const userObj = db.getUserById(currentUser.id) || currentUser;
+          return (userObj.enrolledCourseIds || []).includes(course.id);
+        }
+        return false;
+      })
+      .map(course => ({
+        id: course.id,
+        label: `course-${course.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+        desc: `Official channel for "${course.title}". Led by ${course.trainerName}. Share chats, resource files, and course assignments.`
+      }));
+
+    return [...BASE_CHANNELS, ...courseChannels];
+  }, [currentUser, db.getCurricula(), db.getUsers()]);
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [activeChannelId, setActiveChannelId] = useState<string>('team-general');
   const [activeDmUser, setActiveDmUser] = useState<User | null>(null);
@@ -430,7 +453,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
     const counts: { [key: string]: number } = {};
     
     // 1. Calculate for Channels
-    const channels = ['team-general', 'team-collaboration', 'design-showcase', 'technical-support'];
+    const channels = ALL_CHANNELS.map(c => c.id);
     channels.forEach(chanId => {
       const channelMsgs = messages.filter(m => m.channelId === chanId && m.senderId !== currentUser.id);
       const lastReadId = lastReadMessageMap[`channel-${chanId}`];
@@ -623,6 +646,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
       <ChannelsExplore
         activeChannelId={activeChannelId}
         activeDmUser={activeDmUser}
+        currentUser={currentUser}
         onChannelSelect={(chanId) => {
           setActiveChannelId(chanId);
           setActiveDmUser(null);
@@ -728,7 +752,7 @@ export default function Messaging({ currentUser }: MessagingProps) {
  
                {isChannelsExpanded && (
                 <div className="space-y-1 text-xs font-light mt-2 animate-in fade-in duration-150">
-                  {ALL_CHANNELS.slice(0, 3).map(chan => {
+                  {ALL_CHANNELS.map(chan => {
                     const isSelected = !activeDmUser && activeChannelId === chan.id;
                     const count = unreadCounts[chan.id] || 0;
                     return (

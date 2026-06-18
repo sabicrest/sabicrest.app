@@ -206,7 +206,7 @@ export default function TeamCollaboration({ currentUser }: TeamCollaborationProp
                   }
                   return (
                     <div key={member.id} className="flex items-center gap-2.5">
-                      <img src={member.avatar} alt="member avatar" className="w-7 h-7 rounded-full object-cover border border-zinc-100 referrerPolicy='no-referrer'" />
+                      <img src={member.avatar} alt="member avatar" className="w-7 h-7 rounded-full object-cover border border-zinc-100" referrerPolicy="no-referrer" />
                       <div>
                         <div className="text-xs font-medium text-brand-black">{member.name}</div>
                         <div className="text-[9px] text-zinc-400 font-mono font-light uppercase tracking-wider">{displayedEmail}</div>

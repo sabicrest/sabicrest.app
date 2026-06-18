@@ -1333,6 +1333,13 @@ export class SupabaseDatabase {
     this.saveToSupabase('enrollments', enr.id, enr);
   }
 
+  deleteEnrollment(enrId: string) {
+    this.enrollments = this.enrollments.filter(e => e.id !== enrId);
+    this.saveToStorage();
+    this.logTransaction('DELETE_COURSE_ENROLLMENT', 'CourseEnrollments', enrId);
+    this.saveToSupabase('enrollments', enrId, null, true);
+  }
+
   // --- Admin Activity Audit System ---
   getAdminActivities(): AdminActivity[] {
     return this.adminActivities;

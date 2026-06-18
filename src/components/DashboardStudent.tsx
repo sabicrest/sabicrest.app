@@ -92,6 +92,8 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
   );
   const [selectedCourse, setSelectedCourse] = useState<Curriculum | null>(null);
   const [confirmingCourseId, setConfirmingCourseId] = useState<string | null>(null);
+  const [confirmingProofCourseId, setConfirmingProofCourseId] = useState<string | null>(null);
+  const [cancellingEnrollmentId, setCancellingEnrollmentId] = useState<string | null>(null);
   const [showPaystackTerminal, setShowPaystackTerminal] = useState(false);
   const [paystackRefInput, setPaystackRefInput] = useState('');
   const [generatingLink, setGeneratingLink] = useState(false);
@@ -892,6 +894,77 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
     });
 
     showToast('✓ Paystack reference submitted for CAO validation!');
+    reloadStudentData();
+  };
+
+  const handleConfirmManualProofSubmitted = (course: Curriculum) => {
+    // Check if max 5 students limit reached
+    const approvedCount = db.getEnrollments().filter(e => e.courseId === course.id && e.paymentStatus === 'approved').length;
+    if (approvedCount >= 5) {
+      showToast('Error: This cohort is full (maximum 5 students).');
+      return;
+    }
+
+    const mockRef = `PROOF-TX-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    const match = db.getEnrollments().find(e => e.courseId === course.id && e.studentId === currentUser.id);
+    if (match) {
+      const updated: CourseEnrollment = {
+        ...match,
+        paymentStatus: 'pending_verification',
+        paymentReference: mockRef,
+        submittedAt: new Date().toISOString()
+      };
+      db.updateEnrollment(updated);
+    } else {
+      db.addEnrollment({
+        studentId: currentUser.id,
+        studentName: currentUser.name,
+        studentEmail: currentUser.email,
+        courseId: course.id,
+        courseTitle: course.title,
+        trainerId: course.trainerId,
+        trainerName: course.trainerName,
+        amount: course.price || 35000,
+        paymentLinkUrl: 'https://paystack.shop/pay/sabicrest',
+        paymentStatus: 'pending_verification',
+        paymentReference: mockRef,
+        submittedAt: new Date().toISOString()
+      });
+    }
+
+    db.addNotification({
+      userId: 'u-admin-1',
+      title: 'Manual/WhatsApp Proof Submitted',
+      message: `${currentUser.name} confirmed making payment and sending proof for syllabus "${course.title}" (Ref: ${mockRef}).`,
+      type: 'system'
+    });
+
+    db.addNotification({
+      userId: currentUser.id,
+      title: 'Pending Admission Processing',
+      message: `Your proof confirming enrollment for "${course.title}" has been filed under Pending Admission (Audit Ref: ${mockRef}).`,
+      type: 'system'
+    });
+
+    showToast('✓ Payment confirmation filed! Awaiting admission approval.');
+    reloadStudentData();
+  };
+
+  const handleCancelSubmission = (enrId: string) => {
+    const enr = db.getEnrollmentById(enrId);
+    if (!enr) return;
+
+    db.deleteEnrollment(enrId);
+
+    db.addNotification({
+      userId: 'u-admin-1',
+      title: 'Admission Request Cancelled',
+      message: `${currentUser.name} has cancelled their pending admission request for "${enr.courseTitle}".`,
+      type: 'system'
+    });
+
+    showToast('✓ Submission cancelled successfully.');
     reloadStudentData();
   };
 
@@ -2104,7 +2177,7 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                                   if (enr.paymentStatus === 'pending_verification') {
                                     return (
                                       <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 px-2 py-0.5 rounded-md border border-amber-100 dark:border-amber-950 animate-pulse">
-                                        <Clock size={10} className="animate-spin" /> Verification queue
+                                        <Clock size={10} className="animate-spin" /> Pending Admission
                                       </span>
                                     );
                                   }
@@ -2151,12 +2224,43 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                                   )}
 
                                   {matchingCourse && enr.paymentStatus === 'pending_verification' && (
-                                    <button
-                                      onClick={() => handleViewCourseDetails(matchingCourse)}
-                                      className="bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 hover:dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono text-[10px] uppercase font-bold tracking-wider px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
-                                    >
-                                      Details
-                                    </button>
+                                    <>
+                                      {cancellingEnrollmentId === enr.id ? (
+                                        <div className="flex items-center gap-1 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 p-1 rounded-lg animate-in fade-in duration-150">
+                                          <span className="text-[9px] text-rose-700 dark:text-rose-300 font-mono font-medium px-1 select-none">Sure?</span>
+                                          <button
+                                            onClick={() => {
+                                              handleCancelSubmission(enr.id);
+                                              setCancellingEnrollmentId(null);
+                                            }}
+                                            className="bg-red-600 hover:bg-red-700 text-white font-mono text-[9px] uppercase font-bold tracking-wider px-2 py-1 rounded cursor-pointer transition-colors"
+                                          >
+                                            Yes, Cancel
+                                          </button>
+                                          <button
+                                            onClick={() => setCancellingEnrollmentId(null)}
+                                            className="bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-355 font-mono text-[9px] uppercase font-bold tracking-wider px-2 py-1 rounded cursor-pointer transition-colors"
+                                          >
+                                            No
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center gap-1.5">
+                                          <button
+                                            onClick={() => handleViewCourseDetails(matchingCourse)}
+                                            className="bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 hover:dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono text-[10px] uppercase font-bold tracking-wider px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
+                                          >
+                                            Details
+                                          </button>
+                                          <button
+                                            onClick={() => setCancellingEnrollmentId(enr.id)}
+                                            className="bg-rose-50 hover:bg-rose-100 dark:bg-rose-955/25 dark:hover:bg-rose-900/35 text-rose-650 dark:text-rose-450 font-mono text-[10px] uppercase font-bold tracking-wider px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
+                                          >
+                                            Cancel
+                                          </button>
+                                        </div>
+                                      )}
+                                    </>
                                   )}
                                 </div>
                               </td>
@@ -2759,25 +2863,64 @@ export default function DashboardStudent({ currentUser, activeTab, onNavigateCha
                         To register, proceed to secure online check-out with Paystack. To finalize manual payments, simply click below to submit your payment receipt instantly to Sabicrest on WhatsApp.
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {/* Option 1: Live Paystack */}
-                        <button
-                          onClick={() => setConfirmingCourseId(selectedCourse.id)}
-                          className="flex items-center justify-center gap-2 bg-brand-black dark:bg-zinc-800 hover:bg-zinc-900 text-white dark:text-brand-yellow py-3 px-4 rounded-xl text-xs uppercase tracking-wide font-semibold shadow-xs transition-colors cursor-pointer focus-ring"
-                        >
-                          <CreditCard size={13} className="text-brand-yellow" />
-                          Pay with Paystack
-                        </button>
+                      {confirmingProofCourseId === selectedCourse.id ? (
+                        <div className="bg-emerald-50/50 dark:bg-zinc-900 border border-emerald-500/20 rounded-2xl p-4 sm:p-5 text-center space-y-3.5 animate-in zoom-in-95">
+                          <div className="mx-auto w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 font-bold text-sm">
+                            ✓
+                          </div>
+                          <h5 className="text-xs font-bold text-emerald-950 dark:text-emerald-400 uppercase tracking-wider">Confirm Payment & Proof Sent</h5>
+                          <p className="text-[11px] text-zinc-650 dark:text-zinc-400 font-light leading-relaxed">
+                            By confirming, you certify that you have paid <strong>₦{(selectedCourse.price || 35000).toLocaleString()}</strong> via transfer or bank deposit and submitted the transaction receipt to Sabicrest. Your request will be queued immediately.
+                          </p>
+                          <div className="flex gap-2.5">
+                            <button
+                              onClick={() => {
+                                setConfirmingProofCourseId(null);
+                                handleConfirmManualProofSubmitted(selectedCourse);
+                              }}
+                              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 rounded-xl text-xs uppercase tracking-wider font-semibold shadow-xs transition-colors cursor-pointer"
+                            >
+                              Yes, I have sent proof
+                            </button>
+                            <button
+                              onClick={() => setConfirmingProofCourseId(null)}
+                              className="flex-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-350 py-2 px-3 rounded-xl text-xs uppercase tracking-wider font-semibold transition-colors cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {/* Option 1: Live Paystack */}
+                            <button
+                              onClick={() => setConfirmingCourseId(selectedCourse.id)}
+                              className="flex items-center justify-center gap-2 bg-brand-black dark:bg-zinc-800 hover:bg-zinc-900 text-white dark:text-brand-yellow py-3 px-4 rounded-xl text-xs uppercase tracking-wide font-semibold shadow-xs transition-colors cursor-pointer focus-ring"
+                            >
+                              <CreditCard size={13} className="text-brand-yellow" />
+                              Pay with Paystack
+                            </button>
 
-                        {/* Option 2: WhatsApp Proof of Payment */}
-                        <button
-                          onClick={() => handleSendWhatsAppProof(selectedCourse)}
-                          className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebd53] text-white py-3 px-4 rounded-xl text-xs uppercase tracking-wide font-semibold shadow-xs transition-all cursor-pointer focus-ring shadow-lg shadow-emerald-500/10"
-                        >
-                          <MessageCircle size={14} className="fill-white text-[#25D366]" />
-                          Proof via WhatsApp
-                        </button>
-                      </div>
+                            {/* Option 2: WhatsApp Proof of Payment */}
+                            <button
+                              onClick={() => handleSendWhatsAppProof(selectedCourse)}
+                              className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebd53] text-white py-3 px-4 rounded-xl text-xs uppercase tracking-wide font-semibold shadow-xs transition-all cursor-pointer focus-ring shadow-lg shadow-emerald-500/10"
+                            >
+                              <MessageCircle size={14} className="fill-white text-[#25D366]" />
+                              Proof via WhatsApp
+                            </button>
+                          </div>
+
+                          <button
+                            onClick={() => setConfirmingProofCourseId(selectedCourse.id)}
+                            className="w-full flex items-center justify-center gap-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-850 text-zinc-800 dark:text-zinc-200 py-3  px-4 rounded-xl text-xs uppercase tracking-wide font-bold shadow-3xs transition-colors cursor-pointer focus-ring"
+                          >
+                            <CheckCircle2 size={13} className="text-emerald-500" />
+                            I have paid & sent proof
+                          </button>
+                        </>
+                      )}
 
                       {/* Collapsible reference code input */}
                       <div className="border-t border-zinc-100 dark:border-zinc-800/80 pt-3">

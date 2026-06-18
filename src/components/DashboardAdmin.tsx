@@ -33,6 +33,7 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
   const [enrollments, setEnrollments] = useState<CourseEnrollment[]>(db.getEnrollments());
   const [rejectionEnrollmentId, setRejectionEnrollmentId] = useState<string | null>(null);
   const [rejectEnrollmentReason, setRejectEnrollmentReason] = useState('');
+  const [confirmingApproveId, setConfirmingApproveId] = useState<string | null>(null);
 
   // Serverless performance controls states
   const [coldStartSpeed, setColdStartSpeed] = useState('11ms');
@@ -1256,18 +1257,41 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
                       </div>
 
                       <div className="flex md:flex-col justify-end gap-1.5 shrink-0 self-center">
-                        <button
-                          onClick={() => handleApproveEnrollment(enr.id)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] uppercase font-bold px-4 py-2 cursor-pointer transition-colors"
-                        >
-                          Approve payment
-                        </button>
-                        <button
-                          onClick={() => handleOpenEnrollmentRejection(enr.id)}
-                          className="bg-red-50 hover:bg-red-100 text-red-650 rounded-xl text-[10px] uppercase font-semibold px-4 py-2 cursor-pointer transition-colors"
-                        >
-                          Reject
-                        </button>
+                        {confirmingApproveId === enr.id ? (
+                          <div className="bg-emerald-50 border border-emerald-100 p-2.5 rounded-xl flex items-center gap-2 text-xs animate-in zoom-in-95">
+                            <span className="text-[#218c3f] font-semibold text-[10px] uppercase font-mono">Approve Admission?</span>
+                            <button
+                              onClick={() => {
+                                handleApproveEnrollment(enr.id);
+                                setConfirmingApproveId(null);
+                              }}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[9px] uppercase font-bold px-2.5 py-1.5 cursor-pointer transition-colors"
+                            >
+                              Yes, Approve
+                            </button>
+                            <button
+                              onClick={() => setConfirmingApproveId(null)}
+                              className="bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-lg text-[9px] uppercase font-semibold px-2.5 py-1.5 cursor-pointer transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => setConfirmingApproveId(enr.id)}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] uppercase font-bold px-4 py-2 cursor-pointer transition-colors"
+                            >
+                              Approve payment
+                            </button>
+                            <button
+                              onClick={() => handleOpenEnrollmentRejection(enr.id)}
+                              className="bg-red-50 hover:bg-red-100 text-red-650 rounded-xl text-[10px] uppercase font-semibold px-4 py-2 cursor-pointer transition-colors"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -1402,7 +1426,7 @@ export default function DashboardAdmin({ currentUser }: DashboardAdminProps) {
                     <tr key={user.id} className="hover:bg-zinc-50/50">
                       <td className="py-2.5 flex items-center gap-2">
                         {user.avatar ? (
-                          <img src={user.avatar} alt="logo" className="w-6 h-6 rounded-full object-cover border border-zinc-100 referrerPolicy='no-referrer'" />
+                          <img src={user.avatar} alt="logo" className="w-6 h-6 rounded-full object-cover border border-zinc-100" referrerPolicy="no-referrer" />
                         ) : (
                           <div className="w-6 h-6 rounded-full bg-brand-black text-white flex items-center justify-center text-[9px] font-bold">
                             {user.name.charAt(0)}

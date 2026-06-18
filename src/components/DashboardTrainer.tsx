@@ -1011,7 +1011,7 @@ export default function DashboardTrainer({ currentUser }: DashboardTrainerProps)
                         <div key={studentId} className="py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                           <div className="flex items-center gap-2.5">
                             {studentObj?.avatar ? (
-                              <img src={studentObj.avatar} alt="avatar" className="w-8 h-8 rounded-full object-cover border border-zinc-100 referrerPolicy='no-referrer'" />
+                              <img src={studentObj.avatar} alt="avatar" className="w-8 h-8 rounded-full object-cover border border-zinc-100" referrerPolicy="no-referrer" />
                             ) : (
                               <div className="w-8 h-8 rounded-full bg-brand-black text-white flex items-center justify-center text-[10px] font-bold">
                                 {studentName.charAt(0)}

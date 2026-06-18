@@ -6,15 +6,17 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { User } from '../types';
+import { db } from '../db';
 
 interface ChannelsExploreProps {
   activeChannelId: string;
   activeDmUser: User | null;
+  currentUser: User;
   onChannelSelect: (chanId: string) => void;
   onBack: () => void;
 }
 
-export const ALL_CHANNELS = [
+export const BASE_CHANNELS = [
   { id: 'team-general', label: 'cohort-general', desc: 'General chatter, major announcements, guidelines, and introductions.' },
   { id: 'team-collaboration', label: 'team-active-horizon', desc: 'Secure workspace for collaborative projects, group milestones, and team tasks.' },
   { id: 'design-showcase', label: 'design-showcase', desc: 'Present and critique high-fidelity Figma links, design prototypes, and concept sketches.' },
@@ -24,9 +26,33 @@ export const ALL_CHANNELS = [
 export default function ChannelsExplore({
   activeChannelId,
   activeDmUser,
+  currentUser,
   onChannelSelect,
   onBack
 }: ChannelsExploreProps) {
+  const ALL_CHANNELS = React.useMemo(() => {
+    const approvedCourses = db.getCurricula().filter(c => c.status === 'approved');
+    const courseChannels = approvedCourses
+      .filter(course => {
+        if (currentUser.role === 'admin') return true;
+        if (currentUser.role === 'trainer') {
+          return course.trainerId === currentUser.id || course.trainerName === currentUser.name;
+        }
+        if (currentUser.role === 'student') {
+          const userObj = db.getUserById(currentUser.id) || currentUser;
+          return (userObj.enrolledCourseIds || []).includes(course.id);
+        }
+        return false;
+      })
+      .map(course => ({
+        id: course.id,
+        label: `course-${course.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+        desc: `Official channel for "${course.title}". Led by ${course.trainerName}. Share chats, resource files, and course assignments.`
+      }));
+
+    return [...BASE_CHANNELS, ...courseChannels];
+  }, [currentUser]);
+
   return (
     <div id="messaging-channels-view" className="max-w-4xl mx-auto px-4 py-8 select-none text-brand-black dark:text-white">
       <button 

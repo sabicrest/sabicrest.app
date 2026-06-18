@@ -114,7 +114,22 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
     let unreadTotal = 0;
 
     // 1. Unread from Channels
-    const channels = ['team-general', 'team-collaboration', 'design-showcase', 'technical-support'];
+    const baseChannels = ['team-general', 'team-collaboration', 'design-showcase', 'technical-support'];
+    const approvedCourses = db.getCurricula().filter(c => c.status === 'approved');
+    const myCourseIds = approvedCourses
+      .filter(course => {
+        if (currentUser.role === 'admin') return true;
+        if (currentUser.role === 'trainer') {
+          return course.trainerId === currentUser.id || course.trainerName === currentUser.name;
+        }
+        if (currentUser.role === 'student') {
+          const userObj = db.getUserById(currentUser.id) || currentUser;
+          return (userObj.enrolledCourseIds || []).includes(course.id);
+        }
+        return false;
+      })
+      .map(course => course.id);
+    const channels = [...baseChannels, ...myCourseIds];
     channels.forEach(chanId => {
       const channelMsgs = allMsgs.filter(m => m.channelId === chanId && m.senderId !== currentUser.id);
       if (channelMsgs.length > 0) {
@@ -353,7 +368,7 @@ export default function Navigation({ currentUser, onLogout, activeTab, setActive
               title="View Profile Settings"
             >
               {currentUser.avatar ? (
-                <img src={currentUser.avatar} alt="avatar" className="w-6 h-6 rounded-full object-cover border border-zinc-200" referrerpolicy="no-referrer" />
+                <img src={currentUser.avatar} alt="avatar" className="w-6 h-6 rounded-full object-cover border border-zinc-200" referrerPolicy="no-referrer" />
               ) : (
                 <div className="w-6 h-6 rounded-full bg-brand-black text-white flex items-center justify-center text-[10px] font-bold">
                   {currentUser.name.charAt(0)}
